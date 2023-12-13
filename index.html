@@ -11,12 +11,12 @@
         <div id="paypal-button-container"></div>
     </form>
 
-    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&vault=true&intent=subscription"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AQtmB7n30XzehoP2DAC06-Pj3jHs-iC1dJ9i59j0F-jeoRHvFOJqht0GUrBbe5zMwul-5MYBdXr6KvEv&vault=true&intent=subscription"></script>
     <script>
         paypal.Buttons({
             createSubscription: function(data, actions) {
                 return actions.subscription.create({
-                    'plan_id': 'YOUR_PLAN_ID'
+                    'plan_id': 'P-7G55130131772935HMV4TXFY'
                 });
             },
             onApprove: function(data, actions) {
