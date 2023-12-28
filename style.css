@@ -54,13 +54,14 @@
 }
 
 .btn-primary, .btn-main {
-    margin-top: 20px;
+    margin-top: 10px;
     color:#ffffff;
     background-color: #9BA9F2;
     border: 1px solid #9BA9F2;
 }
 
 .btn-main-mt0 {
+    margin-top:10px;
     color:#ffffff;
     background-color: #9BA9F2;
     border: 1px solid #9BA9F2;
