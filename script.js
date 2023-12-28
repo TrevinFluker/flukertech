@@ -64,7 +64,7 @@ function startTutorial() {
     [`<p>Let's test the WebWatcher on your site. It works by looking for distinct text on your homepage.</p><p>If it finds the text, your site is up.</p><p>If not, your site may be down and you'll receive an alert.</p><p class='custom-bullet'><b>STEP 1</b> <span class='bullet-symbol'>&bull; </span>Enter the domain you want to monitor in the highlighted textbox. Use the format 'yoursite.com'</p>`, 
     `<p class='custom-bullet'><b>STEP 2</b> <span class='bullet-symbol'>&bull; </span>Use the website preview window or open your site in a new tab to copy some distinct text from your homepage. <u>Only copy text from the homepage.</u></p><a href="distinct-text.html" target="_blank" rel="noopener noreferrer">See distinct text examples</a>`, 
     `<p class='custom-bullet'><b>STEP 3</b> <span class='bullet-symbol'>&bull; </span>Paste the text into the input and then run a check on your website.</p><p>If the text is found, WebWatcher can use it to send you alerts.</p><p>If the text is not found, try other distinct text from your homepage.</p>`];
-    const infoPosition = [{"top":"60%","left":"50%"},{"top":"11%","left":"50%"},{"top":"30%","left":"50%"}]
+    const infoPosition = [{"top":"60%","left":"50%"},{"top":"12%","left":"50%"},{"top":"30%","left":"50%"}]
     let currentFeature = 0;
 
     function highlightFeatures(featureClass) {
