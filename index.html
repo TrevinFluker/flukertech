@@ -1,38 +1,74 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>WebWatcher Subscription</title>
+    <title>CoolieTech</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <form id="userForm">
-        Email: <input type="email" id="email" required><br>
-        Business Website URL: <input type="url" id="website" required><br>
-        <div id="paypal-button-container"></div>
-    </form>
+<body id="gradient">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a id="headerTitle" class="navbar-brand" href="index.html"></a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Tools
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="webwatcher-signup.html">WebWatcher</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Services
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="#">Placeholder</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contact.html">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <div class="gradient-background"></div>
 
-    <script src="https://www.paypal.com/sdk/js?client-id=AQtmB7n30XzehoP2DAC06-Pj3jHs-iC1dJ9i59j0F-jeoRHvFOJqht0GUrBbe5zMwul-5MYBdXr6KvEv&components=buttons&vault=true&intent=subscription"></script>
-    <script>
-        paypal.Buttons({
-            createSubscription: function(data, actions) {
-                return actions.subscription.create({
-                    'plan_id': 'P-1M441108AK5728351MV5EDSQ'
-                });
-            },
-            onApprove: function(data, actions) {
-                const email = document.getElementById('email').value;
-                const website = document.getElementById('website').value;
+    <div class="tagline-container d-flex flex-column justify-content-center align-items-center">
+        <h2 class="tagline">Code that helps your business run smoother</h2>
+        <span class="webwatcher-link">Try out the <a href="webwatcher-signup.html">WebWatcher</a> tool and get notified if your site goes down</span>
+    </div>
 
-                // Send the data to your backend
-                fetch('YOUR_BACKEND_ENDPOINT', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, website, subscriptionId: data.subscriptionID })
-                });
-            }
-        }).render('#paypal-button-container');
-    </script>
+    <div class="container mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-6 services-col d-flex flex-column justify-content-center order-md-1 order-2 mt-5 mt-md-0">
+                <h2>Services</h2>
+                <button type="button" class="btn btn-main">Contact Us</button>
+            </div>
+            <div class="col-md-6 order-md-2 order-1">
+                <div id="servicesAccordion">
+                    <!--dynamic-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center">
+        © CoolieTech, LLC
+    </footer>
+    
+    <!-- Page specific content goes here -->
+    <!-- Content for index.html -->
+    <!-- Footer content goes here -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
