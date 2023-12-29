@@ -271,6 +271,7 @@ footer {
     height: 100px;
     display: block;
     margin: auto;
+    transform: translate(-50%, -50%);
     -webkit-animation: spin 2s linear infinite; /* Safari and Chrome */
     animation: spin 2s linear infinite;
 }
