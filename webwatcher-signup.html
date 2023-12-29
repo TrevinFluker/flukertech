@@ -140,6 +140,7 @@
                 if (data.message === "Text not found in the website.") { failedCheck() }
             })
             .catch(error => console.error('Error:', error));
+            startLoader()
         }
 
         function convertToHTMLEntities(text) {

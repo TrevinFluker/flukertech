@@ -106,22 +106,7 @@ function startTutorial() {
 }
 
 function successfulCheck() {
-    var overlay = document.getElementById("overlay");
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.className = 'overlay';
-        overlay.id = 'overlay'
-        document.body.appendChild(overlay);
-        overlay.addEventListener('click', clearInfoBoxAfterCheck);
-    }
-
-    var infoBox = document.getElementById("info-box");
-    if (!infoBox) {
-        infoBox = document.createElement('div');
-        infoBox.className = 'info-box';
-        infoBox.id = 'info-box';
-        document.body.appendChild(infoBox);
-    }
+    var { overlay, infoBox } = initOverlay();
     infoBox.innerHTML = `<p><b>WebWatcher found the text!</b> This means you can use it to start monitoring your site.</p>
     <p><a href="paypal.html" target="_blank" rel="noopener noreferrer">Click here</a> to start using WebWatcher.</p>
     <p><a href="#" onclick="clearInfoBoxAfterCheck();">Click here</a> to run another check.</p>`
@@ -130,6 +115,27 @@ function successfulCheck() {
 }
 
 function failedCheck() {
+    var { overlay, infoBox } = initOverlay();
+    infoBox.innerHTML = `<p><b>WebWatcher could not find the text!</b> Try other text on your homepage or <a href="contact.html" target="_blank" rel="noopener noreferrer">contact us</a> for assistance.</p>
+    <p><a href="#" onclick="clearInfoBoxAfterCheck();">Click here</a> to run another check.</p>`
+    infoBox.style.left = "50%";
+    infoBox.style.top = "30%";
+}
+
+function startLoader() {
+    var { overlay, infoBox } = initOverlay();
+
+    var spinner = document.createElement("div");
+    spinner.className = "spinner"; // Set the class to apply CSS
+
+    infoBox.innerHTML = ''; // Clear out any existing content
+    infoBox.innerHTML = `<p style="text-align:center;"><b>LOADING...</b></p>`
+    infoBox.appendChild(spinner); // Add the spinner
+    infoBox.style.left = "50%";
+    infoBox.style.top = "30%";
+}
+
+function initOverlay() {
     var overlay = document.getElementById("overlay");
     if (!overlay) {
         overlay = document.createElement('div');
@@ -146,10 +152,7 @@ function failedCheck() {
         infoBox.id = 'info-box';
         document.body.appendChild(infoBox);
     }
-    infoBox.innerHTML = `<p><b>WebWatcher could not find the text!</b> Try other text on your homepage or <a href="contact.html" target="_blank" rel="noopener noreferrer">contact us</a> for assistance.</p>
-    <p><a href="#" onclick="clearInfoBoxAfterCheck();">Click here</a> to run another check.</p>`
-    infoBox.style.left = "50%";
-    infoBox.style.top = "30%";
+    return {"overlay": overlay,"infoBox":infoBox}
 }
 
 function clearInfoBoxAfterCheck() {
