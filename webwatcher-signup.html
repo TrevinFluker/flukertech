@@ -134,12 +134,22 @@
                 mode:"cors",
                 body: JSON.stringify({ domain: domain, text: textToCheck })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    // If the response is not 2xx, it will throw an error and go to the catch block
+                    throw new Error(`Error! status: ${response.status}`);
+                } else {
+                    return response.json(); // continue to process the response
+                }
+            })
             .then(data => {
                 if (data.message === "Text found in the website.") { successfulCheck() }
                 if (data.message === "Text not found in the website.") { failedCheck() }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                errorCheck()
+                console.error('Error:', error)
+            });
             startLoader()
         }
 

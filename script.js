@@ -122,6 +122,13 @@ function failedCheck() {
     infoBox.style.top = "30%";
 }
 
+function errorCheck() {
+    var { overlay, infoBox } = initOverlay();
+    infoBox.innerHTML = `<p>An error occurred.</br>Please check again or try later.</p>`
+    infoBox.style.left = "50%";
+    infoBox.style.top = "30%";
+}
+
 function startLoader() {
     var { overlay, infoBox } = initOverlay();
 
