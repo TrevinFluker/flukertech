@@ -121,11 +121,12 @@
             var textToCheck = document.getElementById('textToMonitor').value;
 
             console.log(JSON.stringify({ domain: domain, text: textToCheck }))
-            fetch('http://localhost:3000/check-text-one-off', {
+            fetch('https://z-scraper.herokuapp.com/check-text-one-off', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                mode:"cors",
                 body: JSON.stringify({ domain: domain, text: textToCheck })
             })
             .then(response => response.json())
