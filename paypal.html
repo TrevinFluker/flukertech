@@ -44,33 +44,35 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container mt-5 mb-5">
         <!-- Product Card -->
         <div class="product-card">
-            <img src="path-to-your-image.jpg" alt="Product Image" class="product-image">
-            <h1 class="product-title">Product Title</h1>
-            <p class="product-description">This is a brief description of the product.</p>
-            <p class="product-price">$99</p>
+            <img src="./assets/imgs/webwatcher graphic.png" alt="Product Image" class="product-image">
+            <h2 class="product-title">WebWatcher</h2>
+            <p class="product-description"><b>&diams; </b>Checks your site every time minutes to make sure its up.</p>
+            <p class="product-description"><b>&diams; </b>Emails up to 3 addresses if the text you provide is not found on your homepage.</p>
+            <h3 class="product-price"><span style="color:green">$7</span> monthly</h3>
         </div>
 
         <!-- Form -->
         <form class="form">
-            <label for="email" class="d-block mt-3">Emails to alert if site is down</label>
+            <label for="email" class="d-block mt-3 s-label">The emails to alert if your site is down</label>
             <div class="tags-input-container">
                 <div class="tag-list"></div>
-                <input class="check-input" type="email" id="emailInput" name="email" placeholder="Up to 3 emails separated by commas..." required/>
+                <input class="check-input" type="email" id="emailInput" name="email" placeholder="Enter up to 3 emails separated by commas..." required/>
             </div>
             
-            <label for="domain" class="d-block mt-3">The domain to be monitored</label>
+            <label for="domain" class="d-block mt-3 s-label">The domain to be monitored</label>
             <input class="form-control mb-0 check-input req-input" type="text" id="domainInput" name="domain" 
                     placeholder="Enter domain (e.g., example.com)" required>
                     
-            <label for="checkString" class="d-block mt-3">WebWatcher checks for this text on your homepage</label>
+            <label for="checkString" class="d-block mt-3 s-label">The text WebWatcher should check for on your homepage</label>
             <input class="form-control mb-0 check-input req-input" type="text" id="checkStringInput" name="checkString"
-                    placeholder="The text WebWatcher searches for" required>
+                    placeholder="Enter the text WebWatcher should search for" required>
         </form>
-
-        <div style="opacity: 30%;pointer-events: none;" class="mt-5" id="paypal-button-container"></div>
+        <div style="width:100%;">
+            <div style="opacity: 30%;pointer-events: none;margin:auto;width:60%;" class="mt-5" id="paypal-button-container"></div>
+        </div>
     </div>
 
     <footer class="text-center">

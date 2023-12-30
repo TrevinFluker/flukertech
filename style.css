@@ -38,7 +38,6 @@
     }
 }
 
-
 #headerTitle {
     color: #9BA9F2;
 }
@@ -119,6 +118,11 @@
     color: #ffffff; /* Light grey for hover/focus state */
     background-color: #7186ef;
     border-color: #7186ef;
+}
+
+.s-label {
+    font-size: .9em;
+    margin-bottom: 2px;
 }
 
 .col-md-6 {
@@ -327,4 +331,17 @@ footer {
     outline: none;
 }
 
+.product-image {
+    vertical-align: middle;
+    border-style: none;
+    width: 15em;
+    opacity: 80%;
+    filter: contrast(0.7);
+    border-radius: 10px;
+}
 
+.product-card {
+    text-align: center;
+    max-width: 377px;
+    margin: auto;
+}
