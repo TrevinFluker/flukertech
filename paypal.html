@@ -3,16 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <title>WebWatcher Subscription</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <form id="userForm">
-        Email: <input type="email" id="email" required><br>
-        Business Website URL: <input type="url" id="website" required><br>
-        <div id="paypal-button-container"></div>
-    </form>
+<body id="gradient">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a id="headerTitle" class="navbar-brand" href="index.html"></a>
+            
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Tools
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="webwatcher-signup.html">WebWatcher</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Services
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="#">Placeholder</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contact.html">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <!-- Product Card -->
+        <div class="product-card">
+            <img src="path-to-your-image.jpg" alt="Product Image" class="product-image">
+            <h1 class="product-title">Product Title</h1>
+            <p class="product-description">This is a brief description of the product.</p>
+            <p class="product-price">$99</p>
+        </div>
+
+        <!-- Form -->
+        <form class="form">
+            <label for="email" class="d-block mt-3">Emails to alert if site is down</label>
+            <div class="tags-input-container">
+                <div class="tag-list"></div>
+                <input class="check-input" type="email" id="emailInput" name="email" placeholder="Up to 3 emails separated by commas..." required/>
+            </div>
+            
+            <label for="domain" class="d-block mt-3">The domain to be monitored</label>
+            <input class="form-control mb-0 check-input req-input" type="text" id="domainInput" name="domain" 
+                    placeholder="Enter domain (e.g., example.com)" required>
+                    
+            <label for="checkString" class="d-block mt-3">WebWatcher checks for this text on your homepage</label>
+            <input class="form-control mb-0 check-input req-input" type="text" id="checkStringInput" name="checkString"
+                    placeholder="The text WebWatcher searches for" required>
+        </form>
+
+        <div style="opacity: 30%;pointer-events: none;" class="mt-5" id="paypal-button-container"></div>
+    </div>
+
+    <footer class="text-center">
+        © CoolieTech, LLC
+    </footer>
 
     <script src="https://www.paypal.com/sdk/js?client-id=AQtmB7n30XzehoP2DAC06-Pj3jHs-iC1dJ9i59j0F-jeoRHvFOJqht0GUrBbe5zMwul-5MYBdXr6KvEv&vault=true&intent=subscription"></script>
     <script>
+
+        // Function to check inputs and enable/disable paypal clicking
+        function checkInputsAndUpdateDiv() {
+            let div = document.getElementById('paypal-button-container');
+            let inputs = document.querySelectorAll('.req-input');
+
+            let filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '').length;
+            let tagExists = document.querySelector('.tag') !== null; // Check for at least one tag
+            
+            // Enable or disable clicking based on conditions
+            div.style.pointerEvents = (filledInputs >= 2 && tagExists) ? 'auto' : 'none'; 
+            div.style.opacity = (filledInputs >= 2 && tagExists) ? '100%' : '30%'; 
+        }
+
+        document.querySelectorAll('.check-input').forEach(input => {
+            input.addEventListener('keyup', checkInputsAndUpdateDiv);
+        });
+
+        //create tags for each input email
+        document.addEventListener("DOMContentLoaded", () => {
+            const input = document.getElementById('emailInput');
+            const tagList = document.querySelector('.tag-list');
+            
+            input.addEventListener('keyup', function(event) {
+                if (event.key === ',' || event.key === 'Enter' || event.key === " ") {
+                    const email = input.value.split(',')[0].trim(); // get email before comma
+
+                    if (!email.includes("@") || !email.includes(".")) {
+                        alert("Only valid email addresses are allowed");
+                        return;
+                    }
+
+                    if (document.querySelectorAll('.tag').length > 2) {
+                        alert("Only 3 emails allowed");
+                        return;
+                    }
+
+                    if (email) {
+                        const tag = document.createElement('span');
+                        tag.className = 'tag';
+                        tag.innerHTML = `${email}<span class="remove-btn">&times;</span>`;
+                        tagList.appendChild(tag);
+
+                        // Remove tag logic
+                        tag.querySelector('.remove-btn').addEventListener('click', () => {
+                            tag.remove();
+                            checkInputsAndUpdateDiv();
+                        });
+                    }
+                    input.value = ''; // Clear input field
+                }
+                checkInputsAndUpdateDiv();
+            });
+        });
+
         paypal.Buttons({
             createSubscription: function(data, actions) {
                 return actions.subscription.create({
@@ -53,6 +174,13 @@
                 color: 'black'
             }
         }).render('#paypal-button-container');
+
+        checkInputsAndUpdateDiv();
     </script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
