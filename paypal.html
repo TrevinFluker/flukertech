@@ -23,7 +23,7 @@
                             Tools
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            <a class="dropdown-item" href="webwatcher-signup.html">WebWatcher</a>
+                            <a class="dropdown-item" href="./webwatcher/webwatcher-signup.html">WebWatcher</a>
                         </div>
                     </li>
                     <li class="nav-item dropdown">
@@ -68,10 +68,13 @@
                     
             <label for="checkString" class="d-block mt-3 s-label">The text WebWatcher should check for on your homepage</label>
             <input class="form-control mb-0 check-input req-input" type="text" id="checkStringInput" name="checkString"
-                    placeholder="Enter the text WebWatcher should search for" required>
+                    placeholder="Enter the text WebWatcher should search for" required readonly>
+            <small>This is read only. Go back to the last page to edit.</small>
         </form>
-        <div style="width:100%;">
+        <div style="width:100%; text-align: center;">
             <div style="opacity: 30%;pointer-events: none;margin:auto;width:60%;" class="mt-5" id="paypal-button-container"></div>
+            <small style="margin:auto;display:block;"><b>Pay with a paypal account & log into paypal's website</b></small>
+            <small style="margin:auto;display:block;"><b>to manage your subscription later.</b></small>
         </div>
     </div>
 
@@ -79,7 +82,7 @@
         © CoolieTech, LLC
     </footer>
 
-    <script src="https://www.paypal.com/sdk/js?client-id=AQtmB7n30XzehoP2DAC06-Pj3jHs-iC1dJ9i59j0F-jeoRHvFOJqht0GUrBbe5zMwul-5MYBdXr6KvEv&vault=true&intent=subscription"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AQtmB7n30XzehoP2DAC06-Pj3jHs-iC1dJ9i59j0F-jeoRHvFOJqht0GUrBbe5zMwul-5MYBdXr6KvEv&vault=true&intent=subscription&disable-funding=credit,card"></script>
     <script>
 
         // Function to check inputs and enable/disable paypal clicking
@@ -143,15 +146,17 @@
                 });
             },
             onApprove: function(data, actions) {
-                const email = document.getElementById('email').value;
-                const website = document.getElementById('website').value;
+                var tags = document.querySelectorAll(".tag");
+                const emails = Array.from(tags).map(tag => tag.innerText.split("\n")[0])
+                const checkString = document.getElementById('checkStringInput').value;
+                const website = document.getElementById('domainInput').value;
 
                 fetch('https://z-scraper.herokuapp.com/process-subscription', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ email, website, subscriptionId: data.subscriptionID })
+                    body: JSON.stringify({ emails: emails, url: website, checkString: checkString, subscriptionId: data.subscriptionID })
                 })
                 .then(response => {
                     if (response.ok) {
@@ -160,22 +165,45 @@
                     throw new Error('Network response was not ok.');
                 })
                 .then(data => {
-                    window.alert('Subscription successful! Thank you for your payment.');
+                    paymentSuccessful()
                 })
                 .catch(error => {
-                    window.alert('There was a problem with your subscription: ' + error.message);
+                    paymentError(error.message)
                 });
             },
             onCancel: function(data) {
-                window.alert('Subscription cancelled.');
+                paymentCancelled()
             },
             onError: function(err) {
-                window.alert('An error occurred during the subscription process: ' + err);
+                paymentError(err)
             },
             style: {
-                color: 'black'
+                color: 'black',
+                label: 'pay'
             }
         }).render('#paypal-button-container');
+
+
+        // Function to get query parameter values
+        function getQueryParam(param) {
+            // Use URLSearchParams to handle the query string
+            var searchParams = new URLSearchParams(window.location.search);
+            return searchParams.get(param); // Return the value for the specified query parameter
+        }
+
+        // Function to set input values from URL parameters
+        function setInputValues() {
+            // Get values from query parameters
+            var domain = getQueryParam('domain');
+            var text = getQueryParam('text');
+
+            // Set the value of the inputs
+            document.getElementById('domainInput').value = decodeURIComponent(domain);
+            document.getElementById('checkStringInput').value = decodeURIComponent(text);
+        }
+
+        // Set input values when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', setInputValues);
 
         checkInputsAndUpdateDiv();
     </script>

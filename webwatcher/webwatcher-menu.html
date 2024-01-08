@@ -1,21 +1,48 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>CoolieTech</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .content-container {
+            display: flex; /* Use Flexbox */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 80%;
+            width:100%;
+        }
+        @media only screen and (min-width: 601px) {
+            .menu-btn {
+                background-color: #9BA9F2;
+                color: #ffffff;
+                font-weight: 500;
+                margin: 15px auto;
+                padding: 20px;
+                border-radius: 5px;
+                width: 300px;
+                font-size: 20px;
+            }
+        }
+        @media only screen and (max-width: 600px) {
+            .menu-btn {
+                background-color: #9BA9F2;
+                color: #ffffff;
+                font-weight: 500;
+                margin: 15px auto;
+                padding: 20px;
+                border-radius: 5px;
+                width: 80%;
+                font-size: 20px;
+            }
+        }
+    </style>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body id="gradient">
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a id="headerTitle" class="navbar-brand" href="index.html"></a>
-            
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
+            <a id="headerTitle" class="navbar-brand" href="../index.html"></a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item dropdown">
@@ -23,7 +50,7 @@
                             Tools
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            <a class="dropdown-item" href="./webwatcher/webwatcher-menu.html">WebWatcher</a>
+                            <a class="dropdown-item" href="./webwatcher/webwatcher-signup.html">WebWatcher</a>
                         </div>
                     </li>
                     <li class="nav-item dropdown">
@@ -35,35 +62,26 @@
                         </div>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="about.html">About</a>
+                        <a class="nav-link" href="../about.html">About</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="contact.html">Contact</a>
+                        <a class="nav-link" href="../contact.html">Contact</a>
                     </li>
                 </ul>
             </div>
         </nav>
     </header>
     <div class="gradient-background"></div>
-
-    <div class="tagline-container d-flex flex-column justify-content-center align-items-center">
-        <h2 class="tagline">Code that helps your business run smoother</h2>
-        <span class="webwatcher-link">Try out the <a href="./webwatcher/webwatcher-signup.html">WebWatcher</a> tool and get notified if your site goes down</span>
-    </div>
-
-    <div class="container mb-5">
-        <div class="row align-items-center">
-            <div class="col-md-6 services-col d-flex flex-column justify-content-center order-md-1 order-2 mt-5 mt-md-0">
-                <h2>Services</h2>
-                <button type="button" class="btn btn-main">Contact Us</button>
+    <div class="content-container">
+        <div class="webwatcher-menu" style="width:100%;">
+            <div class="menu-btn" onclick="goToSignUp()">
+                <a id="signUpLink" href="webwatcher-signup.html" style="text-decoration: none; color: white;">Try WebWatcher</a>
             </div>
-            <div class="col-md-6 order-md-2 order-1">
-                <div id="servicesAccordion">
-                    <!--dynamic-->
-                </div>
-            </div>
+            <div class="menu-btn">Domain Logs</div>
+            <div class="menu-btn">Manage Subscription</div>
         </div>
     </div>
+
 
     <footer class="text-center">
         © CoolieTech, LLC
@@ -75,6 +93,11 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script src="script.js"></script>
+    <script src="../script.js"></script>
+    <script>
+        function goToSignUp() {
+            document.getElementById("signUpLink").click();
+        }
+    </script>
 </body>
 </html>

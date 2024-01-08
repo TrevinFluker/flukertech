@@ -108,7 +108,7 @@ function startTutorial() {
 function successfulCheck() {
     var { overlay, infoBox } = initOverlay();
     infoBox.innerHTML = `<p><b>WebWatcher found the text!</b> This means you can use it to start monitoring your site.</p>
-    <p><a href="paypal.html" target="_blank" rel="noopener noreferrer">Click here</a> to start using WebWatcher.</p>
+    <p><a href="#" onclick="navigateToCheckout()">Click here</a> to start using WebWatcher.</p>
     <p><a href="#" onclick="clearInfoBoxAfterCheck();">Click here</a> to run another check.</p>`
     infoBox.style.left = "50%";
     infoBox.style.top = "30%";
@@ -125,6 +125,33 @@ function failedCheck() {
 function errorCheck() {
     var { overlay, infoBox } = initOverlay();
     infoBox.innerHTML = `<p>An error occurred.</br>Please check again or try later.</p>`
+    infoBox.style.left = "50%";
+    infoBox.style.top = "30%";
+}
+
+function paymentCancelled() {
+    var { overlay, infoBox } = initOverlay();
+    infoBox.innerHTML = `<p>Your payment was cancelled.</p>
+    <p>Try again.</p>`
+    infoBox.style.left = "50%";
+    infoBox.style.top = "30%";
+}
+
+function paymentSuccessful() {
+    var { overlay, infoBox } = initOverlay();
+    infoBox.innerHTML = `<p>Your subscription was successful.</p>
+    <p><a href="./webwatcher/webwatcher-logs.html">Click here</a> to see the results of WebWatcher runs.</p>
+    <p>Later, click the tools tab, then "WebWatcher Logs" to see run results.</p>
+    <p>If your site goes down, use WebWatcher Logs to see when the incident occurred.</p>`
+    infoBox.style.left = "50%";
+    infoBox.style.top = "30%";
+}
+
+function paymentError(err) {
+    var { overlay, infoBox } = initOverlay();
+    infoBox.innerHTML = `<p>An error occurred during the subscription proccess.</p>
+    <p>`+err+`.</p>
+    <p>Try again.</p>`
     infoBox.style.left = "50%";
     infoBox.style.top = "30%";
 }
@@ -167,6 +194,18 @@ function clearInfoBoxAfterCheck() {
     var infoBox = document.getElementById("info-box");
     document.body.removeChild(overlay);
     document.body.removeChild(infoBox);
+}
+
+function navigateToCheckout() {
+    // Retrieve values from the elements
+    var domain = document.getElementById('domainInput').value;
+    var text = document.getElementById('textToMonitor').value;
+
+    // Construct the URL with query parameters
+    var url = 'paypal.html?domain=' + encodeURIComponent(domain) + '&text=' + encodeURIComponent(text);
+
+    // Navigate to the URL
+    window.location.href = url;
 }
 
 if (window.location.href.includes('webwatcher-signup.html')) {

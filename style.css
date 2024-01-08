@@ -63,6 +63,10 @@
     text-align: center;
 }
 
+.webwatcher-menu {
+    text-align: center;
+}
+
 /* Index style */
 .container {
     padding: 20px;
@@ -165,10 +169,12 @@ header {
 /* Footer styles */
 footer {
     padding: 10px 0;
-    background-color: #f8f9fa; /* Adjust background color as needed */
-    color: #333; /* Adjust text color as needed */
+    background-color: #f8f9fa;
+    color: #333; 
     bottom: 0;
     width: 100%;
+    position: fixed; /* Fix position to the bottom of the screen */
+    left: 0;
 }
 
 /* webwatcher highlights */
