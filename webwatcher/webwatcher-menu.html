@@ -77,7 +77,9 @@
             <div class="menu-btn" onclick="goToSignUp()">
                 <a id="signUpLink" href="webwatcher-signup.html" style="text-decoration: none; color: white;">Try WebWatcher</a>
             </div>
-            <div class="menu-btn">Domain Logs</div>
+            <div class="menu-btn" onclick="goToLogs()">
+                <a id="logsLink" href="webwatcher-logs.html" style="text-decoration: none; color: white;">Domain Logs</a>
+            </div>
             <div class="menu-btn">Manage Subscription</div>
         </div>
     </div>
@@ -98,6 +100,10 @@
         function goToSignUp() {
             document.getElementById("signUpLink").click();
         }
+        function goToLogs() {
+            document.getElementById("logsLink").click();
+        }
+
     </script>
 </body>
 </html>

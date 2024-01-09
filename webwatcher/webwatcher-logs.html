@@ -4,6 +4,19 @@
 <head>
     <title>CoolieTech</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .result-container {
+          display: flex;
+          flex-direction: column;
+          max-height: 500px;
+          overflow-y: scroll;
+        }
+        .result-item {
+          margin: 10px;
+          padding: 5px;
+          border: 1px solid #ddd;
+        }
+    </style>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="../style.css">
 </head>
@@ -41,15 +54,80 @@
     </header>
     <div class="gradient-background"></div>
 
-    <p>Logs page that shows a history of runs for each website.</p>
+    <form id="query-form">
+        <label for="logs-domain">Domain:</label>
+        <input type="text" id="logs-domain" name="logs-domain" required>
+    
+        <label for="start-date">Start Date:</label>
+        <input type="date" id="start-date" name="start-date" required>
+    
+        <label for="end-date">End Date:</label>
+        <input type="date" id="end-date" name="end-date" required>
+    
+        <button type="submit">Submit</button>
+      </form>
+    
+      <div class="result-container" id="results"></div>
+    
+      <div id="pagination">
+        <button onclick="previousPage()">Previous</button>
+        <button onclick="nextPage()">Next</button>
+      </div>
 
     <footer class="text-center">
         © CoolieTech, LLC
     </footer>
     
-    <!-- Page specific content goes here -->
-    <!-- Content for index.html -->
-    <!-- Footer content goes here -->
+    <script>
+        document.getElementById('query-form').addEventListener('submit', function(event) {
+          event.preventDefault();
+          const domain = document.getElementById('logs-domain').value;
+          const startDate = document.getElementById('start-date').value;
+          const endDate = document.getElementById('end-date').value;
+          fetchRecords(domain, startDate, endDate);
+        });
+      
+        let currentPage = 1;
+      
+        function fetchRecords(domain, startDate, endDate) {
+          fetch(`https://z-scraper.herokuapp.com/logs?domain=${domain}&startDate=${startDate}&endDate=${endDate}&page=${currentPage}`, {
+                method: 'GET', // This is the default, but you can specify it explicitly
+                mode: 'cors', // Include CORS mode
+                headers: {
+                'Content-Type': 'application/json',
+                // Include any other headers you need to send
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+              displayResults(data);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+      
+        function displayResults(data) {
+          const resultsContainer = document.getElementById('results');
+          resultsContainer.innerHTML = ''; // Clear previous results
+          data.forEach(obj => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            resultItem.textContent = `Result: ${obj.result} - Time: ${obj.eventTime}`;
+            resultsContainer.appendChild(resultItem);
+          });
+        }
+      
+        function previousPage() {
+          if (currentPage > 1) {
+            currentPage -= 1;
+            // You would repeat the fetchRecords function here with the updated page
+          }
+        }
+      
+        function nextPage() {
+          currentPage += 1;
+          // You would repeat the fetchRecords function here with the updated page
+        }
+    </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
