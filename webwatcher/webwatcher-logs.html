@@ -90,19 +90,25 @@
         let currentPage = 1;
       
         function fetchRecords(domain, startDate, endDate) {
-          fetch(`https://z-scraper.herokuapp.com/logs?domain=${domain}&startDate=${startDate}&endDate=${endDate}&page=${currentPage}`, {
-                method: 'GET', // This is the default, but you can specify it explicitly
-                mode: 'cors', // Include CORS mode
+            fetch('https://z-scraper.herokuapp.com/logs', {
+                method: 'POST',
                 headers: {
-                'Content-Type': 'application/json',
-                // Include any other headers you need to send
+                    'Content-Type': 'application/json',
                 },
+                mode:"cors",
+                body: JSON.stringify({ domain: domain, startDate: startDate, endDate: endDate, page: currentPage })
             })
-            .then(response => response.json())
-            .then(data => {
-              displayResults(data);
+            .then(response => {
+                if (!response.ok) {
+                    // If the response is not 2xx, it will throw an error and go to the catch block
+                    throw new Error(`Error! status: ${response.status}`);
+                } else {
+                    return response.json(); // continue to process the response
+                }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error)
+            });
         }
       
         function displayResults(data) {
