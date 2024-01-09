@@ -99,12 +99,8 @@
                 body: JSON.stringify({ domain: domain, startDate: startDate, endDate: endDate, page: currentPage })
             })
             .then(response => {
-                if (!response.ok) {
-                    // If the response is not 2xx, it will throw an error and go to the catch block
-                    throw new Error(`Error! status: ${response.status}`);
-                } else {
-                    return response.json(); // continue to process the response
-                }
+                console.log(response)
+                //displayResults(response)
             })
             .catch(error => {
                 console.error('Error:', error)
