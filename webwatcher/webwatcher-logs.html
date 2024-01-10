@@ -16,6 +16,30 @@
           padding: 5px;
           border: 1px solid #ddd;
         }
+        @media screen and (max-width: 600px) {
+            #query-form {
+                width: 80%;
+                margin: auto;
+            }
+        }
+        @media screen and (min-width: 601px) {
+            #query-form {
+                width: 400px;
+                margin: auto;
+            }
+        }
+        .log-nav {
+            width:100px;
+        }
+        #pagination {
+            margin:auto;
+            width:fit-content;
+        }
+        .log-submit {
+            margin-left:auto;
+            margin-right:auto;
+            display:block !important;
+        }
     </style>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="../style.css">
@@ -55,25 +79,17 @@
     <div class="gradient-background"></div>
 
     <form id="query-form">
-        <label for="logs-domain">Domain:</label>
-        <input type="text" id="logs-domain" name="logs-domain" required>
-    
-        <label for="start-date">Start Date:</label>
-        <input type="date" id="start-date" name="start-date" required>
-    
-        <label for="end-date">End Date:</label>
-        <input type="date" id="end-date" name="end-date" required>
-    
-        <button type="submit">Submit</button>
-      </form>
-    
-      <div class="result-container" id="results"></div>
-    
-      <div id="pagination">
-        <button onclick="previousPage()">Previous</button>
-        <button onclick="nextPage()">Next</button>
-      </div>
+        <label class="d-block mt-3" for="logs-domain">Domain:</label>
+        <input class="form-control mb-0" type="text" id="logs-domain" name="logs-domain" required>
 
+        <div class="text-align:center;width:100%;display:block;">
+            <button class="log-submit btn btn-main" type="submit">Submit</button>
+        </div>
+    </form>
+
+    <div class="result-container" id="results"></div>
+
+    <div class="bottom-spacer"></div>
     <footer class="text-center">
         © CoolieTech, LLC
     </footer>
@@ -82,21 +98,17 @@
         document.getElementById('query-form').addEventListener('submit', function(event) {
           event.preventDefault();
           const domain = document.getElementById('logs-domain').value;
-          const startDate = document.getElementById('start-date').value;
-          const endDate = document.getElementById('end-date').value;
-          fetchRecords(domain, startDate, endDate);
+          fetchRecords(domain);
         });
       
-        let currentPage = 1;
-      
-        function fetchRecords(domain, startDate, endDate) {
+        function fetchRecords(domain) {
             fetch('https://z-scraper.herokuapp.com/logs', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 mode:"cors",
-                body: JSON.stringify({ domain: domain, startDate: startDate, endDate: endDate, page: currentPage })
+                body: JSON.stringify({ domain: domain })
             })
             .then(response => {
                 if (!response.ok) {
@@ -121,21 +133,31 @@
           data.forEach(obj => {
             const resultItem = document.createElement('div');
             resultItem.className = 'result-item';
-            resultItem.textContent = `Result: ${obj.result} - Time: ${obj.eventTime}`;
+            if (obj.result === "success") {
+                resultItem.innerHTML = `<p><b><span style='color:green;'>${obj.result}</span></b> - ${formatDateTime(obj.eventTime)}</p>`;
+            } else {
+                resultItem.innerHTML = `<p><b><span style='color:red;'>${obj.result}</span></b> - ${formatDateTime(obj.eventTime)}</p>`;
+            }
             resultsContainer.appendChild(resultItem);
           });
         }
-      
-        function previousPage() {
-          if (currentPage > 1) {
-            currentPage -= 1;
-            // You would repeat the fetchRecords function here with the updated page
-          }
-        }
-      
-        function nextPage() {
-          currentPage += 1;
-          // You would repeat the fetchRecords function here with the updated page
+
+        function formatDateTime(isoString) {
+            const date = new Date(isoString);
+
+            const formattedDate = date.toLocaleDateString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric'
+            });
+
+            const formattedTime = date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+
+            return `${formattedDate} ${formattedTime}`;
         }
     </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
