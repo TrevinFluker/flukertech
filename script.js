@@ -8,10 +8,30 @@ var siteContent = {
 };
 
 const services = [
-    { title: "Web Scraping", description: "Information about Web Scraping service." },
-    { title: "Automation", description: "Details about Data Analysis services." },
-    { title: "List Building", description: "Learn about our API Development offerings." },
-    { title: "Web Development", description: "Insights into Machine Learning services." }
+    { 
+        title: "Web Scraping", 
+        description: `Web scraping is powerful for generating leads and sales. A credit union vendor requested a comprehensive list of US credit union financial data to rank their potential clients based on assets under management. 
+        </br></br>We wrote code to download every PDF from a government website and extract the financials into a spreadsheet. The vendor used this information to prioritize selling to customers who had more to spend.
+        See a similar example involving stock data <a style="display:inline;" href="https://www.youtube.com/watch?v=4rWlWbdCCaU">HERE</a>.` 
+    },
+    { 
+        title: "Automation", 
+        description: `Every business has documents that hold essential data. Whether its employee or customer information, automation could probably make moving that data faster and easier. 
+        </br></br>For our real estate client and youtuber, Ed Hayes, the automation most important was real estate deals. He had us create the deal evaluator, an online property calculator which produced PDF documents that effectively communicated the viability of user's deals. 
+        See it <a style="display:inline;" href="https://youtu.be/WGY8ldALMVc?si=A9DZgXRD4ktBPSXD">HERE</a>.`
+    },
+    { 
+        title: "List Building", 
+        description: `Building a lead list can consist of extracting data from public websites, membership sites, and sometimes even sources locked away in documents. 
+        </br></br>In the case of one real estate investor, the computer needed to read documents to extract addresses. That didn't stop us from providing a solution. 
+        See it <a style="display:inline;" href="https://youtu.be/Cl_0nPoTFE0">HERE</a>.` 
+    },
+    { 
+        title: "Web Development", 
+        description: `Gathering the right data is key, but a great user interface to interact with the data unlocks its value for your business. 
+        </br></br>For an investor in Dallas, Texas, we scraped tax information for every property in the county, stored it all in a database, and built a simple website they could use to export information about properties. 
+        See it <a style="display:inline;" href="https://www.dallaspropertydata.com/">HERE</a>.`
+    }
 ];
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -202,7 +222,7 @@ function navigateToCheckout() {
     var text = document.getElementById('textToMonitor').value;
 
     // Construct the URL with query parameters
-    var url = 'paypal.html?domain=' + encodeURIComponent(domain) + '&text=' + encodeURIComponent(text);
+    var url = '../paypal.html?domain=' + encodeURIComponent(domain) + '&text=' + encodeURIComponent(text);
 
     // Navigate to the URL
     window.location.href = url;
