@@ -10,7 +10,7 @@ var siteContent = {
 const services = [
     { 
         title: "Web Scraping", 
-        description: `Web scraping is powerful for generating leads and sales. A credit union vendor requested a comprehensive list of US credit union financial data to rank their potential clients based on assets under management. 
+        description: `Web scraping is powerful for generating leads and sales. In one case, a credit union vendor requested a comprehensive list of US credit union financial data to rank their potential clients based on assets under management. 
         </br></br>We wrote code to download every PDF from a government website and extract the financials into a spreadsheet. The vendor used this information to prioritize selling to customers who had more to spend.
         See a similar example involving stock data <a style="display:inline;" href="https://www.youtube.com/watch?v=4rWlWbdCCaU">HERE</a>.` 
     },
