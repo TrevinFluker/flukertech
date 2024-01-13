@@ -124,6 +124,23 @@
     border-color: #7186ef;
 }
 
+@media screen and (max-width: 600px) {
+    .cb-desktop {
+        display:none;
+    }
+    .cb-mobile {
+        display:block;
+    }
+}
+@media screen and (min-width: 601px) {
+    .cb-desktop {
+        display:block;
+    }
+    .cb-mobile {
+        display:none;
+    }
+}
+
 .s-label {
     font-size: .9em;
     margin-bottom: 2px;
