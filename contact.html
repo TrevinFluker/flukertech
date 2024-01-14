@@ -114,8 +114,9 @@
         })
         .then(response => response.json())
         .then(data => {
+            document.getElementById('email').value = "";
+            document.getElementById('message').value = "";
             alert('Message sent successfully!');
-            // Reset the form or handle the response as needed
         })
         .catch((error) => {
             console.error('Error:', error);
