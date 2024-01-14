@@ -105,11 +105,12 @@
             message: document.getElementById('message').value
         };
 
-        fetch('/contact-submission', {
+        fetch('https://z-scraper.herokuapp.com/contact-submission', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            mode:"cors",
             body: JSON.stringify(formData)
         })
         .then(response => response.json())
