@@ -2,12 +2,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CoolieTech</title>
+    <title>Contact Us</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        input[type="text"], button {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            cursor: pointer;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .content-container {
+            display: flex; /* Use Flexbox */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 80%;
+            width:100%;
+        }
+        @media only screen and (min-width: 601px) {
+            #contactForm {
+                width:400px;
+                margin:auto;
+            }
+        }
+        @media only screen and (max-width: 600px) {
+            #contactForm {
+                width:80%;
+                margin:auto;
+            }
+        }
+    </style>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body  id="gradient">
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <a id="headerTitle" class="navbar-brand" href="index.html"></a>
@@ -39,9 +71,58 @@
             </div>
         </nav>
     </header>
-    <!-- Page specific content goes here -->
-    <!-- Content for index.html -->
-    <!-- Footer content goes here -->
+    <div class="gradient-background"></div>
+    <div class="content-container">
+        <form id="contactForm">
+            <h3>Contact Us</h3>
+            <label class="d-block mt-3" for="email">Email:</label>
+            <input class="form-control mb-0" type="email" id="email" name="email" placeholder="Your email" required>
+
+            <label class="d-block mt-3" for="topic">Topic:</label>
+            <select class="form-control" id="topic" name="topic">
+                <option value="business">Business Inquiry</option>
+                <option value="webwatcher">WebWatcher</option>
+                <option value="general">General Inquiry</option>
+            </select>
+
+            <label class="d-block mt-3" for="message">Message:</label>
+            <textarea class="form-control" id="message" name="message" placeholder="How can we help?" rows="4" required></textarea>
+
+            <button class="btn btn-main" type="submit">Send Message</button>
+        </form>
+    </div>
+    <div class="bottom-spacer"></div>
+    <footer class="text-center">
+        © CoolieTech, LLC
+    </footer>
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(event){
+        event.preventDefault();
+
+        const formData = {
+            email: document.getElementById('email').value,
+            topic: document.getElementById('topic').value,
+            message: document.getElementById('message').value
+        };
+
+        fetch('/contact-submission', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Message sent successfully!');
+            // Reset the form or handle the response as needed
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
+
+    </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
