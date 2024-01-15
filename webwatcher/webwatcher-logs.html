@@ -92,7 +92,7 @@
             <input placeholder="Enter domain (e.g., example.com)" class="form-control mb-0" type="text" 
             id="logs-domain" name="logs-domain" required>
             <label class="d-block mt-3" for="password">Enter your password:</label>
-            <input class="form-control mb-0" type="text" 
+            <input class="form-control mb-0" type="password" 
             id="password" name="password" required>
     
             <div class="text-align:center;width:100%;display:block;">
@@ -134,8 +134,13 @@
                 }
             })
             .then(data => {
-                console.log(data)
-                displayResults(data["docs"])
+                if (data["message"]) {
+                    console.log("Password incorrect")
+                } else {
+                    displayResults(data["docs"])
+                    document.getElementById("password").value = "";
+                    document.querySelector(".content-container").style.height = "40%";
+                }
             })
             .catch(error => {
                 console.error('Error:', error)
