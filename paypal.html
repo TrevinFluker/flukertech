@@ -56,6 +56,25 @@
 
         <!-- Form -->
         <form class="form">
+            <label for="login-email" class="d-block mt-3 s-label">The email you'll use to view logs and edit Watcher details</label>
+            <input class="form-control mb-0 check-input req-input" type="email" id="login-email" name="login-email" 
+                    placeholder="Enter email (e.g., you@gmail.com)" required>
+            <small id="emailError" class="form-text text-danger" style="display: none;">Email must be valid</small>
+
+            <label for="password" class="d-block mt-3 s-label">Password</label>
+            <input class="form-control mb-0 check-input req-input" type="password" id="password" name="password" 
+                    placeholder="Enter password" required>
+            <small id="passwordError" class="form-text text-danger" style="display: none;">Passwords must match</small>
+            <small id="uppercaseError" class="form-text text-danger" style="display: none;">At least one uppercase character must be included</small>
+            <small id="lowercaseError" class="form-text text-danger" style="display: none;">At least one lowercase character must be included</small>
+            <small id="numberError" class="form-text text-danger" style="display: none;">At least one numeric character must be included</small>
+            <small id="specialCharError" class="form-text text-danger" style="display: none;">At least one special character must be included</small>
+        
+            <label for="confirm-password" class="d-block mt-3 s-label">Confirm Password</label>
+            <input class="form-control mb-0 check-input req-input" type="password" id="confirm-password" name="confirm-password" 
+                    placeholder="Confirm password" required>
+            <small id="confirmPasswordError" class="form-text text-danger" style="display: none;">Passwords must match</small>
+
             <label for="email" class="d-block mt-3 s-label">The emails to alert if your site is down</label>
             <div class="tags-input-container">
                 <div class="tag-list"></div>
@@ -85,6 +104,84 @@
     <script src="https://www.paypal.com/sdk/js?client-id=AQtmB7n30XzehoP2DAC06-Pj3jHs-iC1dJ9i59j0F-jeoRHvFOJqht0GUrBbe5zMwul-5MYBdXr6KvEv&vault=true&intent=subscription&disable-funding=credit,card"></script>
     <script>
 
+        document.getElementById('password').addEventListener('keyup', function(event) {
+            var password = document.getElementById('password').value;
+            var confirmPassword = document.getElementById('confirm-password').value;
+
+            // Password complexity checks
+            var hasUppercase = /[A-Z]/.test(password);
+            var hasLowercase = /[a-z]/.test(password);
+            var hasNumber = /\d/.test(password);
+            var hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+            // Show/hide error messages
+            document.getElementById('uppercaseError').style.display = hasUppercase ? 'none' : 'block';
+            document.getElementById('lowercaseError').style.display = hasLowercase ? 'none' : 'block';
+            document.getElementById('numberError').style.display = hasNumber ? 'none' : 'block';
+            document.getElementById('specialCharError').style.display = hasSpecialChar ? 'none' : 'block';
+
+            // Prevent form submission if any condition is not met
+            if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecialChar || password !== confirmPassword) {
+                event.preventDefault();
+            }
+
+            // Password match check
+            if (password !== confirmPassword) {
+                // Show error message for password mismatch
+                document.getElementById('passwordError').style.display = 'block';
+                document.getElementById('confirmPasswordError').style.display = 'block';
+            } else {
+                // Hide error message for password mismatch
+                document.getElementById('passwordError').style.display = 'none';
+                document.getElementById('confirmPasswordError').style.display = 'none';
+            }
+        });
+
+        document.getElementById('confirm-password').addEventListener('keyup', function(event) {
+            var password = document.getElementById('password').value;
+            var confirmPassword = document.getElementById('confirm-password').value;
+
+            // Password complexity checks
+            var hasUppercase = /[A-Z]/.test(password);
+            var hasLowercase = /[a-z]/.test(password);
+            var hasNumber = /\d/.test(password);
+            var hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+            // Show/hide error messages
+            document.getElementById('uppercaseError').style.display = hasUppercase ? 'none' : 'block';
+            document.getElementById('lowercaseError').style.display = hasLowercase ? 'none' : 'block';
+            document.getElementById('numberError').style.display = hasNumber ? 'none' : 'block';
+            document.getElementById('specialCharError').style.display = hasSpecialChar ? 'none' : 'block';
+
+            // Prevent form submission if any condition is not met
+            if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecialChar || password !== confirmPassword) {
+                event.preventDefault();
+            }
+
+            // Password match check
+            if (password !== confirmPassword) {
+                // Show error message for password mismatch
+                document.getElementById('passwordError').style.display = 'block';
+                document.getElementById('confirmPasswordError').style.display = 'block';
+            } else {
+                // Hide error message for password mismatch
+                document.getElementById('passwordError').style.display = 'none';
+                document.getElementById('confirmPasswordError').style.display = 'none';
+            }
+        });
+
+        function isAnyTextDangerVisible() {
+            var elements = document.getElementsByClassName('text-danger');
+            for (var i = 0; i < elements.length; i++) {
+                if (elements[i].offsetParent !== null) {
+                    return true; // Found a visible element
+                }
+            }
+            return false; // No visible elements found
+        }
+
+
+
         // Function to check inputs and enable/disable paypal clicking
         function checkInputsAndUpdateDiv() {
             let div = document.getElementById('paypal-button-container');
@@ -94,8 +191,8 @@
             let tagExists = document.querySelector('.tag') !== null; // Check for at least one tag
             
             // Enable or disable clicking based on conditions
-            div.style.pointerEvents = (filledInputs >= 2 && tagExists) ? 'auto' : 'none'; 
-            div.style.opacity = (filledInputs >= 2 && tagExists) ? '100%' : '30%'; 
+            div.style.pointerEvents = (filledInputs >= 5 && tagExists && !isAnyTextDangerVisible()) ? 'auto' : 'none'; 
+            div.style.opacity = (filledInputs >= 5 && tagExists && !isAnyTextDangerVisible()) ? '100%' : '30%'; 
         }
 
         document.querySelectorAll('.check-input').forEach(input => {
@@ -147,6 +244,8 @@
             },
             onApprove: function(data, actions) {
                 var tags = document.querySelectorAll(".tag");
+                const userEmail = document.getElementById("login-email").value;
+                const password = document.getElementById("password").value;
                 const emails = Array.from(tags).map(tag => tag.innerText.split("\n")[0])
                 const checkString = document.getElementById('checkStringInput').value;
                 const website = document.getElementById('domainInput').value;
@@ -156,7 +255,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ emails: emails, url: website, checkString: checkString, subscriptionId: data.subscriptionID })
+                    body: JSON.stringify({ userEmail: userEmail, password: password, emails: emails, url: website, checkString: checkString, subscriptionId: data.subscriptionID })
                 })
                 .then(response => {
                     if (response.ok) {
