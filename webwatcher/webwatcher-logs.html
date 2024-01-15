@@ -62,20 +62,20 @@
                             Tools
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            <a class="dropdown-item" href="./webwatcher/webwatcher-signup.html">WebWatcher</a>
+                            <a class="dropdown-item" href="./webwatcher-signup.html">WebWatcher</a>
                         </div>
                     </li>
-                    <li class="nav-item dropdown">
+                    <!-- <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Services
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="#">Placeholder</a>
                         </div>
-                    </li>
-                    <li class="nav-item">
+                    </li> -->
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="../about.html">About</a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
                         <a class="nav-link" href="../contact.html">Contact</a>
                     </li>
@@ -94,6 +94,7 @@
             <label class="d-block mt-3" for="password">Enter your password:</label>
             <input class="form-control mb-0" type="password" 
             id="password" name="password" required>
+            <small id="passwordError" class="form-text text-danger" style="display: none;">Password incorrect</small>
     
             <div class="text-align:center;width:100%;display:block;">
                 <button class="log-submit btn btn-main" type="submit">Submit</button>
@@ -117,6 +118,7 @@
         });
       
         function fetchRecords(domain, password) {
+            document.getElementById("passwordError").style.display = "none";
             fetch('https://z-scraper.herokuapp.com/logs', {
                 method: 'POST',
                 headers: {
@@ -135,7 +137,7 @@
             })
             .then(data => {
                 if (data["message"]) {
-                    console.log("Password incorrect")
+                    document.getElementById("passwordError").style.display = "block";
                 } else {
                     displayResults(data["docs"])
                     document.getElementById("password").value = "";

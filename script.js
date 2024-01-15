@@ -161,7 +161,7 @@ function paymentSuccessful() {
     var { overlay, infoBox } = initOverlay();
     infoBox.innerHTML = `<p>Your subscription was successful.</p>
     <p><a href="./webwatcher/webwatcher-logs.html">Click here</a> to see the results of WebWatcher runs.</p>
-    <p>Later, click the tools tab, then "WebWatcher Logs" to see run results.</p>
+    <p>Later, click the tools tab, click "WebWatcher", and then "Domain Logs" to see run results.</p>
     <p>If your site goes down, use WebWatcher Logs to see when the incident occurred.</p>`
     infoBox.style.left = "50%";
     infoBox.style.top = "30%";
