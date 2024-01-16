@@ -1,6 +1,6 @@
 // Add custom JavaScript here
 var siteContent = {
-    'headerTitle': 'CoolieTech',
+    'headerTitle': 'FlukerTech',
     'toolsTab': 'Tools',
     'servicesTab': 'Services',
     'aboutTab': 'About',
