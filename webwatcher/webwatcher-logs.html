@@ -140,6 +140,7 @@
                     document.getElementById("passwordError").style.display = "block";
                 } else {
                     console.log('Docs returned')
+                    console.log(data["docs"])
                     displayResults(data["docs"])
                     document.getElementById("password").value = "";
                     document.querySelector(".content-container").style.height = "40%";
