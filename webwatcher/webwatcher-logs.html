@@ -139,6 +139,7 @@
                 if (data["message"]) {
                     document.getElementById("passwordError").style.display = "block";
                 } else {
+                    console.log('Docs returned')
                     displayResults(data["docs"])
                     document.getElementById("password").value = "";
                     document.querySelector(".content-container").style.height = "40%";
