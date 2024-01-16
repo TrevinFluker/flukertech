@@ -61,7 +61,75 @@
             <div class="col-md-6 order-md-2 order-1">
                 <div id="servicesAccordion">
                     <!--dynamic-->
+                
+                <div class="card">
+                    <div class="card-header card-click" id="heading0" data-toggle="collapse" data-target="#collapse0" aria-expanded="true" aria-controls="collapse0">
+                        <h5 class="mb-0 card-click" data-toggle="collapse" data-target="#collapse0" aria-expanded="true" aria-controls="collapse0">
+                            <button style="font-size:18px;" class="btn btn-link card-click" data-toggle="collapse" data-target="#collapse0" aria-expanded="true" aria-controls="collapse0">
+                                Web Scraping <span class="accordion-icon" style="font-size:20px;">+</span>
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapse0" class="collapse show" aria-labelledby="heading0" data-parent="#servicesAccordion">
+                        <div class="card-body" style="color:black;">
+                            Web scraping is powerful for generating leads and sales. In one case, a credit union vendor requested a comprehensive list of US credit union financial data to rank their potential clients based on assets under management. 
+        <br><br>We wrote code to download every PDF from a government website and extract the financials into a spreadsheet. The vendor used this information to prioritize selling to customers who had more to spend.
+        See a similar example involving stock data <a style="display:inline;" href="https://www.youtube.com/watch?v=4rWlWbdCCaU">HERE</a>.
+                        </div>
+                    </div>
                 </div>
+            
+                <div class="card">
+                    <div class="card-header card-click" id="heading1" data-toggle="collapse" data-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                        <h5 class="mb-0 card-click" data-toggle="collapse" data-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                            <button style="font-size:18px;" class="btn btn-link card-click" data-toggle="collapse" data-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                                Automation <span class="accordion-icon" style="font-size:20px;">+</span>
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapse1" class="collapse " aria-labelledby="heading1" data-parent="#servicesAccordion">
+                        <div class="card-body" style="color:black;">
+                            Every business has documents that hold essential data. Whether its employee or customer information, automation could probably make moving that data faster and easier. 
+        <br><br>For our real estate client and youtuber, Ed Hayes, the automation most important was real estate deals. He had us create the deal evaluator, an online property calculator which produced PDF documents that effectively communicated the viability of user's deals. 
+        See it <a style="display:inline;" href="https://youtu.be/WGY8ldALMVc?si=A9DZgXRD4ktBPSXD">HERE</a>.
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card">
+                    <div class="card-header card-click" id="heading2" data-toggle="collapse" data-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                        <h5 class="mb-0 card-click" data-toggle="collapse" data-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                            <button style="font-size:18px;" class="btn btn-link card-click" data-toggle="collapse" data-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                                List Building <span class="accordion-icon" style="font-size:20px;">+</span>
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapse2" class="collapse " aria-labelledby="heading2" data-parent="#servicesAccordion">
+                        <div class="card-body" style="color:black;">
+                            Building a lead list can consist of extracting data from public websites, membership sites, and sometimes even sources locked away in documents. 
+        <br><br>In the case of one real estate investor, the computer needed to read documents to extract addresses. That didn't stop us from providing a solution. 
+        See it <a style="display:inline;" href="https://youtu.be/Cl_0nPoTFE0">HERE</a>.
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card">
+                    <div class="card-header card-click" id="heading3" data-toggle="collapse" data-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                        <h5 class="mb-0 card-click" data-toggle="collapse" data-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                            <button style="font-size:18px;" class="btn btn-link card-click" data-toggle="collapse" data-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                                Web Development <span class="accordion-icon" style="font-size:20px;">+</span>
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapse3" class="collapse " aria-labelledby="heading3" data-parent="#servicesAccordion">
+                        <div class="card-body" style="color:black;">
+                            Gathering the right data is key, but a great user interface to interact with the data unlocks its value for your business. 
+        <br><br>For an investor in Dallas, Texas, we scraped tax information for every property in the county, stored it all in a database, and built a simple website they could use to export information about properties. 
+        See it <a style="display:inline;" href="https://www.dallaspropertydata.com/">HERE</a>.
+                        </div>
+                    </div>
+                </div>
+            </div>
             </div>
         </div>
         <button type="button" class="btn btn-main cb-mobile" style="margin:10px auto;" onclick="goToContact()">Contact Us</button>
@@ -73,8 +141,15 @@
     
     <script>
         function goToContact() {
-            window.location.href = window.location.origin + '/flukertech/contact.html'
+            window.location.href = window.location.origin + '/contact.html'
         }
+        window.addEventListener('load', function() {
+    // Your code goes here
+    console.log("Page fully loaded");
+
+    // Any additional JavaScript you want to run once the page is fully loaded
+});
+
     </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>

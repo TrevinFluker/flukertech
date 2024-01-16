@@ -233,7 +233,7 @@ if (window.location.href.includes('webwatcher-signup.html')) {
 }
 
 // Call the function on page load
-window.onload = populateAccordion;
+//window.onload = populateAccordion;
 
 
 
