@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel File Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        .slicer-container {
+            display: flex; /* Use Flexbox */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 80%;
+            width:100%;
+        }
+        @media only screen and (min-width: 601px) {
+            #slicerBox {
+                width:400px;
+                margin:auto;
+            }
+        }
+        @media only screen and (max-width: 600px) {
+            #slicerBox {
+                width:80%;
+                margin:auto;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../style.css">
+
+</head>
+<body  id="gradient" style="padding-bottom:50px;">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a id="headerTitle" class="navbar-brand" href="../index.html"></a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Tools
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="../webwatcher/webwatcher-menu.html">WebWatcher</a>
+                            <a class="dropdown-item" href="../csv_sclicer/slicer-example.html">CSV Slicer</a>
+                        </div>
+                    </li>
+                    <!-- <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Services
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="#">Placeholder</a>
+                        </div>
+                    </li> -->
+                    <!-- <li class="nav-item">
+                        <a class="nav-link" href="../about.html">About</a>
+                    </li> -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../contact.html">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <div class="slicer-container">
+        <div id="slicerBox">
+            <!-- Excel File Editor Section -->
+            <h3 class="mt-3">Test CSV Slicer in the browser</h3>
+            <small>
+                Slicer has 12 functions. Here, you can test the column removal feature.</br>
+                Choose an excel file from your computer.</br>
+                List the column names separated by spaces.</br>
+                Output the file to see results!
+            </small>
+            <label class="d-block mt-3" for="excelFile"></label>
+            <input class="form-control mb-0" style="background-color: transparent;border: none;"
+            type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls" />
+            <label class="d-block mt-3" for="columnsToKeep"></label>
+            <input class="form-control mb-2" type="text" id="columnsToKeep" placeholder="Enter column names separated by spaces" />
+            
+            <button class="btn btn-main" class="mt-3" onclick="processExcel()">Output Sliced File</button>
+
+            <!-- Download Executable File Section -->
+            <h3 class="mt-3">Test as an executable</h3>
+            <p class="mb-0"><b>Steps to run after download:</b></p>
+            <small><b>STEP 1</b>: Move the file to a directory that only has excel files you want to edit.</br></small>
+            <small><b>STEP 2</b>: Open a command prompt and navigate to the folder with the excel files and the executable.</br></small>
+            <small><b>STEP 3</b>: Run the command (columns in file must not have spaces): <b>csv_slicer -keep column1 column2 column3</b></br></small>
+            <small><b>STEP 4</b>: The new files will be added to your current directory and the old files will be added to a directory called "raw_files" next to the current folder</br></small>
+            <p class="mt-3 mb-0"><b>Click the link below to download the file:</b></p>
+            <a href="../assets/exe/csv_slicer.exe" download>Download Executable Here</a>
+            <p class="mt-3 mb-0"><b>Contact us for the complete version of the file with all column rearrangement and row filtering commands:</b></p>
+            <button type="button" class="btn btn-main" style="margin: 10px 0px 100px 0px;display:block;" onclick="goToContact()">Contact Us</button>
+        </div>
+    </div>
+    <div class="bottom-spacer" style="height:100px;width:100%;"></div>
+    <footer class="text-center">
+        © FlukerTech, LLC
+    </footer>
+    <script>
+        function goToContact() {
+            window.location.href = 'https://www.flukertech.com/contact.html'
+        }
+
+        function processExcel() {
+            let file = document.getElementById('excelFile').files[0];
+            let columnsToKeep = document.getElementById('columnsToKeep').value.split(' ');
+
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, {type: 'array'});
+                    let newWorkbook = XLSX.utils.book_new();
+
+                    workbook.SheetNames.forEach(function(sheetName) {
+                        let sheet = workbook.Sheets[sheetName];
+                        let jsonSheet = XLSX.utils.sheet_to_json(sheet, {header: 1});
+                        if (jsonSheet.length > 0) {
+                            let headers = jsonSheet[0];
+                            let columnIndexMap = headers.reduce((map, header, index) => {
+                                if (columnsToKeep.includes(header)) {
+                                    map[index] = header;
+                                }
+                                return map;
+                            }, {});
+
+                            let filteredData = jsonSheet.map(row => {
+                                return Object.keys(columnIndexMap).map(index => row[index]);
+                            });
+
+                            let newSheet = XLSX.utils.aoa_to_sheet(filteredData);
+                            XLSX.utils.book_append_sheet(newWorkbook, newSheet, sheetName);
+                        }
+                    });
+
+                    XLSX.writeFile(newWorkbook, 'edited_file.xlsx');
+                };
+
+                reader.readAsArrayBuffer(file);
+            }
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="../script.js"></script>
+</body>
+</html>
