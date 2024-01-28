@@ -25,13 +25,14 @@ const services = [
         description: `Building a lead list can consist of extracting data from public websites, membership sites, and sometimes even sources locked away in documents. 
         </br></br>In the case of one real estate investor, the computer needed to read documents to extract addresses. That didn't stop us from providing a solution. 
         See it <a style="display:inline;" href="https://youtu.be/Cl_0nPoTFE0">HERE</a>.` 
-    },
-    { 
-        title: "Web Development", 
-        description: `Gathering the right data is key, but a great user interface to interact with the data unlocks its value for your business. 
-        </br></br>For an investor in Dallas, Texas, we scraped tax information for every property in the county, stored it all in a database, and built a simple website they could use to export information about properties. 
-        See it <a style="display:inline;" href="https://www.dallaspropertydata.com/">HERE</a>.`
     }
+    // ,
+    // { 
+    //     title: "Web Development", 
+    //     description: `Gathering the right data is key, but a great user interface to interact with the data unlocks its value for your business. 
+    //     </br></br>For an investor in Dallas, Texas, we scraped tax information for every property in the county, stored it all in a database, and built a simple website they could use to export information about properties. 
+    //     See it <a style="display:inline;" href="https://www.dallaspropertydata.com/">HERE</a>.`
+    // }
 ];
 
 document.addEventListener('DOMContentLoaded', function () {
