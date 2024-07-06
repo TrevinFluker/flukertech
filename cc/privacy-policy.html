@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FlukerTech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .content-container {
+            display: block; /* Use Flexbox */
+            padding: 10%;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 80%;
+            width:100%;
+        }
+        @media only screen and (min-width: 601px) {
+            .menu-btn {
+                background-color: #9BA9F2;
+                color: #ffffff;
+                font-weight: 500;
+                margin: 15px auto;
+                padding: 20px;
+                border-radius: 5px;
+                width: 300px;
+                font-size: 20px;
+            }
+        }
+        @media only screen and (max-width: 600px) {
+            .menu-btn {
+                background-color: #9BA9F2;
+                color: #ffffff;
+                font-weight: 500;
+                margin: 15px auto;
+                padding: 20px;
+                border-radius: 5px;
+                width: 80%;
+                font-size: 20px;
+            }
+        }
+        h1 {
+            color: #333;
+            text-decoration: underline;
+        }
+        h2 {
+            font-size: 1.7rem !important;
+        }
+        h3 {
+            font-size: 1.3rem !important;
+        }
+        p {
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body id="gradient">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a id="headerTitle" class="navbar-brand" href="../index.html"></a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Tools
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="../br/br.html">Bulk Rename</a>
+                            <a class="dropdown-item" href="../webwatcher/webwatcher-menu.html">WebWatcher</a>
+                            <a class="dropdown-item" href="../craf/craf-example.html">Bulk XLSX Editor</a>
+                            <a class="dropdown-item" href="menu.html">Chat Capture</a>
+                        </div>
+                    </li>
+                    <!-- <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Services
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="#">Placeholder</a>
+                        </div>
+                    </li> -->
+                    <!-- <li class="nav-item">
+                        <a class="nav-link" href="../about.html">About</a>
+                    </li> -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="../contact.html">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <div class="gradient-background"></div>
+    <div class="content-container">
+        <h1>Privacy Policy for ChatCapture</h1>
+        <p><strong>Effective Date:</strong> 07/06/2024</p>
+    
+        <h2>1. Introduction</h2>
+        <p>FlukerTech ("we", "our", "us") is committed to protecting and respecting your privacy. This Privacy Policy explains how our Chrome extension, ChatCapture ("extension" or "Product"), collects, uses, and shares user data. By using our extension, you agree to the collection and use of information in accordance with this policy.</p>
+    
+        <h2>2. Information We Collect</h2>
+        <h3>User Data:</h3>
+        <ul>
+            <li><strong>Email and Password:</strong> We collect your email and a password for login purposes. The password is hashed for security purposes.</li>
+            <li><strong>Payment Information:</strong> We use Stripe to manage payment information. We do not store sensitive payment information, such as card details, on our servers.</li>
+        </ul>
+    
+        <h2>3. Data Storage</h2>
+        <ul>
+            <li><strong>Database:</strong> User email and hashed password are stored in a secure database.</li>
+            <li><strong>Chrome Local Storage:</strong> Game-related data is stored in Chrome local storage.</li>
+            <li><strong>Retention:</strong> User login information is retained beyond the deletion of the extension from the browser unless the user requests its deletion.</li>
+        </ul>
+    
+        <h2>4. How We Use Your Information</h2>
+        <ul>
+            <li><strong>Login and Authentication:</strong> To allow you to log in and authenticate your access to the extension.</li>
+            <li><strong>Game Functionality:</strong> To facilitate the functioning of the contexto word guessing game by scanning comments on TikTok live chats.</li>
+            <li><strong>Payment Processing:</strong> To manage payments and subscriptions through Stripe.</li>
+        </ul>
+    
+        <h2>5. How We Share Your Information</h2>
+        <ul>
+            <li><strong>Third-Party Service Providers:</strong> We share user data with Stripe for payment processing. Stripe handles all payment information securely and in accordance with their privacy policies.</li>
+            <li><strong>No Additional Sharing:</strong> We do not share your personal information with any other third parties.</li>
+        </ul>
+    
+        <h2>6. User Rights</h2>
+        <ul>
+            <li><strong>Access and Deletion:</strong> You can contact us at <a href="mailto:info@flukertech.com">info@flukertech.com</a> to access or delete your login information.</li>
+            <li><strong>Opt-Out:</strong> No additional data is collected that requires an opt-out mechanism.</li>
+        </ul>
+    
+        <h2>7. Security Measures</h2>
+        <ul>
+            <li><strong>Password Security:</strong> Passwords are hashed to ensure that no one but the user can see their password.</li>
+            <li><strong>Payment Security:</strong> Payment details are securely managed by Stripe, ensuring that sensitive information is protected.</li>
+        </ul>
+    
+        <h2>8. Cookies and Tracking</h2>
+        <ul>
+            <li><strong>Cookies:</strong> We do not use cookies.</li>
+            <li><strong>Tracking:</strong> We do not implement any tracking technologies.</li>
+        </ul>
+    
+        <h2>9. Changes to This Privacy Policy</h2>
+        <p>Changes to this privacy policy will be emailed to users to ensure they are aware of updates.</p>
+    
+        <h2>10. Contact Information</h2>
+        <p>If you have any questions or concerns about this Privacy Policy, please contact us at <a href="mailto:info@flukertech.com">info@flukertech.com</a>.</p>
+    
+        <h2>11. Compliance</h2>
+        <p>We currently do not have specific regulatory compliance requirements but aim to adhere to best practices in data protection.</p>
+    
+        <p>By using ChatCapture, you acknowledge that you have read and understood this Privacy Policy. Thank you for trusting FlukerTech with your data.</p>
+    </div>
+
+    <div class="bottom-spacer"></div>
+    <footer class="text-center">
+        © FlukerTech, LLC
+    </footer>
+    
+    <!-- Page specific content goes here -->
+    <!-- Content for index.html -->
+    <!-- Footer content goes here -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="../script.js"></script>
+    <script>
+        function aboutChatCapture() {
+            document.getElementById("aboutLink").click();
+        }
+        function goToLogs() {
+            document.getElementById("ppLink").click();
+        }
+        function manageSubscription() {
+            window.location.href = "https://billing.stripe.com/p/login/aEU9D55NEeZr2di000";
+        }
+    </script>
+</body>
+</html>

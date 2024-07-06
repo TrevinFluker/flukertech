@@ -51,9 +51,9 @@
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="../br/br.html">Bulk Rename</a>
-                            <a class="dropdown-item" href="./webwatcher-menu.html">WebWatcher</a>
+                            <a class="dropdown-item" href="../webwatcher/webwatcher-menu.html">WebWatcher</a>
                             <a class="dropdown-item" href="../craf/craf-example.html">Bulk XLSX Editor</a>
-                            <a class="dropdown-item" href="../cc/menu.html">Chat Capture</a>
+                            <a class="dropdown-item" href="menu.html">Chat Capture</a>
                         </div>
                     </li>
                     <!-- <li class="nav-item dropdown">
@@ -76,14 +76,14 @@
     </header>
     <div class="gradient-background"></div>
     <div class="content-container">
-        <div class="webwatcher-menu" style="width:100%;">
-            <div class="menu-btn" onclick="goToSignUp()">
-                <a id="signUpLink" href="webwatcher-signup.html" style="text-decoration: none; color: white;">Try WebWatcher</a>
+        <div class="chatcapture-menu" style="width:100%;">
+            <div class="menu-btn" onclick="aboutChatCapture()">
+                <a id="aboutLink" href="about-chatcapture.html" style="text-decoration: none; color: white;">About ChatCapture</a>
             </div>
             <div class="menu-btn" onclick="goToLogs()">
-                <a id="logsLink" href="webwatcher-logs.html" style="text-decoration: none; color: white;">Domain Logs</a>
+                <a id="ppLink" href="privacy-policy.html" style="text-decoration: none; color: white;">Privacy Policy</a>
             </div>
-            <div class="menu-btn">Manage Subscription</div>
+            <div class="menu-btn" style="cursor: pointer;" onclick="manageSubscription()">Manage Subscription</div>
         </div>
     </div>
 
@@ -100,11 +100,14 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="../script.js"></script>
     <script>
-        function goToSignUp() {
-            document.getElementById("signUpLink").click();
+        function aboutChatCapture() {
+            document.getElementById("aboutLink").click();
         }
         function goToLogs() {
-            document.getElementById("logsLink").click();
+            document.getElementById("ppLink").click();
+        }
+        function manageSubscription() {
+            window.location.href = "https://billing.stripe.com/p/login/aEU9D55NEeZr2di000";
         }
 
     </script>
