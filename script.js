@@ -36,7 +36,11 @@ const services = [
 ];
 
 document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('headerTitle').textContent = siteContent['headerTitle'];
+    if (!location.href.includes('sp')) {
+        document.getElementById('headerTitle').textContent = siteContent['headerTitle'];
+    } else {
+        document.getElementById('headerTitle').textContent = 'Steel Peaches Photography';
+    }
     // similarly, update other elements
 });
 

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Steel Peaches Photography</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .content-container {
+            display: flex; /* Use Flexbox */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 80%;
+            width:100%;
+        }
+        @media only screen and (min-width: 601px) {
+            .menu-btn {
+                background-color: #9BA9F2;
+                color: #ffffff;
+                font-weight: 500;
+                margin: 15px auto;
+                padding: 20px;
+                border-radius: 5px;
+                width: 300px;
+                font-size: 20px;
+                text-align: left;
+                box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
+            }
+        }
+        @media only screen and (max-width: 600px) {
+            .menu-btn {
+                background-color: #9BA9F2;
+                color: #ffffff;
+                font-weight: 500;
+                margin: 15px auto;
+                padding: 20px;
+                border-radius: 5px;
+                width: 80%;
+                font-size: 20px;
+                text-align: left;
+                box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
+            }
+        }
+        #headerTitle, .content-container{
+            font-family: 'Alegreya', serif;
+        }
+        .menu-icon {
+            width: 40px; /* Set the width of the image */
+            height: 40px; /* Set the height of the image */
+            border-radius: 50%; /* Make the image circular */
+            margin-right: 15px; /* Add space between the image and text */
+            box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
+        }
+        .button-row {
+            display: flex;
+            gap: 10px; /* Space between the two buttons */
+            margin: 15px auto;
+    width: 300px;
+    justify-content: center;
+        }
+    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Alegreya&display=swap" rel="stylesheet">
+    
+    
+</head>
+<body id="gradient">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a id="headerTitle" class="navbar-brand" href="../index.html"></a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Tools
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="../br/br.html">Bulk Rename</a>
+                            <a class="dropdown-item" href="../webwatcher/webwatcher-menu.html">WebWatcher</a>
+                            <a class="dropdown-item" href="../craf/craf-example.html">Bulk XLSX Editor</a>
+                            <a class="dropdown-item" href="menu.html">Chat Capture</a>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../contact.html">Contact</a>
+                    </li>
+                </ul> -->
+            </div>
+        </nav>
+    </header>
+    <div class="gradient-background"></div>
+    <div class="content-container">
+        <div class="chatcapture-menu" style="width:100%;">
+            <div class="menu-btn" onclick="aboutChatCapture()">
+                <img src="../assets/imgs/splogo.png" class="menu-icon">
+                <a id="aboutLink" href="https://www.instagram.com/steelpeachesphotography" style="text-decoration: none; color: white;">Instagram</a>
+            </div>
+            <div class="menu-btn" onclick="goToLogs()">
+                <img src="https://images.squarespace-cdn.com/content/v1/5b8601b0d274cb934d8d15e0/1536861013861-IZFLQEMRBMEJ1LO15O16/favicon.ico?format=100w" class="menu-icon">
+                <a id="ppLink" href="https://www.steelpeachesphotography.com/" style="text-decoration: none; color: white;">Our website</a>
+            </div>
+            <div class="button-row">
+                <div class="" style="cursor: pointer;" onclick="linkCashApp()">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Square_Cash_app_logo.svg/1200px-Square_Cash_app_logo.svg.png" class="menu-icon">
+                </div>
+                <div class="" style="cursor: pointer;" onclick="linkVenmo()">
+                    <img src="https://banner2.cleanpng.com/20180615/ppl/kisspng-venmo-square-cash-payment-paypal-public-writer-5b2384df3be2c1.7977350515290544312453.jpg" class="menu-icon">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-spacer"></div>
+    <footer class="text-center">
+        © FlukerTech, LLC
+    </footer>
+    
+    <!-- Page specific content goes here -->
+    <!-- Content for index.html -->
+    <!-- Footer content goes here -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="../script.js"></script>
+    <script>
+        function aboutChatCapture() {
+            document.getElementById("aboutLink").click();
+        }
+        function goToLogs() {
+            document.getElementById("ppLink").click();
+        }
+        // function manageSubscription() {
+        //     window.location.href = "https://cash.app/$prestonpresley?amount=10";
+        // }
+        function linkCashapp() {
+            window.location.href = "https://cash.app/$becspp?amount=25";
+        }
+        function linkVenmo() {
+            window.location.href = "https://venmo.com/?txn=pay&recipients=rebeccamuhihu&amount=25&note=Print";
+        }
+
+    </script>
+</body>
+</html>
