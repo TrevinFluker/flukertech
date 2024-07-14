@@ -24,6 +24,13 @@
                 font-size: 20px;
             }
         }
+        @media only screen and (min-width: 751px) {
+            .gif-frame {
+                width:650px;
+                height:300px;
+                overflow: hidden;
+            }
+        }
         @media only screen and (max-width: 600px) {
             .menu-btn {
                 background-color: #9BA9F2;
@@ -36,9 +43,17 @@
                 font-size: 20px;
             }
         }
+        @media only screen and (max-width: 750px) {
+            .gif-frame {
+                width:100%;
+                height:200px;
+                overflow: hidden;
+            }
+        }
         h1 {
             color: #333;
             text-decoration: underline;
+            margin-bottom: 1rem !important;
         }
         h2 {
             font-size: 1.7rem !important;
@@ -52,6 +67,13 @@
         ul {
             list-style-type: none;
             padding-left: 20px;
+        }
+        .bullet-points {
+            margin-bottom: 0px;
+        }
+        .step-margin {
+            width: 100%;
+            margin-left: 20px;
         }
     </style>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
@@ -88,7 +110,41 @@
     </header>
     <div class="gradient-background"></div>
     <div class="content-container">
-       
+        <h1>Getting Started with ChatCapture</h1>
+    
+        <h2>Requirements:</h2>
+        <p class="bullet-points">- Access to a laptop for running the chrome extension</p>
+        <p class="bullet-points">- Access to go live from a mobile phone or TikTok Live Studio</p>
+        <p class="bullet-points">- 1000 Followers (TikTok requirement to go live)</p>
+    
+        <h2>Using Chat Capture:</h2>
+        <div class="step-margin">
+            <h5>Download the extension from <a target="_blank" rel="noopener noreferrer" href="https://www.runchatcapture.com">RunChatCapture.com</a> and add it to chrome</h5>
+            <div class="gif-frame">
+                <img width="100%" src="../assets/imgs/chrome_amyNb5QsI2.gif" alt="Local GIF">
+            </div>
+            <h5>Navigate to <a target="_blank" rel="noopener noreferrer" href="https://contexto.me">contexto.me</a>, open the extension and sign up</h5>
+            <div class="gif-frame">
+                <img width="100%" src="../assets/imgs/chrome_75tv9geVAe.gif" alt="Local GIF">
+            </div>
+            <h5>Check your email for the verification code</h5>
+            <div class="gif-frame">
+                <img width="100%" src="../assets/imgs/emailverify.jpg" alt="Local JPG">
+            </div>
+            <h5>Verify your email and login</h5>
+            <div class="gif-frame">
+                <img width="100%" src="../assets/imgs/chrome_NUSo96uPG3.gif" alt="Local JPG">
+            </div>
+            <h5 style="max-width: 650px;">Start your 7 day free trial! Click "Start Subscription" and the browser will automatically navigate to stripe, and back to contexto.me once you successfully start a trial.</h5>
+            <div class="gif-frame">
+                <img width="100%" src="../assets/imgs/successful_payment.png" alt="Local PNG">
+            </div>
+            <h5 style="max-width: 650px;">Enter and save your tiktok username. Hover over the icon above the input for an example.</h5>
+            <div class="gif-frame">
+                <img width="100%" src="../assets/imgs/chrome_jhlcYvMUYw.gif" alt="Local PNG">
+            </div>
+        </div>
+
     </div>
 
     <div class="bottom-spacer"></div>
