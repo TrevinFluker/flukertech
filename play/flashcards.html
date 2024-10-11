@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flashcards with Leaderboard and Management Modals</title>
+    <style>
+        /* Existing styles */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+        }
+        .main-container {
+            display: flex;
+            margin-top: 50px;
+        }
+        .leaderboard {
+            width: 250px;
+            margin-right: 30px;
+        }
+        .leaderboard h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .leaderboard .user {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .leaderboard .user img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+        .leaderboard .user-info {
+            flex: 1;
+        }
+        .leaderboard .username {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .leaderboard .points {
+            color: #666;
+        }
+        .container {
+            width: 600px;
+            text-align: center;
+            position: relative;
+        }
+        .collection-title {
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        /* Flashcard Styles */
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            margin: 0 auto 40px auto;
+            position: relative;
+        }
+        .flashcard {
+            position: relative;
+            width: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+        .flashcard.is-flipped {
+            transform: rotateX(180deg);
+        }
+        .flashcard-face {
+            position: relative;
+            width: 100%;
+            backface-visibility: hidden;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            min-height: 200px;
+        }
+        .flashcard-face h2 {
+            margin: 0;
+        }
+        .flashcard-front {
+            transform: rotateX(0deg);
+        }
+        .flashcard-back {
+            transform: rotateX(180deg);
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        /* Timer Styles */
+        .timer {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            display: none;
+        }
+        /* Button Styles */
+        .buttons {
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        .buttons button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .buttons button:hover {
+            background-color: #e0e0e0;
+        }
+        /* Comments Section Styles */
+        .comments-section {
+            width: 100%;
+            margin: 0 auto;
+            margin-bottom: 60px;
+            position: relative;
+            height: 400px;
+            overflow: hidden;
+        }
+        .comment {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 10px;
+            margin-top: 10px;
+            opacity: 1;
+            animation: fadeOut 1s forwards;
+            position: relative;
+        }
+        .comment.new-comment {
+            animation: slideDown 0.5s ease-out;
+        }
+        .comment img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+        .comment .comment-text {
+            flex: 1;
+            text-align: left;
+        }
+        .comment .username {
+            font-weight: bold;
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+        @keyframes slideDown {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        /* Side Panel Styles */
+        #sidepanel {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 2;
+            top: 0;
+            right: 0;
+            background-color: #fff;
+            overflow-x: hidden;
+            transition: 0.5s;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+            padding-top: 60px;
+        }
+        #sidepanel .closebtn {
+            position: absolute;
+            top: 20px;
+            left: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+            color: #000;
+            cursor: pointer;
+        }
+        #sidepanel h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #collectionsList {
+            list-style-type: none;
+            padding: 0;
+        }
+        #collectionsList li {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+        #collectionsList li:hover {
+            background-color: #f1f1f1;
+        }
+        #sidepanel .add-collection,
+        #sidepanel .add-card,
+        #sidepanel .manage-collection,
+        #sidepanel .manage-card,
+        #sidepanel .simulate-comments,
+        #sidepanel .adjust-timer,
+        #sidepanel .add-user,
+        #sidepanel .clear-leaderboard {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        #sidepanel .clear-leaderboard {
+            margin-bottom: 100px; /* Existing line */
+        }
+        #sidepanel input,
+        #sidepanel button {
+            margin: 10px 0;
+            padding: 10px;
+        }
+        .openbtn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 20px;
+            background-color: #fff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+        .openbtn:hover {
+            background-color: #e0e0e0;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 3;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 100px auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px; /* Could be more or less, depending on screen size */
+            border-radius: 10px;
+            position: relative;
+        }
+        .close-modal {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal h2 {
+            margin-top: 0;
+        }
+        .modal ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .modal ul li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal ul li:last-child {
+            border-bottom: none;
+        }
+        .modal ul li button {
+            padding: 5px 10px;
+            margin-left: 10px;
+        }
+        /* New Styles for JSON Upload */
+        #jsonUploadContainer {
+            margin-top: 20px;
+        }
+        #jsonUploadContainer textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        #jsonUploadContainer button {
+            margin-top: 10px;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+        .success-message {
+            color: green;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidepanel">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeSidePanel()">&times;</a>
+    <h2>Settings</h2>
+    <div class="adjust-timer">
+        <h3>Adjust Round Duration</h3>
+        <input type="number" id="roundDurationInput" placeholder="Seconds (e.g., 90)" min="1" value="90">
+    </div>
+    <div class="add-collection">
+        <h3>Add New Collection</h3>
+        <input type="text" id="newCollectionName" placeholder="Collection Name">
+        <button onclick="addCollection()">Add Collection</button>
+    </div>
+    <div class="manage-collection">
+        <button onclick="openManageCollectionsModal()">Manage Collections</button>
+    </div>
+    <div class="add-card">
+        <h3>Add New Flashcard</h3>
+        <input type="text" id="newPrompt" placeholder="Prompt">
+        <input type="text" id="newAnswer" placeholder="Answer">
+        <button onclick="addFlashcard()">Add Flashcard</button>
+    </div>
+    <div class="manage-card">
+        <button onclick="openManageFlashcardsModal()">Manage Flashcards</button>
+    </div>
+    <div class="simulate-comments">
+        <h3>Simulate Comments</h3>
+        <button onclick="simulateComments()">Add Comment</button>
+    </div>
+    <div class="add-user">
+        <h3>Simulate User Answer</h3>
+        <button onclick="simulateUserAnswer()">Simulate Correct Answer</button>
+    </div>
+    <div class="clear-leaderboard">
+        <h3>Leaderboard Controls</h3>
+        <button onclick="clearLeaderboard()">Clear Leaderboard</button>
+    </div>
+</div>
+
+<button class="openbtn" onclick="openSidePanel()">&#9776;</button>
+
+<!-- Modals -->
+<!-- Manage Collections Modal -->
+<div id="manageCollectionsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeManageCollectionsModal()">&times;</span>
+        <h2>Manage Collections</h2>
+        <ul id="collectionsModalList">
+            <!-- Collections will be listed here -->
+        </ul>
+    </div>
+</div>
+
+<!-- Manage Flashcards Modal -->
+<div id="manageFlashcardsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeManageFlashcardsModal()">&times;</span>
+        <h2>Manage Flashcards in "<span id="currentCollectionName"></span>"</h2>
+        <ul id="flashcardsModalList">
+            <!-- Flashcards will be listed here -->
+        </ul>
+        <!-- JSON Upload Section -->
+        <div id="jsonUploadContainer">
+            <h3>Upload Flashcards via JSON</h3>
+            <textarea id="jsonInput" placeholder='Paste JSON array here'></textarea>
+            <button onclick="uploadFlashcardsFromJSON()">Upload Flashcards</button>
+            <div id="jsonMessage"></div>
+        </div>
+    </div>
+</div>
+
+<div class="main-container">
+    <!-- Leaderboard Section -->
+    <div class="leaderboard" id="leaderboard">
+        <h2>Leaderboard</h2>
+        <!-- Users will be injected here -->
+    </div>
+
+    <!-- Flashcards Container -->
+    <div class="container">
+        <h1 class="collection-title" id="collectionTitle">Default Collection</h1>
+        <div class="flashcard-container">
+            <div class="flashcard" id="flashcard">
+                <div class="flashcard-face flashcard-front">
+                    <div class="timer" id="timerDisplay">90</div>
+                    <h2 id="flashcardPrompt">Prompt</h2>
+                </div>
+                <div class="flashcard-face flashcard-back">
+                    <h2 id="flashcardAnswer">Answer</h2>
+                </div>
+            </div>
+        </div>
+        <div class="buttons">
+            <button onclick="startRound()">Start Round</button>
+            <button onclick="prevFlashcard()">Previous</button>
+            <button onclick="revealAnswer()">Reveal</button>
+            <button onclick="nextFlashcard()">Next</button>
+        </div>
+        <!-- Comments Section -->
+        <div class="comments-section" id="commentsSection"></div>
+    </div>
+</div>
+
+<script>
+    let collections = {
+        "Default Collection": [
+            { prompt: "What is the capital of France?", answer: "Paris" },
+            { prompt: "What is 2 + 2?", answer: "4" },
+            { prompt: "What color is the sky?", answer: "Blue" },
+            { prompt: "Explain the theory of relativity in simple terms.", answer: "The theory of relativity, developed by Albert Einstein, includes both the Special and General theories. It revolutionized our understanding of space, time, and gravity, suggesting that time and space are interwoven into a single continuum known as spacetime." }
+        ]
+    };
+    let currentCollection = "Default Collection";
+    let currentIndex = 0;
+    let showingAnswer = false;
+
+    // Timer Variables
+    let timerDuration = 90; // in seconds
+    let timer;
+    let remainingTime = timerDuration;
+    let roundStartTime;
+    let roundActive = false; // Indicates if a round is active
+
+    // Leaderboard Data
+    let leaderboardData = [];
+
+    // Users who have answered correctly in the current round
+    let usersAnsweredThisRound = new Set();
+
+    // Comment Data for Testing
+    const testComment = {
+        photoUrl: "https://p16-sign-useast2a.tiktokcdn.com/tos-useast2a-avt-0068-euttp/45cc78c2ec2a317d25a77d5e60a4b89a~tplv-tiktok-shrink:72:72.webp",
+        username: "userperson",
+        comments: [
+            "New comment from me",
+            "Great job!",
+            "Keep it up!",
+            "Another insightful comment",
+            "This is amazing!",
+            "I learned something new today."
+        ]
+    };
+
+    function updateFlashcard() {
+        const flashcards = collections[currentCollection];
+        const flashcardPrompt = document.getElementById('flashcardPrompt');
+        const flashcardAnswer = document.getElementById('flashcardAnswer');
+        const flashcardElement = document.getElementById('flashcard');
+
+        if (flashcards.length === 0) {
+            flashcardPrompt.textContent = "No flashcards in this collection.";
+            flashcardAnswer.textContent = "";
+            flashcardElement.classList.remove('is-flipped');
+            return;
+        }
+
+        flashcardPrompt.textContent = flashcards[currentIndex].prompt;
+        flashcardAnswer.textContent = flashcards[currentIndex].answer;
+
+        // Ensure both faces have the same height
+        setEqualCardHeight();
+
+        if (showingAnswer) {
+            flashcardElement.classList.add('is-flipped');
+        } else {
+            flashcardElement.classList.remove('is-flipped');
+        }
+
+        // Reset Timer and Users Answered
+        resetTimer();
+        usersAnsweredThisRound.clear();
+    }
+
+    function setEqualCardHeight() {
+        const frontFace = document.querySelector('.flashcard-front');
+        const backFace = document.querySelector('.flashcard-back');
+
+        // Reset heights
+        frontFace.style.height = 'auto';
+        backFace.style.height = 'auto';
+
+        // Get the heights
+        const frontHeight = frontFace.offsetHeight;
+        const backHeight = backFace.offsetHeight;
+
+        // Set both to the maximum height
+        const maxHeight = Math.max(frontHeight, backHeight);
+        frontFace.style.height = backFace.style.height = maxHeight + 'px';
+    }
+
+    function revealAnswer() {
+        showingAnswer = !showingAnswer;
+        const flashcardElement = document.getElementById('flashcard');
+        flashcardElement.classList.toggle('is-flipped');
+    }
+
+    function prevFlashcard() {
+        const flashcards = collections[currentCollection];
+        if (flashcards.length === 0) return;
+        if (currentIndex > 0) {
+            currentIndex--;
+            showingAnswer = false;
+            updateFlashcard();
+        }
+    }
+
+    function nextFlashcard() {
+        const flashcards = collections[currentCollection];
+        if (flashcards.length === 0) return;
+        if (currentIndex < flashcards.length - 1) {
+            currentIndex++;
+            showingAnswer = false;
+            updateFlashcard();
+        }
+    }
+
+    function openSidePanel() {
+        document.getElementById("sidepanel").style.width = "300px";
+        // displayCollections(); // No longer needed
+    }
+
+    function closeSidePanel() {
+        document.getElementById("sidepanel").style.width = "0";
+    }
+
+    function selectCollection(name) {
+        currentCollection = name;
+        currentIndex = 0;
+        showingAnswer = false;
+        document.getElementById('collectionTitle').textContent = name;
+        updateFlashcard();
+        closeSidePanel();
+    }
+
+    function addCollection() {
+        const name = document.getElementById('newCollectionName').value.trim();
+        if (name && !collections[name]) {
+            collections[name] = [];
+            document.getElementById('newCollectionName').value = '';
+        }
+    }
+
+    function addFlashcard() {
+        const prompt = document.getElementById('newPrompt').value.trim();
+        const answer = document.getElementById('newAnswer').value.trim();
+        if (prompt && answer) {
+            collections[currentCollection].push({ prompt, answer });
+            document.getElementById('newPrompt').value = '';
+            document.getElementById('newAnswer').value = '';
+            updateFlashcard();
+        }
+    }
+
+    // Timer Functions
+    function startRound() {
+        // Update timer duration from input
+        const roundDurationInput = document.getElementById('roundDurationInput');
+        const newDuration = parseInt(roundDurationInput.value);
+        if (!isNaN(newDuration) && newDuration > 0) {
+            timerDuration = newDuration;
+        } else {
+            timerDuration = 90; // Default to 90 seconds if input is invalid
+            roundDurationInput.value = 90;
+        }
+        resetTimer();
+        startTimer();
+    }
+
+    function startTimer() {
+        const timerDisplay = document.getElementById('timerDisplay');
+        remainingTime = timerDuration;
+        timerDisplay.textContent = remainingTime;
+        timerDisplay.style.display = 'block';
+        roundStartTime = Date.now();
+        usersAnsweredThisRound.clear(); // Clear users who have answered in the previous round
+        roundActive = true; // Round is now active
+
+        timer = setInterval(() => {
+            const elapsedSeconds = Math.floor((Date.now() - roundStartTime) / 1000);
+            remainingTime = timerDuration - elapsedSeconds;
+
+            if (remainingTime > 0) {
+                timerDisplay.textContent = remainingTime;
+            } else {
+                timerDisplay.textContent = '0';
+                clearInterval(timer);
+                roundActive = false; // Round has ended
+            }
+        }, 1000);
+    }
+
+    function resetTimer() {
+        clearInterval(timer);
+        remainingTime = timerDuration;
+        const timerDisplay = document.getElementById('timerDisplay');
+        timerDisplay.textContent = remainingTime;
+        timerDisplay.style.display = 'none';
+        roundStartTime = null;
+        roundActive = false;
+    }
+
+    // Comments Functionality
+    function simulateComments() {
+        const randomComment = testComment.comments[Math.floor(Math.random() * testComment.comments.length)];
+        addComment(testComment.photoUrl, testComment.username, randomComment);
+    }
+
+    function addComment(photoUrl, username, commentText) {
+        const commentsSection = document.getElementById('commentsSection');
+
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'comment new-comment';
+
+        const img = document.createElement('img');
+        img.src = photoUrl;
+        img.alt = username + "'s profile picture";
+
+        const commentContent = document.createElement('div');
+        commentContent.className = 'comment-text';
+
+        const usernameSpan = document.createElement('span');
+        usernameSpan.className = 'username';
+        usernameSpan.textContent = username + ': ';
+
+        const commentSpan = document.createElement('span');
+        commentSpan.textContent = commentText;
+
+        commentContent.appendChild(usernameSpan);
+        commentContent.appendChild(commentSpan);
+
+        commentDiv.appendChild(img);
+        commentDiv.appendChild(commentContent);
+
+        // Insert the new comment at the top
+        commentsSection.insertBefore(commentDiv, commentsSection.firstChild);
+
+        // Check if the comment is correct
+        checkCommentForAnswer(username, photoUrl, commentText);
+
+        // Remove the comment after 1 second
+        setTimeout(() => {
+            commentDiv.style.opacity = '0';
+            setTimeout(() => {
+                commentsSection.removeChild(commentDiv);
+            }, 500); // Allow time for opacity transition
+        }, 1000);
+    }
+
+    function checkCommentForAnswer(username, photoUrl, commentText) {
+        if (roundActive && remainingTime > 0) {
+            const currentAnswer = collections[currentCollection][currentIndex].answer.trim().toLowerCase();
+            if (commentText.trim().toLowerCase() === currentAnswer) {
+                if (usersAnsweredThisRound.has(username)) {
+                    // User has already answered in this round; do not award more points
+                    return;
+                }
+                const elapsedSeconds = Math.floor((Date.now() - roundStartTime) / 1000);
+                const points = Math.max(0, Math.floor(1000 - (elapsedSeconds * (1000 / timerDuration))));
+                updateLeaderboard(username, photoUrl, points);
+                usersAnsweredThisRound.add(username); // Mark user as having answered this round
+            }
+        }
+    }
+
+    // Leaderboard Functions
+    function displayLeaderboard() {
+        const leaderboardElement = document.getElementById('leaderboard');
+        leaderboardElement.innerHTML = '<h2>Leaderboard</h2>';
+        leaderboardData.sort((a, b) => b.points - a.points);
+        leaderboardData.forEach(user => {
+            const userDiv = document.createElement('div');
+            userDiv.className = 'user';
+
+            const img = document.createElement('img');
+            img.src = user.photoUrl;
+            img.alt = user.username + "'s profile picture";
+
+            const userInfo = document.createElement('div');
+            userInfo.className = 'user-info';
+
+            const usernameDiv = document.createElement('div');
+            usernameDiv.className = 'username';
+            usernameDiv.textContent = user.username;
+
+            const pointsDiv = document.createElement('div');
+            pointsDiv.className = 'points';
+            pointsDiv.textContent = user.points + ' points';
+
+            userInfo.appendChild(usernameDiv);
+            userInfo.appendChild(pointsDiv);
+
+            userDiv.appendChild(img);
+            userDiv.appendChild(userInfo);
+
+            leaderboardElement.appendChild(userDiv);
+        });
+    }
+
+    function updateLeaderboard(username, photoUrl, points) {
+        const existingUser = leaderboardData.find(user => user.username === username);
+        if (existingUser) {
+            existingUser.points += points; // Add new points to existing points
+        } else {
+            leaderboardData.push({ username, photoUrl, points });
+        }
+        displayLeaderboard();
+    }
+
+    function clearLeaderboard() {
+        leaderboardData = [];
+        displayLeaderboard();
+    }
+
+    function simulateUserAnswer() {
+        // Simulate a correct answer from a random user
+        const usernames = ['Alice', 'Bob', 'Charlie', 'Dana', 'Eve'];
+        const randomUsername = usernames[Math.floor(Math.random() * usernames.length)];
+        addComment(testComment.photoUrl, randomUsername, collections[currentCollection][currentIndex].answer);
+    }
+
+    // Manage Collections Modal Functions
+    function openManageCollectionsModal() {
+        const modal = document.getElementById('manageCollectionsModal');
+        const list = document.getElementById('collectionsModalList');
+        list.innerHTML = '';
+
+        for (let collectionName in collections) {
+            const li = document.createElement('li');
+            li.textContent = collectionName;
+
+            const openBtn = document.createElement('button');
+            openBtn.textContent = 'Open';
+            openBtn.onclick = function() {
+                selectCollection(collectionName);
+                closeManageCollectionsModal();
+            };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function() {
+                deleteCollection(collectionName);
+                openManageCollectionsModal(); // Refresh the list
+            };
+
+            const btnContainer = document.createElement('div');
+            btnContainer.appendChild(openBtn);
+            btnContainer.appendChild(deleteBtn);
+
+            li.appendChild(btnContainer);
+            list.appendChild(li);
+        }
+
+        modal.style.display = 'block';
+    }
+
+    function closeManageCollectionsModal() {
+        const modal = document.getElementById('manageCollectionsModal');
+        modal.style.display = 'none';
+    }
+
+    function deleteCollection(name) {
+        if (name !== "Default Collection") {
+            delete collections[name];
+            if (currentCollection === name) {
+                currentCollection = "Default Collection";
+                currentIndex = 0;
+                updateFlashcard();
+            }
+        } else {
+            alert("Cannot delete the Default Collection.");
+        }
+    }
+
+    // Manage Flashcards Modal Functions
+    function openManageFlashcardsModal() {
+        const modal = document.getElementById('manageFlashcardsModal');
+        const list = document.getElementById('flashcardsModalList');
+        const currentCollectionFlashcards = collections[currentCollection];
+
+        document.getElementById('currentCollectionName').textContent = currentCollection;
+        list.innerHTML = '';
+
+        currentCollectionFlashcards.forEach((card, index) => {
+            const li = document.createElement('li');
+            li.textContent = card.prompt;
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function() {
+                deleteFlashcard(index);
+                openManageFlashcardsModal(); // Refresh the list
+            };
+
+            li.appendChild(deleteBtn);
+            list.appendChild(li);
+        });
+
+        // Clear previous messages
+        document.getElementById('jsonMessage').textContent = '';
+        document.getElementById('jsonInput').value = '';
+
+        modal.style.display = 'block';
+    }
+
+    function closeManageFlashcardsModal() {
+        const modal = document.getElementById('manageFlashcardsModal');
+        modal.style.display = 'none';
+    }
+
+    function deleteFlashcard(index) {
+        collections[currentCollection].splice(index, 1);
+        if (currentIndex >= collections[currentCollection].length) {
+            currentIndex = collections[currentCollection].length - 1;
+        }
+        updateFlashcard();
+    }
+
+    // Upload Flashcards from JSON
+    function uploadFlashcardsFromJSON() {
+        const jsonInput = document.getElementById('jsonInput').value.trim();
+        const messageDiv = document.getElementById('jsonMessage');
+
+        try {
+            const parsedData = JSON.parse(jsonInput);
+
+            if (!Array.isArray(parsedData)) {
+                throw new Error("JSON must be an array of objects.");
+            }
+
+            const validFlashcards = parsedData.filter(item => {
+                return item.prompt && item.answer;
+            });
+
+            if (validFlashcards.length === 0) {
+                throw new Error("No valid flashcards found in the JSON.");
+            }
+
+            collections[currentCollection] = collections[currentCollection].concat(validFlashcards);
+            updateFlashcard();
+            openManageFlashcardsModal(); // Refresh the list
+
+            messageDiv.textContent = "Flashcards uploaded successfully!";
+            messageDiv.className = "success-message";
+            document.getElementById('jsonInput').value = '';
+        } catch (error) {
+            messageDiv.textContent = "Error: " + error.message;
+            messageDiv.className = "error-message";
+        }
+    }
+
+    // Close modals when clicking outside of them
+    window.onclick = function(event) {
+        const manageCollectionsModal = document.getElementById('manageCollectionsModal');
+        const manageFlashcardsModal = document.getElementById('manageFlashcardsModal');
+
+        if (event.target === manageCollectionsModal) {
+            closeManageCollectionsModal();
+        } else if (event.target === manageFlashcardsModal) {
+            closeManageFlashcardsModal();
+        }
+    };
+
+    // Initialize the first flashcard and leaderboard
+    updateFlashcard();
+    displayLeaderboard();
+</script>
+
+</body>
+</html>
+
+
+
