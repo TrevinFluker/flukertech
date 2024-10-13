@@ -498,7 +498,7 @@
         ]
     };
 
-    // New Variable to Store TikTok Username
+    // Variable to Store TikTok Username
     let tiktokUsername = '';
 
     // Disable input fields until username is saved
@@ -518,9 +518,8 @@
         const usernameInput = document.getElementById('tiktokUsernameInput').value.trim();
         if (usernameInput) {
             tiktokUsername = usernameInput;
-            // Enable input fields
+            localStorage.setItem('tiktokUsername', tiktokUsername); // Store in localStorage
             disableInputs(false);
-            // Fetch collections and flashcards
             fetchCollectionsAndFlashcards();
         } else {
             alert('Please enter your TikTok username.');
@@ -1138,6 +1137,17 @@
 
     // Initialize the leaderboard
     displayLeaderboard();
+
+    // Check if tiktokUsername is stored in localStorage
+    window.onload = function() {
+        const storedUsername = localStorage.getItem('tiktokUsername');
+        if (storedUsername) {
+            tiktokUsername = storedUsername;
+            document.getElementById('tiktokUsernameInput').value = tiktokUsername;
+            disableInputs(false);
+            fetchCollectionsAndFlashcards();
+        }
+    };
 </script>
 
 </body>
