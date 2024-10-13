@@ -227,6 +227,7 @@
         #collectionsList li:hover {
             background-color: #f1f1f1;
         }
+        #sidepanel .enter-username,
         #sidepanel .add-collection,
         #sidepanel .add-card,
         #sidepanel .manage-collection,
@@ -240,7 +241,7 @@
             padding: 20px;
         }
         #sidepanel .clear-leaderboard {
-            margin-bottom: 100px; /* Existing line */
+            margin-bottom: 100px;
         }
         #sidepanel input,
         #sidepanel button {
@@ -265,23 +266,23 @@
         }
         /* Modal Styles */
         .modal {
-            display: none; /* Hidden by default */
+            display: none;
             position: fixed;
             z-index: 3;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
         }
         .modal-content {
             background-color: #fefefe;
-            margin: 100px auto; /* 15% from the top and centered */
+            margin: 100px auto;
             padding: 20px;
             border: 1px solid #888;
             width: 80%;
-            max-width: 500px; /* Could be more or less, depending on screen size */
+            max-width: 500px;
             border-radius: 10px;
             position: relative;
         }
@@ -336,6 +337,20 @@
             color: green;
             margin-top: 10px;
         }
+        /* New Styles for Enter Username */
+        #sidepanel .enter-username input {
+            margin: 10px 0;
+            padding: 10px;
+        }
+        #sidepanel .enter-username button {
+            margin: 10px 0;
+            padding: 10px;
+        }
+        /* Disable buttons when not allowed */
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -343,26 +358,34 @@
 <div id="sidepanel">
     <a href="javascript:void(0)" class="closebtn" onclick="closeSidePanel()">&times;</a>
     <h2>Settings</h2>
+
+    <!-- New TikTok Username Input -->
+    <div class="enter-username">
+        <h3>Enter Your TikTok Username</h3>
+        <input type="text" id="tiktokUsernameInput" placeholder="TikTok Username">
+        <button id="saveUsernameButton">Save Username</button>
+    </div>
+
     <div class="adjust-timer">
         <h3>Adjust Round Duration</h3>
         <input type="number" id="roundDurationInput" placeholder="Seconds (e.g., 90)" min="1" value="90">
     </div>
     <div class="add-collection">
         <h3>Add New Collection</h3>
-        <input type="text" id="newCollectionName" placeholder="Collection Name">
-        <button onclick="addCollection()">Add Collection</button>
+        <input type="text" id="newCollectionName" placeholder="Collection Name" disabled>
+        <button id="addCollectionButton" onclick="addCollection()" disabled>Add Collection</button>
     </div>
     <div class="manage-collection">
-        <button onclick="openManageCollectionsModal()">Manage Collections</button>
+        <button id="manageCollectionsButton" onclick="openManageCollectionsModal()" disabled>Manage Collections</button>
     </div>
     <div class="add-card">
         <h3>Add New Flashcard</h3>
-        <input type="text" id="newPrompt" placeholder="Prompt">
-        <input type="text" id="newAnswer" placeholder="Answer">
-        <button onclick="addFlashcard()">Add Flashcard</button>
+        <input type="text" id="newPrompt" placeholder="Prompt" disabled>
+        <input type="text" id="newAnswer" placeholder="Answer" disabled>
+        <button id="addFlashcardButton" onclick="addFlashcard()" disabled>Add Flashcard</button>
     </div>
     <div class="manage-card">
-        <button onclick="openManageFlashcardsModal()">Manage Flashcards</button>
+        <button id="manageFlashcardsButton" onclick="openManageFlashcardsModal()" disabled>Manage Flashcards</button>
     </div>
     <div class="simulate-comments">
         <h3>Simulate Comments</h3>
@@ -419,15 +442,15 @@
 
     <!-- Flashcards Container -->
     <div class="container">
-        <h1 class="collection-title" id="collectionTitle">Default Collection</h1>
+        <h1 class="collection-title" id="collectionTitle">Please Enter Username</h1>
         <div class="flashcard-container">
             <div class="flashcard" id="flashcard">
                 <div class="flashcard-face flashcard-front">
                     <div class="timer" id="timerDisplay">90</div>
-                    <h2 id="flashcardPrompt">Prompt</h2>
+                    <h2 id="flashcardPrompt">No Flashcards Available</h2>
                 </div>
                 <div class="flashcard-face flashcard-back">
-                    <h2 id="flashcardAnswer">Answer</h2>
+                    <h2 id="flashcardAnswer"></h2>
                 </div>
             </div>
         </div>
@@ -443,15 +466,8 @@
 </div>
 
 <script>
-    let collections = {
-        "Default Collection": [
-            { prompt: "What is the capital of France?", answer: "Paris" },
-            { prompt: "What is 2 + 2?", answer: "4" },
-            { prompt: "What color is the sky?", answer: "Blue" },
-            { prompt: "Explain the theory of relativity in simple terms.", answer: "The theory of relativity, developed by Albert Einstein, includes both the Special and General theories. It revolutionized our understanding of space, time, and gravity, suggesting that time and space are interwoven into a single continuum known as spacetime." }
-        ]
-    };
-    let currentCollection = "Default Collection";
+    let collections = {}; // Collections will be fetched from the server
+    let currentCollection = "";
     let currentIndex = 0;
     let showingAnswer = false;
 
@@ -482,8 +498,95 @@
         ]
     };
 
+    // New Variable to Store TikTok Username
+    let tiktokUsername = '';
+
+    // Disable input fields until username is saved
+    function disableInputs(disable) {
+        document.getElementById('newCollectionName').disabled = disable;
+        document.getElementById('addCollectionButton').disabled = disable;
+        document.getElementById('manageCollectionsButton').disabled = disable;
+        document.getElementById('newPrompt').disabled = disable;
+        document.getElementById('newAnswer').disabled = disable;
+        document.getElementById('addFlashcardButton').disabled = disable;
+        document.getElementById('manageFlashcardsButton').disabled = disable;
+    }
+    disableInputs(true); // Disable inputs initially
+
+    // Event Listener for Save Username Button
+    document.getElementById('saveUsernameButton').addEventListener('click', function() {
+        const usernameInput = document.getElementById('tiktokUsernameInput').value.trim();
+        if (usernameInput) {
+            tiktokUsername = usernameInput;
+            // Enable input fields
+            disableInputs(false);
+            // Fetch collections and flashcards
+            fetchCollectionsAndFlashcards();
+        } else {
+            alert('Please enter your TikTok username.');
+        }
+    });
+
+    function fetchCollectionsAndFlashcards() {
+        // Fetch collections
+        fetch('https://cc-contexto-d01a6bbfa039.herokuapp.com/get-collections?tiktok_username=' + encodeURIComponent(tiktokUsername))
+        .then(response => response.json())
+        .then(data => {
+            // Assuming data.collections is an array of collection names
+            if (Array.isArray(data.collections)) {
+                collections = {};
+                data.collections.forEach(collectionName => {
+                    collections[collectionName] = []; // Initialize empty arrays for flashcards
+                });
+                // Now fetch flashcards
+                fetchFlashcards();
+            } else {
+                console.error('Invalid data format for collections.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching collections:', error);
+        });
+    }
+
+    function fetchFlashcards() {
+        fetch('https://cc-contexto-d01a6bbfa039.herokuapp.com/get-flashcards?tiktok_username=' + encodeURIComponent(tiktokUsername))
+        .then(response => response.json())
+        .then(data => {
+            // Assuming data.flashcards is an array of flashcards with collection_name, prompt, answer
+            if (Array.isArray(data.flashcards)) {
+                data.flashcards.forEach(flashcard => {
+                    const { collection_name, prompt, answer } = flashcard;
+                    if (!collections[collection_name]) {
+                        collections[collection_name] = [];
+                    }
+                    collections[collection_name].push({ prompt, answer });
+                });
+                // Update the UI with the fetched data
+                // Set currentCollection to one of the collections, e.g., the first one
+                if (Object.keys(collections).length > 0) {
+                    currentCollection = Object.keys(collections)[0];
+                    document.getElementById('collectionTitle').textContent = currentCollection;
+                    currentIndex = 0;
+                    showingAnswer = false;
+                    updateFlashcard();
+                } else {
+                    // No collections or flashcards found
+                    currentCollection = '';
+                    document.getElementById('collectionTitle').textContent = 'No Collections';
+                    updateFlashcard();
+                }
+            } else {
+                console.error('Invalid data format for flashcards.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching flashcards:', error);
+        });
+    }
+
     function updateFlashcard() {
-        const flashcards = collections[currentCollection];
+        const flashcards = collections[currentCollection] || [];
         const flashcardPrompt = document.getElementById('flashcardPrompt');
         const flashcardAnswer = document.getElementById('flashcardAnswer');
         const flashcardElement = document.getElementById('flashcard');
@@ -536,7 +639,7 @@
     }
 
     function prevFlashcard() {
-        const flashcards = collections[currentCollection];
+        const flashcards = collections[currentCollection] || [];
         if (flashcards.length === 0) return;
         if (currentIndex > 0) {
             currentIndex--;
@@ -546,7 +649,7 @@
     }
 
     function nextFlashcard() {
-        const flashcards = collections[currentCollection];
+        const flashcards = collections[currentCollection] || [];
         if (flashcards.length === 0) return;
         if (currentIndex < flashcards.length - 1) {
             currentIndex++;
@@ -557,7 +660,6 @@
 
     function openSidePanel() {
         document.getElementById("sidepanel").style.width = "300px";
-        // displayCollections(); // No longer needed
     }
 
     function closeSidePanel() {
@@ -578,6 +680,31 @@
         if (name && !collections[name]) {
             collections[name] = [];
             document.getElementById('newCollectionName').value = '';
+
+            // Send data to the collection endpoint
+            const data = {
+                tiktok_username: tiktokUsername,
+                collection_name: name,
+                loaddate: new Date().toISOString()
+            };
+
+            fetch('https://cc-contexto-d01a6bbfa039.herokuapp.com/add-flashcard-collection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Optionally handle the response
+                console.log('Collection added successfully.');
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
         }
     }
 
@@ -589,6 +716,33 @@
             document.getElementById('newPrompt').value = '';
             document.getElementById('newAnswer').value = '';
             updateFlashcard();
+
+            // Send data to the flashcard endpoint
+            const data = {
+                tiktok_username: tiktokUsername,
+                collection_name: currentCollection,
+                prompt: prompt,
+                answer: answer,
+                loaddate: new Date().toISOString()
+            };
+
+            fetch('https://cc-contexto-d01a6bbfa039.herokuapp.com/add-flashcard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Optionally handle the response
+                console.log('Flashcard added successfully.');
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
         }
     }
 
@@ -689,7 +843,10 @@
 
     function checkCommentForAnswer(username, photoUrl, commentText) {
         if (roundActive && remainingTime > 0) {
-            const currentAnswer = collections[currentCollection][currentIndex].answer.trim().toLowerCase();
+            const flashcards = collections[currentCollection] || [];
+            if (flashcards.length === 0) return;
+
+            const currentAnswer = flashcards[currentIndex].answer.trim().toLowerCase();
             if (commentText.trim().toLowerCase() === currentAnswer) {
                 if (usersAnsweredThisRound.has(username)) {
                     // User has already answered in this round; do not award more points
@@ -756,7 +913,9 @@
         // Simulate a correct answer from a random user
         const usernames = ['Alice', 'Bob', 'Charlie', 'Dana', 'Eve'];
         const randomUsername = usernames[Math.floor(Math.random() * usernames.length)];
-        addComment(testComment.photoUrl, randomUsername, collections[currentCollection][currentIndex].answer);
+        const flashcards = collections[currentCollection] || [];
+        if (flashcards.length === 0) return;
+        addComment(testComment.photoUrl, randomUsername, flashcards[currentIndex].answer);
     }
 
     // Manage Collections Modal Functions
@@ -800,15 +959,37 @@
     }
 
     function deleteCollection(name) {
-        if (name !== "Default Collection") {
+        if (collections.hasOwnProperty(name)) {
             delete collections[name];
             if (currentCollection === name) {
-                currentCollection = "Default Collection";
-                currentIndex = 0;
+                currentCollection = Object.keys(collections)[0] || '';
                 updateFlashcard();
             }
-        } else {
-            alert("Cannot delete the Default Collection.");
+
+            // Send data to the remove collection endpoint
+            const data = {
+                tiktok_username: tiktokUsername,
+                collection_name: name,
+                loaddate: new Date().toISOString()
+            };
+
+            fetch('https://cc-contexto-d01a6bbfa039.herokuapp.com/remove-flashcard-collection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Optionally handle the response
+                console.log('Collection removed successfully.');
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
         }
     }
 
@@ -816,7 +997,7 @@
     function openManageFlashcardsModal() {
         const modal = document.getElementById('manageFlashcardsModal');
         const list = document.getElementById('flashcardsModalList');
-        const currentCollectionFlashcards = collections[currentCollection];
+        const currentCollectionFlashcards = collections[currentCollection] || [];
 
         document.getElementById('currentCollectionName').textContent = currentCollection;
         list.innerHTML = '';
@@ -849,11 +1030,39 @@
     }
 
     function deleteFlashcard(index) {
+        const removedCard = collections[currentCollection][index];
         collections[currentCollection].splice(index, 1);
         if (currentIndex >= collections[currentCollection].length) {
             currentIndex = collections[currentCollection].length - 1;
         }
         updateFlashcard();
+
+        // Send data to the remove flashcard endpoint
+        const data = {
+            tiktok_username: tiktokUsername,
+            collection_name: currentCollection,
+            prompt: removedCard.prompt,
+            answer: removedCard.answer,
+            loaddate: new Date().toISOString()
+        };
+
+        fetch('https://cc-contexto-d01a6bbfa039.herokuapp.com/remove-flashcard', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            // Optionally handle the response
+            console.log('Flashcard removed successfully.');
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
     }
 
     // Upload Flashcards from JSON
@@ -880,6 +1089,32 @@
             updateFlashcard();
             openManageFlashcardsModal(); // Refresh the list
 
+            // Send data to the batch endpoint
+            const data = {
+                tiktok_username: tiktokUsername,
+                collection_name: currentCollection,
+                flashcards: validFlashcards,
+                loaddate: new Date().toISOString()
+            };
+
+            fetch('https://cc-contexto-d01a6bbfa039.herokuapp.com/add-flashcard-batch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Optionally handle the response
+                console.log('Flashcards batch added successfully.');
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+
             messageDiv.textContent = "Flashcards uploaded successfully!";
             messageDiv.className = "success-message";
             document.getElementById('jsonInput').value = '';
@@ -901,13 +1136,9 @@
         }
     };
 
-    // Initialize the first flashcard and leaderboard
-    updateFlashcard();
+    // Initialize the leaderboard
     displayLeaderboard();
 </script>
 
 </body>
 </html>
-
-
-
