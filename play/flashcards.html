@@ -12,6 +12,10 @@
             overflow-x: hidden;
             display: flex;
         }
+        h3 {
+            margin-top:0px;
+            margin-bottom:0px;
+        }
         /* Add 100px margin-left if the viewport width is greater than 800px */
         @media screen and (min-width: 1001px) {
             body {
@@ -239,6 +243,11 @@
             display: flex;
             flex-direction: column;
             padding: 20px;
+            padding-bottom:0px;
+        }
+        #sidepanel .manage-collection,
+        #sidepanel .manage-card {
+            padding-top:0px;
         }
         #sidepanel .clear-leaderboard {
             margin-bottom: 100px;
@@ -345,6 +354,10 @@
         #sidepanel .enter-username button {
             margin: 10px 0;
             padding: 10px;
+        }
+        #manageCollectionsButton,
+        #manageFlashcardsButton {
+            margin-top:0px !important;
         }
         /* Disable buttons when not allowed */
         .disabled {
@@ -544,6 +557,7 @@
             }
         })
         .catch(error => {
+            window.alert(error)
             console.error('Error fetching collections:', error);
         });
     }
