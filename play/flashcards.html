@@ -814,7 +814,7 @@
         addComment(testComment.photoUrl, testComment.username, randomComment);
     }
 
-    function addComment(photoUrl, username, commentText) {
+    window.addNewComment = function addComment(photoUrl, username, commentText) {
         const commentsSection = document.getElementById('commentsSection');
 
         const commentDiv = document.createElement('div');
