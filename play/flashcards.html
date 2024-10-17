@@ -479,7 +479,7 @@
     </div>
 </div>
 
-<script nonce="67890">
+<script>
     let collections = {}; // Collections will be fetched from the server
     let currentCollection = "";
     let currentIndex = 0;
@@ -809,15 +809,14 @@
     }
 
     // Comments Functionality
-    // function simulateComments() {
-    //     const randomComment = testComment.comments[Math.floor(Math.random() * testComment.comments.length)];
-    //     addComment(testComment.photoUrl, testComment.username, randomComment);
-    // }
-
-    window.simulateComments = function(photoUrl, username, commentText) {
+    function simulateComments() {
         const randomComment = testComment.comments[Math.floor(Math.random() * testComment.comments.length)];
         addComment(testComment.photoUrl, testComment.username, randomComment);
-    };
+    }
+
+    window.addEventListener('addCommentEvent', function(event) {
+        simulateComments()
+    });
 
     function addComment(photoUrl, username, commentText) {
         const commentsSection = document.getElementById('commentsSection');
