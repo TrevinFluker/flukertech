@@ -809,12 +809,17 @@
     }
 
     // Comments Functionality
-    function simulateComments() {
+    // function simulateComments() {
+    //     const randomComment = testComment.comments[Math.floor(Math.random() * testComment.comments.length)];
+    //     addComment(testComment.photoUrl, testComment.username, randomComment);
+    // }
+
+    window.simulateComments = function(photoUrl, username, commentText) {
         const randomComment = testComment.comments[Math.floor(Math.random() * testComment.comments.length)];
         addComment(testComment.photoUrl, testComment.username, randomComment);
-    }
+    };
 
-    window.addNewComment = function(photoUrl, username, commentText) {
+    function addComment(photoUrl, username, commentText) {
         const commentsSection = document.getElementById('commentsSection');
 
         const commentDiv = document.createElement('div');
