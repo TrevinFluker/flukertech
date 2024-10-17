@@ -815,7 +815,7 @@
     }
 
     window.addEventListener('addCommentEvent', function(event) {
-        addComment()
+        addComment(event.photoUrl, event.username, event.commentText)
     });
 
     function addComment(photoUrl, username, commentText) {
