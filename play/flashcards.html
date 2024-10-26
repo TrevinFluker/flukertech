@@ -125,7 +125,6 @@
             right: 20px;
             font-size: 24px;
             font-weight: bold;
-            color: #333;
             display: none;
         }
         /* Button Styles */
@@ -368,18 +367,19 @@
         .wavy-text {
             font-size: 2em;
             font-weight: bold;
-            color: #3498db;
+            color: #5bc25f;
             animation: wave 1.5s ease-in-out infinite;
         }
 
         .wavy-text span {
+            display: inline-block;
             animation: wave 1.5s ease-in-out infinite;
         }
 
         @keyframes wave {
             0%, 100% { transform: translateY(0); }
-            25% { transform: translateY(-10px); }
-            75% { transform: translateY(10px); }
+            25% { transform: translateY(-3px); }
+            75% { transform: translateY(3px); }
         }
 
         .wavy-text span:nth-child(1) { animation-delay: 0s; }
@@ -478,7 +478,7 @@
 <div class="main-container">
     <!-- Leaderboard Section -->
     <div class="leaderboard" id="leaderboard">
-        <h2 class="wavy-text" id="leaderboardTextContainer">
+        <h2 id="leaderboardTextContainer">
             <span>L</span><span>e</span><span>a</span><span>d</span><span>e</span><span>r</span><span>b</span><span>o</span><span>a</span><span>r</span><span>d</span>
         </h2>
         <!-- Users will be injected here -->
@@ -806,7 +806,9 @@
     }
 
     function startTimer() {
+        addLeaderboardWaveEffect();
         const timerDisplay = document.getElementById('timerDisplay');
+        timerDisplay.style.color = "#5bc25f";
         remainingTime = timerDuration;
         timerDisplay.textContent = remainingTime;
         timerDisplay.style.display = 'block';
@@ -823,6 +825,8 @@
             } else {
                 timerDisplay.textContent = '0';
                 clearInterval(timer);
+                removeLeaderboardWaveEffect();
+                timerDisplay.style.color = "#000000";
                 roundActive = false; // Round has ended
             }
         }, 1000);
@@ -912,7 +916,9 @@
     // Leaderboard Functions
     function displayLeaderboard() {
         const leaderboardElement = document.getElementById('leaderboard');
-        leaderboardElement.innerHTML = '<h2>Leaderboard</h2>';
+        leaderboardElement.innerHTML = '<h2 id="leaderboardTextContainer">' + 
+            '<span>L</span><span>e</span><span>a</span><span>d</span><span>e</span><span>r</span><span>b</span><span>o</span><span>a</span><span>r</span><span>d</span>' +
+        '</h2>';
         leaderboardData.sort((a, b) => b.points - a.points);
         leaderboardData.forEach(user => {
             const userDiv = document.createElement('div');
@@ -1080,6 +1086,10 @@
 
     function removeLeaderboardWaveEffect() {
         document.getElementById("leaderboardTextContainer").classList.remove("wavy-text");
+    }
+
+    function addLeaderboardWaveEffect() {
+        document.getElementById("leaderboardTextContainer").classList.add("wavy-text");
     }
 
     function deleteFlashcard(index) {
