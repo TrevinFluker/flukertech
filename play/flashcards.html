@@ -677,12 +677,22 @@
     }
 
     function revealAnswer() {
+        removeLeaderboardWaveEffect();
+        resetTimer();
         showingAnswer = !showingAnswer;
         const flashcardElement = document.getElementById('flashcard');
         flashcardElement.classList.toggle('is-flipped');
     }
 
     function prevFlashcard() {
+        removeLeaderboardWaveEffect();
+        if (showingAnswer) {
+            revealAnswer();
+            setTimeout(() => {
+                prevFlashcard();
+            }, 500)
+            return;
+        }
         const flashcards = collections[currentCollection] || [];
         if (flashcards.length === 0) return;
         if (currentIndex > 0) {
@@ -693,6 +703,14 @@
     }
 
     function nextFlashcard() {
+        removeLeaderboardWaveEffect();
+        if (showingAnswer) {
+            revealAnswer();
+            setTimeout(() => {
+                nextFlashcard();
+            }, 500)
+            return;
+        }
         const flashcards = collections[currentCollection] || [];
         if (flashcards.length === 0) return;
         if (currentIndex < flashcards.length - 1) {
@@ -809,7 +827,7 @@
         addLeaderboardWaveEffect();
         const timerDisplay = document.getElementById('timerDisplay');
         timerDisplay.style.color = "#5bc25f";
-        remainingTime = timerDuration;
+        remainingTime = timerDuration;//
         timerDisplay.textContent = remainingTime;
         timerDisplay.style.display = 'block';
         roundStartTime = Date.now();
