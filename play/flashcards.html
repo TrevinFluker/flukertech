@@ -365,6 +365,34 @@
             opacity: 0.5;
             pointer-events: none;
         }
+        .wavy-text {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+            animation: wave 1.5s ease-in-out infinite;
+        }
+
+        .wavy-text span {
+            animation: wave 1.5s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-10px); }
+            75% { transform: translateY(10px); }
+        }
+
+        .wavy-text span:nth-child(1) { animation-delay: 0s; }
+        .wavy-text span:nth-child(2) { animation-delay: 0.1s; }
+        .wavy-text span:nth-child(3) { animation-delay: 0.2s; }
+        .wavy-text span:nth-child(4) { animation-delay: 0.3s; }
+        .wavy-text span:nth-child(5) { animation-delay: 0.4s; }
+        .wavy-text span:nth-child(6) { animation-delay: 0.5s; }
+        .wavy-text span:nth-child(7) { animation-delay: 0.6s; }
+        .wavy-text span:nth-child(8) { animation-delay: 0.7s; }
+        .wavy-text span:nth-child(9) { animation-delay: 0.8s; }
+        .wavy-text span:nth-child(10) { animation-delay: 0.9s; }
+        .wavy-text span:nth-child(11) { animation-delay: 1.0s; }
     </style>
 </head>
 <body>
@@ -450,7 +478,9 @@
 <div class="main-container">
     <!-- Leaderboard Section -->
     <div class="leaderboard" id="leaderboard">
-        <h2>Leaderboard</h2>
+        <h2 class="wavy-text" id="leaderboardTextContainer">
+            <span>L</span><span>e</span><span>a</span><span>d</span><span>e</span><span>r</span><span>b</span><span>o</span><span>a</span><span>r</span><span>d</span>
+        </h2>
         <!-- Users will be injected here -->
     </div>
 
@@ -1046,6 +1076,10 @@
     function closeManageFlashcardsModal() {
         const modal = document.getElementById('manageFlashcardsModal');
         modal.style.display = 'none';
+    }
+
+    function removeLeaderboardWaveEffect() {
+        document.getElementById("leaderboardTextContainer").classList.remove("wavy-text");
     }
 
     function deleteFlashcard(index) {
