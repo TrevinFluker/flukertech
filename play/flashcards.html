@@ -79,7 +79,7 @@
         .flashcard-container {
             perspective: 1000px;
             width: 100%;
-            margin: 0 auto 40px auto;
+            margin: 0 auto 10px auto;
             position: relative;
         }
         .flashcard {
@@ -129,7 +129,7 @@
         }
         /* Button Styles */
         .buttons {
-            margin-top: 30px;
+            margin-top: 10px;
             margin-bottom: 20px;
         }
         .buttons button {
@@ -393,6 +393,18 @@
         .wavy-text span:nth-child(9) { animation-delay: 0.8s; }
         .wavy-text span:nth-child(10) { animation-delay: 0.9s; }
         .wavy-text span:nth-child(11) { animation-delay: 1.0s; }
+
+        /* Hide arrows in number input for Chrome, Safari, Edge, and Opera */
+        .no-arrows::-webkit-outer-spin-button,
+        .no-arrows::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Hide arrows in number input for Firefox */
+        .no-arrows[type="number"] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 <body>
@@ -498,6 +510,7 @@
                 </div>
             </div>
         </div>
+        <div id="flashcardIndex" style="cursor:pointer;"></div>
         <div class="buttons">
             <button id="startRoundButton" onclick="startRound()">Start Round</button>
             <button id="previousButton" onclick="prevFlashcard()">Previous</button>
@@ -630,6 +643,10 @@
         });
     }
 
+    function updateFlashcardIndex(fIndex, fLength) {
+        document.getElementById("flashcardIndex").innerText = fIndex.toString() + " / " + fLength.toString()
+    }
+
     function updateFlashcard() {
         const flashcards = collections[currentCollection] || [];
         const flashcardPrompt = document.getElementById('flashcardPrompt');
@@ -654,7 +671,7 @@
         } else {
             flashcardElement.classList.remove('is-flipped');
         }
-
+        updateFlashcardIndex(currentIndex + 1, flashcards.length)
         // Reset Timer and Users Answered
         resetTimer();
         usersAnsweredThisRound.clear();
@@ -683,6 +700,25 @@
         showingAnswer = !showingAnswer;
         const flashcardElement = document.getElementById('flashcard');
         flashcardElement.classList.toggle('is-flipped');
+    }
+
+    function jumpToFlashcard(newIndex) {
+        const flashcards = collections[currentCollection] || [];
+        const totalLength = flashcards.length;
+        if (totalLength === 0) return;
+
+        if (newIndex >= 1 && newIndex <= totalLength) {
+            currentIndex = newIndex - 1;
+            if (showingAnswer) {
+                revealAnswer();
+                setTimeout(() => {
+                    jumpToFlashcard(newIndex);
+                }, 500)
+                return;
+            }
+            showingAnswer = false; // Reset showingAnswer
+            updateFlashcard();
+        }
     }
 
     function prevFlashcard() {
@@ -997,7 +1033,7 @@
         const modal = document.getElementById('manageCollectionsModal');
         const list = document.getElementById('collectionsModalList');
         list.innerHTML = '';
-
+        console.log(collections)
         for (let collectionName in collections) {
             const li = document.createElement('li');
             li.textContent = collectionName;
@@ -1011,6 +1047,9 @@
 
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = 'Delete';
+            if (collectionName === "Incohearent") {
+                deleteBtn.disabled = true;
+            }
             deleteBtn.onclick = function() {
                 deleteCollection(collectionName);
                 openManageCollectionsModal(); // Refresh the list
@@ -1081,6 +1120,9 @@
             li.textContent = card.prompt;
 
             const deleteBtn = document.createElement('button');
+            if (currentCollection === "Incohearent") {
+                deleteBtn.disabled = true;
+            }
             deleteBtn.textContent = 'Delete';
             deleteBtn.onclick = function() {
                 deleteFlashcard(index);
@@ -1205,6 +1247,61 @@
             messageDiv.className = "error-message";
         }
     }
+
+    document.getElementById("flashcardIndex").addEventListener('click', function() {
+        var flashcardIndexDiv = document.getElementById("flashcardIndex");
+        var currentText = flashcardIndexDiv.innerText;
+        var parts = currentText.split(' / ');
+        var currentIndexText = parts[0];
+        var totalLengthText = parts[1];
+        var totalLength = parseInt(totalLengthText);
+
+        // If there are no flashcards, do nothing
+        if (isNaN(totalLength) || totalLength <= 0) {
+            return;
+        }
+
+        // Create an input field
+        var input = document.createElement('input');
+        input.classList.add('no-arrows')
+        input.type = 'number';
+        input.min = 1;
+        input.max = totalLength;
+        input.value = currentIndexText;
+        input.style.width = '25px'; // Adjust width as needed
+
+        // Replace the index number with the input field
+        flashcardIndexDiv.innerHTML = ''; // Clear the div
+        flashcardIndexDiv.appendChild(input);
+        flashcardIndexDiv.appendChild(document.createTextNode(' / ' + totalLengthText));
+
+        input.focus();
+
+        // Function to finalize input processing
+        function finalizeInput() {
+            // Handle the input value
+            var newIndex = parseInt(input.value);
+            if (isNaN(newIndex) || newIndex < 1 || newIndex > totalLength) {
+                // Invalid input, reset to current index
+                newIndex = currentIndex + 1; // currentIndex is 0-based
+            }
+            // Jump to the new flashcard
+            jumpToFlashcard(newIndex);
+        }
+
+        input.addEventListener('blur', function() {
+            finalizeInput();
+        });
+
+        // Also handle the Enter and Escape keys
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+                input.blur();
+            }
+        });
+    });
+
 
     // Close modals when clicking outside of them
     window.onclick = function(event) {
