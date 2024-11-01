@@ -147,7 +147,9 @@ a {
     .overlay.show {
         display: block;
     }
-
+    .header {
+        padding: 105px 20px 60px; /* Increased top padding */
+    }
     .header h1 {
         font-size: 34px;
     }
@@ -167,6 +169,9 @@ a {
     }
 }
 @media (min-width: 769px) {
+    .header {
+        padding: 140px 20px 80px; /* Increased top padding */
+    }
     .header h1 {
         font-size: 48px;
     }
@@ -189,7 +194,6 @@ a {
 /* Header (Adjusted for Fixed Navigation) */
 .header {
     background: linear-gradient(135deg, #1f1c2c, #6100ff);
-    padding: 140px 20px 80px; /* Increased top padding */
     text-align: center;
     position: relative;
     overflow: hidden;
