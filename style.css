@@ -149,21 +149,21 @@ a {
     }
 
     .header h1 {
-        font-size: 48px;
+        font-size: 34px;
     }
     .header p {
-        font-size: 20px;
-        padding: 0px 0px;
+        font-size: 17px;
+        padding: 0px 30px;
     }
     .toggle-option {
-        padding: 15px 30px;
-        font-size: 16px;
+        padding: 10px 30px;
+        font-size: 15px;
     }
     .toggle-container {
-        width: auto;
+        width: 321px;
     }
     .toggle-option {
-        width: auto;
+        width: 150px;
     }
 }
 /* Header (Adjusted for Fixed Navigation) */
@@ -191,16 +191,16 @@ a {
 }
 .header h1 {
     font-family: 'Montserrat', sans-serif;
-    font-size: 34px;
+    font-size: 48px;
     margin-bottom: 20px;
     z-index: 1;
     position: relative;
 }
 .header p {
-    font-size: 17px;
+    font-size: 20px;
     z-index: 1;
     position: relative;
-    padding: 0px 30px;
+    padding: 0px 0px;
 }
 /* Toggle Button */
 .toggle-container {
@@ -209,7 +209,7 @@ a {
     margin-top: 40px;
     z-index: 1;
     position: relative;
-    width: 321px;
+    width: auto;
     justify-self: center;
     margin-left: auto;
     margin-right: auto;
@@ -223,9 +223,9 @@ a {
     cursor: pointer;
 }
 .toggle-option {
-    width: 150px;
-    padding: 10px 30px;
-    font-size: 15px;
+    width: auto;
+    padding: 15px 30px;
+    font-size: 16px;
     color: #fff;
     transition: background 0.3s, color 0.3s;
 }
