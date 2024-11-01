@@ -661,7 +661,7 @@
         }
 
         flashcardPrompt.textContent = flashcards[currentIndex].prompt;
-        flashcardAnswer.textContent = flashcards[currentIndex].answer;
+        flashcardAnswer.textContent = flashcards[currentIndex].answer.split('|')[0];
 
         // Ensure both faces have the same height
         setEqualCardHeight();
@@ -949,13 +949,34 @@
         }, 1000);
     }
 
+    // function checkCommentForAnswer(username, photoUrl, commentText) {
+    //     if (roundActive && remainingTime > 0) {
+    //         const flashcards = collections[currentCollection] || [];
+    //         if (flashcards.length === 0) return;
+
+    //         const currentAnswer = flashcards[currentIndex].answer.trim().toLowerCase();
+    //         if (commentText.trim().toLowerCase() === currentAnswer) {
+    //             if (usersAnsweredThisRound.has(username)) {
+    //                 // User has already answered in this round; do not award more points
+    //                 return;
+    //             }
+    //             const elapsedSeconds = Math.floor((Date.now() - roundStartTime) / 1000);
+    //             const points = Math.max(0, Math.floor(1000 - (elapsedSeconds * (1000 / timerDuration))));
+    //             updateLeaderboard(username, photoUrl, points);
+    //             usersAnsweredThisRound.add(username); // Mark user as having answered this round
+    //         }
+    //     }
+    // }
+
     function checkCommentForAnswer(username, photoUrl, commentText) {
         if (roundActive && remainingTime > 0) {
             const flashcards = collections[currentCollection] || [];
             if (flashcards.length === 0) return;
 
             const currentAnswer = flashcards[currentIndex].answer.trim().toLowerCase();
-            if (commentText.trim().toLowerCase() === currentAnswer) {
+            const acceptableAnswers = currentAnswer.split('|').map(ans => ans.trim().toLowerCase());
+
+            if (acceptableAnswers.includes(commentText.trim().toLowerCase())) {
                 if (usersAnsweredThisRound.has(username)) {
                     // User has already answered in this round; do not award more points
                     return;
@@ -967,6 +988,7 @@
             }
         }
     }
+
 
     // Leaderboard Functions
     function displayLeaderboard() {
