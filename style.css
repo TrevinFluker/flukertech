@@ -166,6 +166,26 @@ a {
         width: 150px;
     }
 }
+@media (min-width: 769px) {
+    .header h1 {
+        font-size: 48px;
+    }
+    .header p {
+        font-size: 20px;
+        padding: 0px 0px;
+    }
+    .toggle-option {
+        padding: 15px 30px;
+        font-size: 16px;
+    }
+    .toggle-container {
+        width: auto;
+    }
+    .toggle-option {
+        width: auto;
+    }
+}
+
 /* Header (Adjusted for Fixed Navigation) */
 .header {
     background: linear-gradient(135deg, #1f1c2c, #6100ff);
@@ -191,16 +211,13 @@ a {
 }
 .header h1 {
     font-family: 'Montserrat', sans-serif;
-    font-size: 48px;
     margin-bottom: 20px;
     z-index: 1;
     position: relative;
 }
 .header p {
-    font-size: 20px;
     z-index: 1;
     position: relative;
-    padding: 0px 0px;
 }
 /* Toggle Button */
 .toggle-container {
@@ -209,7 +226,6 @@ a {
     margin-top: 40px;
     z-index: 1;
     position: relative;
-    width: auto;
     justify-self: center;
     margin-left: auto;
     margin-right: auto;
@@ -223,9 +239,6 @@ a {
     cursor: pointer;
 }
 .toggle-option {
-    width: auto;
-    padding: 15px 30px;
-    font-size: 16px;
     color: #fff;
     transition: background 0.3s, color 0.3s;
 }
