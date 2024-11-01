@@ -167,6 +167,15 @@ a {
     .toggle-option {
         width: 150px;
     }
+    .aspirational h2 {
+        font-size: 34px;
+    }
+    .aspirational p {
+        font-size: 17px;
+    }
+    #aspirational-section {
+        padding: 20px 20px 0px 20px;
+    }
 }
 @media (min-width: 769px) {
     .header {
@@ -188,6 +197,15 @@ a {
     }
     .toggle-option {
         width: auto;
+    }
+    .aspirational h2 {
+        font-size: 36px;
+    }
+    .aspirational p {
+        font-size: 17px;
+    }
+    #aspirational-section {
+        padding: 60px 20px;
     }
 }
 
@@ -253,7 +271,6 @@ a {
 /* Aspirational Words */
 .aspirational {
     position: relative;
-    padding: 60px 20px;
     text-align: center;
     background: #1e1e1e;
     overflow: hidden;
@@ -285,7 +302,6 @@ a {
     color: #ffffff;
 }
 .aspirational p {
-    font-size: 22px;
     margin-bottom: 20px;
     line-height: 1.5;
 }
