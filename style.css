@@ -393,7 +393,7 @@ a {
 /* Navigation Buttons for Slider */
 .slider-nav {
     text-align: center;
-    margin-top: -45px;
+    margin-top: -45px !important;
 }
 .slider-nav button {
     background: transparent;
