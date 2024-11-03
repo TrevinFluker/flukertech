@@ -177,7 +177,7 @@ a {
         padding: 20px 20px 0px 20px;
     }
     .aspirational::before {
-        background: url('https://www.flukertech.com/assets/imgs/contexto_gif.gif') no-repeat top center;
+        background: url('https://www.runchatcapture.com/assets/imgs/contexto_gif.gif') no-repeat top center;
     }
 }
 @media (min-width: 769px) {
@@ -211,7 +211,7 @@ a {
         padding: 60px 20px;
     }
     .aspirational::before {
-        background: url('https://www.flukertech.com/assets/imgs/contexto_gif.gif') no-repeat center center;
+        background: url('https://www.runchatcapture.com/assets/imgs/contexto_gif.gif') no-repeat center center;
     }
 }
 
