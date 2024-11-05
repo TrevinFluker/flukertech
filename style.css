@@ -57,7 +57,7 @@ a {
 .nav-menu ul li .dropdown-menu {
     display: none;
     position: absolute;
-    top: 36px;
+    top: 100%;
     right: 0; /* Opens to the bottom left */
     background: #1e1e1e;
     padding: 10px 0;
@@ -65,7 +65,8 @@ a {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     z-index: 1000;
 }
-.nav-menu ul li:hover .dropdown-menu {
+.nav-menu ul li:hover .dropdown-menu,
+.nav-menu ul li .dropdown-menu:hover {
     display: block;
 }
 .nav-menu ul li .dropdown-menu li {

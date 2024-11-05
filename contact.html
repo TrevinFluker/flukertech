@@ -1,141 +1,206 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Contact Us</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Contact - ChatCapture</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto&display=swap" rel="stylesheet">
+    <!-- Link to Base Stylesheet -->
+    <link rel="stylesheet" href="./style.css">
+    <!-- Additional Styles for Contact Page -->
     <style>
-        input[type="text"], button {
-            padding: 10px;
+        /* Contact Form Styles */
+        .contact-container {
+            padding: 160px 20px 60px; /* Adjust padding to account for fixed header */
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .contact-container h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 36px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .contact-container form {
+            display: flex;
+            flex-direction: column;
+        }
+        .contact-container label {
+            font-size: 18px;
             margin-bottom: 10px;
         }
-        button {
+        .contact-container input,
+        .contact-container textarea {
+            padding: 10px;
+            margin-bottom: 20px;
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+        }
+        .contact-container input:focus,
+        .contact-container textarea:focus {
+            outline: none;
+            border-color: #6610f2;
+        }
+        .contact-container button {
+            background: #6610f2;
+            color: #fff;
+            padding: 15px;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
             cursor: pointer;
+            transition: background 0.3s;
         }
-        label {
-            display: block;
-            margin-bottom: 5px;
+        .contact-container button:hover {
+            background: #520dc2;
         }
-        .content-container {
-            display: flex; /* Use Flexbox */
-            justify-content: center; /* Center horizontally */
-            align-items: center; /* Center vertically */
-            height: 80%;
-            width:100%;
-        }
-        @media only screen and (min-width: 601px) {
-            #contactForm {
-                width:400px;
-                margin:auto;
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .contact-container {
+                padding: 120px 20px 60px;
             }
-        }
-        @media only screen and (max-width: 600px) {
-            #contactForm {
-                width:80%;
-                margin:auto;
+            .contact-container h1 {
+                font-size: 28px;
+                margin-bottom: 30px;
+            }
+            .contact-container label {
+                font-size: 16px;
+            }
+            .contact-container input,
+            .contact-container textarea {
+                font-size: 14px;
+            }
+            .contact-container button {
+                font-size: 16px;
+                padding: 12px;
             }
         }
     </style>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="style.css">
 </head>
-<body  id="gradient">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a id="headerTitle" class="navbar-brand" href="index.html"></a>
-            
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+<body>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Tools
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            <a class="dropdown-item" href="./br/br.html">Bulk Rename</a>
-                            <a class="dropdown-item" href="./webwatcher/webwatcher-menu.html">WebWatcher</a>
-                            <a class="dropdown-item" href="./craf/craf-example.html">Bulk XLSX Editor</a>
-                            <a class="dropdown-item" href="./cc/menu.html">Chat Capture</a>
-                        </div>
-                    </li>
-                    <!-- <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Services
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            <a class="dropdown-item" href="#">Placeholder</a>
-                        </div>
-                    </li> -->
-                    <!-- <li class="nav-item">
-                        <a class="nav-link" href="about.html">About</a>
-                    </li> -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="contact.html">Contact</a>
-                    </li>
-                </ul>
-            </div>
+    <!-- Overlay for Mobile Menu -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Navigation Header -->
+    <header class="nav-header">
+        <div class="logo">
+            <a href="index.html">ChatCapture</a>
+        </div>
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <nav class="nav-menu" id="nav-menu">
+            <ul>
+                <li class="dropdown">
+                    <a href="#">Guides</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Going Live with ChatCapture</a></li>
+                        <li><a href="#">Creating with a Developer</a></li>
+                        <li><a href="#">Developing for Chat Capture</a></li>
+                    </ul>
+                </li>
+                <li><a href="#" class="active">Contact</a></li>
+            </ul>
         </nav>
     </header>
-    <div class="gradient-background"></div>
-    <div class="content-container">
+
+    <!-- Main Content -->
+    <div class="contact-container">
+        <h1>Contact Us</h1>
         <form id="contactForm">
-            <h3>Contact Us</h3>
-            <label class="d-block mt-3" for="email">Email:</label>
-            <input class="form-control mb-0" type="email" id="email" name="email" placeholder="Your email" required>
+            <!-- Email -->
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
 
-            <label class="d-block mt-3" for="topic">Topic:</label>
-            <select class="form-control" id="topic" name="topic">
-                <option value="business">Business Inquiry</option>
-                <option value="webwatcher">WebWatcher</option>
-                <option value="general">General Inquiry</option>
-            </select>
+            <!-- Topic -->
+            <label for="topic">Topic:</label>
+            <input type="text" id="topic" name="topic" required>
 
-            <label class="d-block mt-3" for="message">Message:</label>
-            <textarea class="form-control" id="message" name="message" placeholder="How can we help?" rows="4" required></textarea>
+            <!-- Message -->
+            <label for="message">Message:</label>
+            <textarea id="message" name="message" rows="6" required></textarea>
 
-            <button class="btn btn-main" type="submit">Send Message</button>
+            <!-- Submit Button -->
+            <button type="submit">Send Message</button>
         </form>
     </div>
-    <div class="bottom-spacer"></div>
-    <footer class="text-center">
-        © FlukerTech, LLC
-    </footer>
+
+    <!-- Footer -->
+    <div class="footer">
+        &copy; 2024 ChatCapture. All rights reserved.
+    </div>
+
+    <!-- Scripts -->
     <script>
+        // JavaScript code provided by you
         document.getElementById('contactForm').addEventListener('submit', function(event){
-        event.preventDefault();
+            event.preventDefault();
 
-        const formData = {
-            email: document.getElementById('email').value,
-            topic: document.getElementById('topic').value,
-            message: document.getElementById('message').value
-        };
+            const formData = {
+                email: document.getElementById('email').value,
+                topic: document.getElementById('topic').value,
+                message: document.getElementById('message').value
+            };
 
-        fetch('https://z-scraper.herokuapp.com/contact-submission', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            mode:"cors",
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('email').value = "";
-            document.getElementById('message').value = "";
-            alert('Message sent successfully!');
-        })
-        .catch((error) => {
-            console.error('Error:', error);
+            fetch('https://z-scraper.herokuapp.com/contact-submission', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                mode:"cors",
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('email').value = "";
+                document.getElementById('topic').value = "";
+                document.getElementById('message').value = "";
+                alert('Message sent successfully!');
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
         });
-    });
 
+        // JavaScript for Mobile Menu
+        (function() {
+            // Hamburger Menu Functionality
+            const hamburger = document.getElementById('hamburger');
+            const navMenu = document.getElementById('nav-menu');
+            const overlay = document.getElementById('overlay');
+
+            function toggleMenu() {
+                navMenu.classList.toggle('show');
+                overlay.classList.toggle('show');
+            }
+
+            hamburger.addEventListener('click', function(event) {
+                event.stopPropagation();
+                toggleMenu();
+            });
+
+            overlay.addEventListener('click', function() {
+                toggleMenu();
+            });
+
+            // Close menu when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const isClickInsideMenu = navMenu.contains(event.target);
+                const isHamburger = hamburger.contains(event.target);
+
+                if (!isClickInsideMenu && !isHamburger && navMenu.classList.contains('show')) {
+                    toggleMenu();
+                }
+            });
+        })();
     </script>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script src="script.js"></script>
+
 </body>
 </html>
