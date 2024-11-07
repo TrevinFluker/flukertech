@@ -1049,7 +1049,7 @@
         const randomUsername = usernames[Math.floor(Math.random() * usernames.length)];
         const flashcards = collections[currentCollection] || [];
         if (flashcards.length === 0) return;
-        addComment(testComment.photoUrl, randomUsername, flashcards[currentIndex].answer);
+        addComment(testComment.photoUrl, randomUsername, flashcards[currentIndex].answer.split("|")[0]);
     }
 
     // Manage Collections Modal Functions
