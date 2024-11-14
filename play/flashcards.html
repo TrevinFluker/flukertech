@@ -36,6 +36,7 @@
         .leaderboard {
             width: 250px;
             margin-right: 30px;
+            justify-items: center;
         }
         .leaderboard h2 {
             text-align: center;
@@ -43,6 +44,7 @@
         }
         .leaderboard .user {
             display: flex;
+            width:80%;
             align-items: center;
             background-color: #fff;
             border-radius: 10px;
@@ -489,7 +491,7 @@
 
 <div class="main-container">
     <!-- Leaderboard Section -->
-    <div class="leaderboard" id="leaderboard">
+    <div style="margin-right:0px;" class="leaderboard" id="leaderboard">
         <h2 id="leaderboardTextContainer">
             <span>L</span><span>e</span><span>a</span><span>d</span><span>e</span><span>r</span><span>b</span><span>o</span><span>a</span><span>r</span><span>d</span>
         </h2>
@@ -497,7 +499,7 @@
     </div>
 
     <!-- Flashcards Container -->
-    <div class="container">
+    <div style="width:430px;" class="container">
         <h1 class="collection-title" id="collectionTitle">Please Enter Username</h1>
         <div class="flashcard-container">
             <div class="flashcard" id="flashcard">
