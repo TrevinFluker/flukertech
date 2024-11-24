@@ -646,10 +646,6 @@
         let soundMode = 'none';
         let sequentialIndex = 0;
 
-        soundModeSelect.addEventListener('change', function() {
-            soundMode = this.value;
-        });
-
         for (let i = 1; i <= 4; i++) {
             const input = document.getElementById('soundUrl' + i);
             input.addEventListener('change', function() {
@@ -682,7 +678,6 @@
             ];
             const inputIds = ['soundUrl1', 'soundUrl2', 'soundUrl3', 'soundUrl4'];
             // Get references to the dropdown and the description element
-            const dropdown = document.getElementById('soundMode');
             const description = document.getElementById('soundModeDescription');
 
             // Object to map sound modes to their descriptions
@@ -694,8 +689,10 @@
             };
 
             // Event listener for dropdown change
-            dropdown.addEventListener('change', function () {
-                const selectedValue = dropdown.value;
+            soundModeSelect.addEventListener('change', function () {
+                soundMode = this.value;
+                const selectedValue = soundModeSelect.value;
+                localStorage.setItem("soundModeSelect", soundModeSelect.value);
                 // Update the description based on the selected value
                 if (selectedValue && soundModeDescriptions[selectedValue]) {
                     description.innerText = soundModeDescriptions[selectedValue];
@@ -726,12 +723,14 @@
                 });
             });
 
-            let milestoneSoundFromStorage = localStorage.getItem("milestoneSoundUrl");
-            if (!milestoneSoundFromStorage) {
-                milestoneSoundUrl = milestoneSoundFromStorage;
-                document.getElementById("milestoneSoundUrl").value = "https://www.runchatcapture.com/assets/sounds/shape_minute.mp3"
-                url = "https://www.runchatcapture.com/assets/sounds/shape_minute.mp3"
-                localStorage.setItem("milestoneSoundUrl", "https://www.runchatcapture.com/assets/sounds/shape_minute.mp3")
+            let selectedSoundMode = localStorage.getItem("soundModeSelect");
+            if (!selectedSoundMode) {
+                soundModeSelect.value = "single"
+                soundModeSelect.dispatchEvent(new Event('change'));
+                localStorage.setItem("soundModeSelect", "single")
+            } else {
+                soundModeSelect.value = localStorage.getItem("soundModeSelect");
+                soundModeSelect.dispatchEvent(new Event('change'));
             }
 
             // Load username if it exists
@@ -746,7 +745,7 @@
         const notificationText = document.getElementById('notificationText');
         const notificationImage = notificationCard.querySelector('img');
         let defaultMilestoneSoundUrl = "https://www.runchatcapture.com/assets/sounds/shape_minute.mp3";
-        let milestoneSoundEnabled = false;
+        let milestoneSoundEnabled = true;
         let milestoneSoundUrl = '';
 
         const milestoneSoundToggle = document.getElementById('milestoneSoundToggle');
@@ -754,6 +753,7 @@
 
         milestoneSoundToggle.addEventListener('change', function() {
             milestoneSoundEnabled = this.checked;
+            localStorage.setItem("milestoneSoundEnabled", this.checked)
         });
 
         milestoneSoundUrlInput.addEventListener('change', function() {
@@ -770,6 +770,17 @@
             } else {
                 milestoneSoundUrlInput.value = milestoneSoundFromStorage;
                 milestoneSoundUrl = milestoneSoundFromStorage;
+            }
+
+            //check local storage to see if milestone sound is enabled
+            let milestoneSoundEnableFromStorage = localStorage.getItem("milestoneSoundEnabled");
+            if (milestoneSoundEnableFromStorage === null) {
+                milestoneSoundEnabled = true;
+                milestoneSoundToggle.checked = true;
+                localStorage.setItem("milestoneSoundEnabled", true)
+            } else {
+                milestoneSoundToggle.checked = JSON.parse(localStorage.getItem("milestoneSoundEnabled"));
+                milestoneSoundEnabled = localStorage.getItem("milestoneSoundEnabled");
             }
         });
 
@@ -822,7 +833,23 @@
         // Theme Toggle
         const themeToggle = document.getElementById('themeToggle');
         themeToggle.addEventListener('change', function() {
+            console.log(this.value)
             document.body.classList.toggle('dark-mode', this.checked);
+            localStorage.setItem("themeToggleValue", this.checked);
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            let themeToggleFromStorage = localStorage.getItem("themeToggleValue");
+            if (themeToggleFromStorage === null) {
+                console.log('no entry found')
+                themeToggle.checked = true;
+                themeToggle.dispatchEvent(new Event('change'));
+                localStorage.setItem("themeToggleValue", true);
+            } else {
+                console.log('entry found')
+                themeToggle.checked = JSON.parse(localStorage.getItem("themeToggleValue"));
+                themeToggle.dispatchEvent(new Event('change'));
+            }
         });
 
         // Start and Stop buttons
@@ -849,7 +876,7 @@
             const randomNumber = Math.floor(Math.random() * 1000);
             const user = {
                 username: 'user' + randomNumber,
-                photoUrl: 'https://picsum.photos/40?' + Math.random(),
+                photoUrl: 'https://picsum.photos/' + Math.random(),
                 gift_name: 'rose'
             };
 
