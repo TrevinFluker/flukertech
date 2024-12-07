@@ -902,7 +902,51 @@
             assignUserToSquare(user);
         });
 
+        // function assignUserToSquare(user) {
+        //     const availableSquare = squares.find(sq => !sq.assignedUser);
+        //     if (availableSquare) {
+        //         assignUserToSpecificSquare(user, availableSquare);
+        //     } else {
+        //         queueUsers.push(user);
+        //         updateQueueDisplay();
+        //         const queueGrid = document.querySelector('.queue-grid');
+        //         const maxVisibleUsers = 5;
+        //         const index = Math.min(queueUsers.length - 1, maxVisibleUsers - 1);
+        //         const userDiv = queueGrid.children[index];
+        //         if (userDiv) {
+        //             createParticleBurstForQueueUser(userDiv);
+        //         }
+        //     }
+        // }
+
+        // Helper function to count how many times a username currently exists in squares or queue
+        function countUserEntries(username) {
+            let count = 0;
+            // Count in assigned squares
+            for (const sq of squares) {
+                if (sq.assignedUser && sq.assignedUser.username === username) {
+                    count++;
+                }
+            }
+            // Count in the queue
+            for (const qUser of queueUsers) {
+                if (qUser.username === username) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
         function assignUserToSquare(user) {
+            // Check how many times this user already exists
+            const usernameCount = countUserEntries(user.username);
+
+            // If this user is already at the limit (3) do not add them again
+            if (usernameCount >= 3) {
+                console.log(`User ${user.username} already has 3 entries, skipping assignment.`);
+                return;
+            }
+
             const availableSquare = squares.find(sq => !sq.assignedUser);
             if (availableSquare) {
                 assignUserToSpecificSquare(user, availableSquare);
@@ -918,6 +962,7 @@
                 }
             }
         }
+
 
         function assignUserToSpecificSquare(user, square) {
             square.element.classList.remove('hit');
