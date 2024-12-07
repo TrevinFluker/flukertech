@@ -323,7 +323,7 @@
             width: 100%;
             max-height: 10%;
             justify-content: center;
-            overflow: hidden; /* Removed scroll */
+            overflow: hidden; 
             background-color: #f0f0f0;
             padding: 10px;
             box-sizing: border-box;
@@ -343,7 +343,6 @@
         .queue-grid {
             display: flex;
             align-items: center;
-            /* Removed overflow-x */
         }
 
         .queue-user {
@@ -396,7 +395,6 @@
             position: absolute;
             width: 5px;
             height: 5px;
-            /* background-color is set dynamically */
             border-radius: 50%;
             pointer-events: none;
         }
@@ -415,7 +413,7 @@
         /* Notification Card Styles */
         #notificationCard {
             position: fixed;
-            bottom: 20px; /* Start off-screen */
+            bottom: 20px; 
             left: 50%;
             transform: translateX(-9%);
             width: 300px;
@@ -431,19 +429,16 @@
             opacity: 0;
         }
 
-        /* Dark Mode Adjustment */
         .dark-mode #notificationCard {
             background-color: #424242;
             color: #ffffff;
         }
 
-        /* Notification Card Visible State */
         #notificationCard.show {
-            bottom: 50px; /* Slide up to visible position */
+            bottom: 50px; 
             opacity: 1;
         }
 
-        /* Notification Card Image */
         #notificationCard img {
             width: 50px;
             height: 50px;
@@ -451,7 +446,6 @@
             margin-right: 10px;
         }
 
-        /* Sound Settings */
         #soundUrls {
             margin-top: 10px;
         }
@@ -472,7 +466,53 @@
             font-size: 14px;
         }
 
-        /* Responsive adjustments for mobile viewing */
+        /* Freestyle Overlay */
+        #freestyleOverlay {
+            display:none;
+            position:absolute;
+            top:50%; 
+            left:50%;
+            transform: translate(-50%, -50%); 
+            width:550px; 
+            height:550px; 
+            background:rgba(255,255,255,0.8);
+            cursor: crosshair;
+            z-index:9999;
+        }
+
+        #freestyleOverlayControls {
+            position:absolute; 
+            top:10px; 
+            left:10px; 
+            background:#ecf0f1; 
+            padding:10px; 
+            border-radius:5px;
+            box-shadow:0 0 5px rgba(0,0,0,0.2);
+        }
+
+        #freestyleOverlayControls p {
+            margin:0; 
+            font-size:14px; 
+            color:#2c3e50; 
+            font-weight:500;
+        }
+
+        #freestyleOverlayControls button {
+            margin-top:5px;
+            width:auto;
+            padding:5px 10px;
+            font-size:14px;
+        }
+
+        .freestyle-point {
+            position:absolute;
+            width:10px;
+            height:10px;
+            border-radius:50%;
+            background:black;
+            cursor: move;
+        }
+
         @media (max-width: 600px) {
             #sidebar {
                 width: 200px;
@@ -527,6 +567,8 @@
             <option value="spirograph">Spirograph</option>
             <!-- New Shape -->
             <option value="swirl">Swirl</option>
+            <option value="plusSign">Plus Sign</option>
+            <option value="heart">Heart</option>
         </select>
         <h2>Adjust Speed</h2>
         <select id="speedSelector">
@@ -586,8 +628,20 @@
             Enable Sound
         </label>
         <input type="text" id="milestoneSoundUrl" placeholder="Enter MP3 URL">
+
+        <h2>Freestyle Shape</h2>
+        <button id="freestyleButton">Freestyle</button>
     </div>
     <div id="main">
+        <!-- Freestyle Overlay -->
+        <div id="freestyleOverlay">
+            <div id="freestyleOverlayControls">
+                <p>Click to set points. Drag points to adjust. Press "Finish" when done.</p>
+                <button id="freestyleFinishButton">Finish</button>
+                <button id="freestyleCancelButton">Cancel</button>
+            </div>
+        </div>
+
         <!-- Next Up -->
         <div id="nextUp">
             <h2 id="nextHeader" style="display:none;">Playing Next:</h2>
@@ -598,7 +652,6 @@
             <h2>Time Rankings</h2>
             <div class="leaderboard-grid"></div>
         </div>
-        <!-- Squares and balls will be generated here -->
         <!-- Notification Card -->
         <div id="notificationCard">
             <img src="" alt="User Image">
@@ -615,32 +668,19 @@
         let lastTimestamp = null;
         const duration = 10000; // Animation duration in milliseconds
 
-        // Speed variable
         let currentSpeed = 1; // Default speed multiplier
-
-        // Shooting variables
         let shotPause = 2000; // Default shot pause in milliseconds
         let lastShotTime = 0;
         const balls = [];
-        let shooting = false; // Shooting is initially off
-        let shotLocation = 1; // Default shot location
+        let shooting = false; 
+        let shotLocation = 1; 
 
-        // Shatter pieces
         const shatterPieces = [];
-
-        // Particles
         const particles = [];
-
-        // Leaderboard entries
         const leaderboardEntries = [];
-
-        // Queue for users when no squares are available
         const queueUsers = [];
-
-        // Keep track of visible queue users
         let visibleQueueUsers = [];
 
-        // Sound settings
         const soundModeSelect = document.getElementById('soundMode');
         const soundUrls = [];
         let soundMode = 'none';
@@ -653,14 +693,12 @@
             });
         }
 
-        // Function to save the username to localStorage
         function saveUsername() {
             const username = document.getElementById('tiktokUsername').value;
             localStorage.setItem('shapeRunnerUsername', username);
             alert('Username saved!');
         }
 
-        // Function to retrieve the username from localStorage on page load
         function loadUsername() {
             const savedUsername = localStorage.getItem('shapeRunnerUsername');
             if (savedUsername) {
@@ -668,7 +706,6 @@
             }
         }
 
-        // Set up event listeners on DOM content load
         document.addEventListener('DOMContentLoaded', function () {
             const defaultUrls = [
                 'https://www.runchatcapture.com/assets/sounds/meet.mp3',
@@ -677,10 +714,8 @@
                 'https://www.runchatcapture.com/assets/sounds/crunching.mp3'
             ];
             const inputIds = ['soundUrl1', 'soundUrl2', 'soundUrl3', 'soundUrl4'];
-            // Get references to the dropdown and the description element
             const description = document.getElementById('soundModeDescription');
 
-            // Object to map sound modes to their descriptions
             const soundModeDescriptions = {
                 single: "Sound url 1 will be played on collsions",
                 random: "A random url will be played on collisions",
@@ -688,38 +723,30 @@
                 none: "No sound will be played on collisions"
             };
 
-            // Event listener for dropdown change
             soundModeSelect.addEventListener('change', function () {
                 soundMode = this.value;
                 const selectedValue = soundModeSelect.value;
                 localStorage.setItem("soundModeSelect", soundModeSelect.value);
-                // Update the description based on the selected value
                 if (selectedValue && soundModeDescriptions[selectedValue]) {
                     description.innerText = soundModeDescriptions[selectedValue];
                 } else {
-                    description.innerText = "No sound will be played on collisions"; // Clear description if no valid selection
+                    description.innerText = "No sound will be played on collisions";
                 }
             });
 
             inputIds.forEach((id, index) => {
                 const input = document.getElementById(id);
-
-                // Retrieve URL from localStorage or set default
                 let url = localStorage.getItem(id);
                 if (!url) {
-                url = defaultUrls[index];
-                localStorage.setItem(id, url);
+                    url = defaultUrls[index];
+                    localStorage.setItem(id, url);
                 }
-
-                // Set the input value
                 input.value = url;
                 soundUrls[index] = url;
-
-                // Add event listener for changes
                 input.addEventListener('input', function() {
-                const newValue = input.value;
-                localStorage.setItem(id, newValue); // Update localStorage
-                soundUrls[index] = newValue;
+                    const newValue = input.value;
+                    localStorage.setItem(id, newValue); 
+                    soundUrls[index] = newValue;
                 });
             });
 
@@ -733,14 +760,10 @@
                 soundModeSelect.dispatchEvent(new Event('change'));
             }
 
-            // Load username if it exists
             loadUsername();
-
-            // Add event listener to the Save button
             document.getElementById('usernameSave').addEventListener('click', saveUsername);
         });
 
-        // Milestone Notification Variables
         const notificationCard = document.getElementById('notificationCard');
         const notificationText = document.getElementById('notificationText');
         const notificationImage = notificationCard.querySelector('img');
@@ -772,7 +795,6 @@
                 milestoneSoundUrl = milestoneSoundFromStorage;
             }
 
-            //check local storage to see if milestone sound is enabled
             let milestoneSoundEnableFromStorage = localStorage.getItem("milestoneSoundEnabled");
             if (milestoneSoundEnableFromStorage === null) {
                 milestoneSoundEnabled = true;
@@ -784,11 +806,9 @@
             }
         });
 
-        // Notification Queue Variables
         let notificationQueue = [];
         let notificationInProgress = false;
 
-        // Create squares and add them to the main area
         for (let i = 0; i < numSquares; i++) {
             const squareElem = document.createElement('div');
             squareElem.classList.add('square');
@@ -796,23 +816,21 @@
             main.appendChild(squareElem);
             squares.push({
                 element: squareElem,
-                offset: i / numSquares, // To stagger the starting positions
+                offset: i / numSquares, 
                 x: 0,
                 y: 0,
-                assignedUser: null, // No user assigned initially
-                timeOnSquare: 0, // Time in milliseconds
-                lastMilestone: 0 // For milestone tracking
+                assignedUser: null,
+                timeOnSquare: 0,
+                lastMilestone: 0
             });
         }
 
         const shapeSelector = document.getElementById('shapeSelector');
         shapeSelector.addEventListener('change', function() {
             currentShape = this.value;
-            startTime = null; // Reset animation timing
-
-            // Reset speed to default (1x)
+            startTime = null; 
             currentSpeed = 1;
-            speedSelector.value = '1'; // Reset the speed selector dropdown
+            speedSelector.value = '1'; 
         });
 
         const speedSelector = document.getElementById('speedSelector');
@@ -822,7 +840,7 @@
 
         const shotPauseSelector = document.getElementById('shotPauseSelector');
         shotPauseSelector.addEventListener('change', function() {
-            shotPause = parseInt(this.value) * 1000; // Convert seconds to milliseconds
+            shotPause = parseInt(this.value) * 1000; 
         });
 
         const shotLocationSelector = document.getElementById('shotLocationSelector');
@@ -830,10 +848,8 @@
             shotLocation = parseInt(this.value);
         });
 
-        // Theme Toggle
         const themeToggle = document.getElementById('themeToggle');
         themeToggle.addEventListener('change', function() {
-            console.log(this.value)
             document.body.classList.toggle('dark-mode', this.checked);
             localStorage.setItem("themeToggleValue", this.checked);
         });
@@ -841,46 +857,39 @@
         document.addEventListener('DOMContentLoaded', function () {
             let themeToggleFromStorage = localStorage.getItem("themeToggleValue");
             if (themeToggleFromStorage === null) {
-                console.log('no entry found')
                 themeToggle.checked = true;
                 themeToggle.dispatchEvent(new Event('change'));
                 localStorage.setItem("themeToggleValue", true);
             } else {
-                console.log('entry found')
                 themeToggle.checked = JSON.parse(localStorage.getItem("themeToggleValue"));
                 themeToggle.dispatchEvent(new Event('change'));
             }
         });
 
-        // Start and Stop buttons
         const startButton = document.getElementById('startButton');
         const stopButton = document.getElementById('stopButton');
 
         startButton.addEventListener('click', function() {
             shooting = true;
-            lastShotTime = performance.now(); // Reset last shot time
+            lastShotTime = performance.now(); 
         });
 
         stopButton.addEventListener('click', function() {
             shooting = false;
         });
 
-        // Simulate Gift Button
         const simulateGiftButton = document.getElementById('simulateGiftButton');
         simulateGiftButton.addEventListener('click', function() {
             simulateGift();
         });
 
         function simulateGift() {
-            // Simulate a user gift
             const randomNumber = Math.floor(Math.random() * 1000);
             const user = {
                 username: 'user' + randomNumber,
                 photoUrl: 'https://picsum.photos/40?' + Math.random(),
                 gift_name: 'rose'
             };
-
-            // Assign the user to an available square
             assignUserToSquare(user);
         }
 
@@ -894,18 +903,12 @@
         });
 
         function assignUserToSquare(user) {
-            // Find an available square (one that doesn't have an assignedUser)
             const availableSquare = squares.find(sq => !sq.assignedUser);
-
             if (availableSquare) {
-                // Assign the user to the square
                 assignUserToSpecificSquare(user, availableSquare);
             } else {
-                // No available square, add user to queue
                 queueUsers.push(user);
                 updateQueueDisplay();
-                
-                // Trigger particle burst effect for the newly added user in the queue
                 const queueGrid = document.querySelector('.queue-grid');
                 const maxVisibleUsers = 5;
                 const index = Math.min(queueUsers.length - 1, maxVisibleUsers - 1);
@@ -917,45 +920,34 @@
         }
 
         function assignUserToSpecificSquare(user, square) {
-            // Remove 'hit' class to reset color if the square is black
             square.element.classList.remove('hit');
-
-            // Trigger particle burst effect
             createParticleBurst(square);
-
-            // Assign the user to the square
             square.assignedUser = user;
-            user.square = square; // Reference to the square
-            square.timeOnSquare = 0; // Start the timer
-            square.lastMilestone = 0; // Initialize lastMilestone
+            user.square = square;
+            square.timeOnSquare = 0;
+            square.lastMilestone = 0;
 
-            // Display the user's photo on the square
             const img = document.createElement('img');
             img.src = user.photoUrl;
             img.classList.add('user-image');
             square.element.appendChild(img);
 
-            square.userImage = img; // Keep reference to the image element for later removal
+            square.userImage = img;
 
-            // Display username and time above the square
             const textContainer = document.createElement('div');
             textContainer.classList.add('user-text-container');
-
             const nameText = document.createElement('div');
             nameText.textContent = user.username;
-
             const timeText = document.createElement('div');
             timeText.textContent = '0s';
 
             textContainer.appendChild(nameText);
             textContainer.appendChild(timeText);
-
             square.element.appendChild(textContainer);
 
             square.userTextContainer = textContainer;
             square.userTimeText = timeText;
 
-            // Add the user to the leaderboard
             addUserToLeaderboard(user);
         }
 
@@ -968,10 +960,9 @@
 
             const queueGrid = document.querySelector('.queue-grid');
             const previousVisibleUsers = visibleQueueUsers.slice();
-            visibleQueueUsers = []; // Reset the visible users list
-            queueGrid.innerHTML = ''; // Clear existing entries
+            visibleQueueUsers = [];
+            queueGrid.innerHTML = '';
 
-            // Display up to 10 users in the queue
             const maxVisibleUsers = 5;
             const visibleUsers = queueUsers.slice(0, maxVisibleUsers);
 
@@ -985,19 +976,15 @@
                 userDiv.appendChild(img);
                 queueGrid.appendChild(userDiv);
 
-                // Add to visible users list
                 visibleQueueUsers.push(user);
 
-                // If the user was not previously visible, trigger particle burst
                 if (!previousVisibleUsers.includes(user)) {
                     createParticleBurstForQueueUser(userDiv);
                 }
             });
 
-            // If there are more users than visible, add a "+{number}" indicator
             if (queueUsers.length > maxVisibleUsers) {
                 const remainingCount = queueUsers.length - maxVisibleUsers;
-
                 const plusDiv = document.createElement('div');
                 plusDiv.classList.add('plus-count-circle');
                 plusDiv.textContent = '+' + remainingCount;
@@ -1015,11 +1002,9 @@
         }
 
         function addUserToLeaderboard(user) {
-            // Create a leaderboard entry
             const entry = document.createElement('div');
             entry.classList.add('leaderboard-entry');
 
-            // User's photo
             const img = document.createElement('img');
             img.src = user.photoUrl;
             img.style.width = '40px';
@@ -1027,7 +1012,6 @@
             img.style.borderRadius = '50%';
             img.style.pointerEvents = 'none';
 
-            // Username
             const name = document.createElement('div');
             name.textContent = user.username;
             name.style.whiteSpace = 'nowrap';
@@ -1035,70 +1019,55 @@
             name.style.width = "75px";
             name.style.fontSize = "14px";
 
-            // Time existing
             const time = document.createElement('div');
             time.textContent = '0s';
             time.style.fontSize = '15px';
 
-            // Rank label (to be updated)
             const rankLabel = document.createElement('div');
-            rankLabel.textContent = ''; // Placeholder, will be updated
+            rankLabel.textContent = '';
             rankLabel.classList.add('rank-label');
             rankLabel.style.fontWeight = "600";
             rankLabel.style.fontSize = '14px';
 
-
             entry.appendChild(img);
             entry.appendChild(name);
             entry.appendChild(time);
-            entry.appendChild(rankLabel); // Added rank label to entry
+            entry.appendChild(rankLabel);
 
-            // Add the entry to the leaderboard
             user.leaderboardEntry = entry;
             user.leaderboardTime = time;
             user.rankLabel = rankLabel;
 
-            // Add to leaderboardEntries array
             leaderboardEntries.push(user);
-
-            updateLeaderboardRanks(); // Update ranks after adding a new user
+            updateLeaderboardRanks();
         }
 
         function removeUserFromLeaderboard(user) {
-            // Remove the leaderboard entry
             if (user.leaderboardEntry) {
                 user.leaderboardEntry.remove();
             }
 
-            // Remove from leaderboardEntries array
             const index = leaderboardEntries.indexOf(user);
             if (index !== -1) {
                 leaderboardEntries.splice(index, 1);
             }
 
-            updateLeaderboardRanks(); // Update ranks after removing a user
+            updateLeaderboardRanks();
         }
 
         function updateLeaderboardRanks() {
-            // Sort leaderboard entries based on timeOnSquare in descending order
             leaderboardEntries.sort((a, b) => {
                 const timeA = a.square ? a.square.timeOnSquare : 0;
                 const timeB = b.square ? b.square.timeOnSquare : 0;
                 return timeB - timeA;
             });
 
-            // Update the leaderboard grid
             const leaderboardGrid = document.querySelector('.leaderboard-grid');
-            leaderboardGrid.innerHTML = ''; // Clear existing entries
-
-            // Only show the top 6 entries
+            leaderboardGrid.innerHTML = '';
             const topEntries = leaderboardEntries.slice(0, 5);
 
             topEntries.forEach((user, index) => {
                 const entry = user.leaderboardEntry;
-
-                //'#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f1c40f'
-                // Update rank label
                 const rankLabel = user.rankLabel;
                 if (index === 0) {
                     rankLabel.textContent = '1st';
@@ -1150,7 +1119,7 @@
             for (let i = 0; i < numPieces; i++) {
                 const piece = document.createElement('div');
                 piece.classList.add('shatter-piece');
-                piece.style.backgroundColor = ballColor; // Match ball color
+                piece.style.backgroundColor = ballColor;
                 main.appendChild(piece);
 
                 const angle = Math.random() * 2 * Math.PI;
@@ -1165,7 +1134,7 @@
                     y: ball.y,
                     dx: dx,
                     dy: dy,
-                    life: 1000, // milliseconds
+                    life: 1000,
                     createdAt: performance.now()
                 };
 
@@ -1198,7 +1167,7 @@
                     y: centerY,
                     dx: dx,
                     dy: dy,
-                    life: 1000, // milliseconds
+                    life: 1000,
                     createdAt: performance.now()
                 };
 
@@ -1219,7 +1188,7 @@
             for (let i = 0; i < numParticles; i++) {
                 const particleElem = document.createElement('div');
                 particleElem.classList.add('particle');
-                particleElem.style.backgroundColor = '#3498db'; // Color for queue particles
+                particleElem.style.backgroundColor = '#3498db';
                 main.appendChild(particleElem);
 
                 const angle = Math.random() * 2 * Math.PI;
@@ -1234,7 +1203,7 @@
                     y: centerY,
                     dx: dx,
                     dy: dy,
-                    life: 1000, // milliseconds
+                    life: 1000,
                     createdAt: performance.now()
                 };
 
@@ -1246,19 +1215,16 @@
         }
 
         function removeUserFromSquare(square) {
-            // Remove photo if any
             if (square.userImage) {
                 square.userImage.remove();
                 square.userImage = null;
             }
 
-            // Remove username and time text
             if (square.userTextContainer) {
                 square.userTextContainer.remove();
                 square.userTextContainer = null;
             }
 
-            // Remove user from leaderboard
             if (square.assignedUser) {
                 removeUserFromLeaderboard(square.assignedUser);
                 square.assignedUser = null;
@@ -1266,13 +1232,9 @@
         }
 
         function showNotification(user, minutes) {
-            // Create notification data
             const notificationData = { user: user, minutes: minutes };
-
-            // Add to queue
             notificationQueue.push(notificationData);
 
-            // If no notification is currently being displayed, start showing notifications
             if (!notificationInProgress) {
                 displayNextNotification();
             }
@@ -1294,7 +1256,6 @@
 
             notificationCard.classList.add('show');
 
-            // Play sound if enabled
             if (milestoneSoundEnabled && milestoneSoundUrl) {
                 const audio = new Audio(milestoneSoundUrl);
                 audio.play().catch(error => {
@@ -1302,15 +1263,12 @@
                 });
             }
 
-            // Hide after 2 seconds, then display next notification
             setTimeout(() => {
                 notificationCard.classList.remove('show');
-
-                // Wait for the slide-out animation to finish before showing the next notification
                 setTimeout(() => {
                     notificationInProgress = false;
                     displayNextNotification();
-                }, 500); // Adjust if your CSS transition duration is different
+                }, 500);
             }, 2000);
         }
 
@@ -1320,12 +1278,10 @@
             const deltaTime = timestamp - lastTimestamp;
             lastTimestamp = timestamp;
             let progress = (timestamp - startTime);
-            let t = ((progress * currentSpeed) % duration) / duration; // Adjusted with currentSpeed
+            let t = ((progress * currentSpeed) % duration) / duration;
 
-            // Update squares
             squares.forEach(function(sq) {
-                // Squares keep moving even if hit
-                let tOffset = (t + sq.offset) % 1; // Wrap around if greater than 1
+                let tOffset = (t + sq.offset) % 1;
                 let position = getPosition(currentShape, tOffset);
                 sq.x = position.x;
                 sq.y = position.y;
@@ -1333,73 +1289,50 @@
                 sq.element.style.top = position.y + 'px';
 
                 if (sq.assignedUser) {
-                    // Increase timeOnSquare
-                    sq.timeOnSquare += deltaTime; // deltaTime is in milliseconds
-
-                    // Calculate total time in seconds
+                    sq.timeOnSquare += deltaTime;
                     const totalTimeInSeconds = Math.floor(sq.timeOnSquare / 1000);
-
-                    // Update the time text above the square
                     sq.userTimeText.textContent = totalTimeInSeconds + 's';
-
-                    // Update the leaderboard time display
                     sq.assignedUser.leaderboardTime.textContent = totalTimeInSeconds + 's';
 
-                    // Check for minute milestones
                     if (totalTimeInSeconds % 60 === 0 && totalTimeInSeconds !== 0 && sq.lastMilestone !== totalTimeInSeconds) {
                         const minutes = totalTimeInSeconds / 60;
                         showNotification(sq.assignedUser, minutes);
-                        sq.lastMilestone = totalTimeInSeconds; // To prevent multiple triggers
+                        sq.lastMilestone = totalTimeInSeconds;
                     }
                 }
             });
 
-            updateLeaderboardRanks(); // Update ranks continuously
+            updateLeaderboardRanks();
 
             if (shooting) {
-                // Shoot balls at intervals
                 if (timestamp - lastShotTime > shotPause) {
                     shootBall();
                     lastShotTime = timestamp;
                 }
 
-                // Update balls
                 for (let i = balls.length - 1; i >= 0; i--) {
                     const ball = balls[i];
-                    const ballSpeed = 5; // Pixels per frame
+                    const ballSpeed = 5;
 
                     ball.x += ball.dx * ballSpeed;
                     ball.y += ball.dy * ballSpeed;
                     ball.element.style.left = ball.x + 'px';
                     ball.element.style.top = ball.y + 'px';
 
-                    // Check for collisions with squares
                     for (let j = 0; j < squares.length; j++) {
                         const sq = squares[j];
-
                         if (isColliding(ball, sq)) {
                             sq.element.classList.add('hit');
-
-                            // Play sound
                             playSound();
-
-                            // Remove user from square
                             removeUserFromSquare(sq);
-
-                            // Create shatter effect at the ball's position
                             createShatterEffect(ball);
-
                             ball.element.remove();
                             balls.splice(i, 1);
-
-                            // Assign next user from queue if available
                             assignNextUserFromQueue(sq);
-
-                            break; // Break out of squares loop
+                            break;
                         }
                     }
 
-                    // Remove ball if it goes off-screen
                     const mainRect = main.getBoundingClientRect();
                     if (ball.x < -15 || ball.x > mainRect.width || ball.y < -15 || ball.y > mainRect.height) {
                         ball.element.remove();
@@ -1408,7 +1341,6 @@
                 }
             }
 
-            // Update shatter pieces
             for (let i = shatterPieces.length - 1; i >= 0; i--) {
                 const piece = shatterPieces[i];
                 const timeElapsed = timestamp - piece.createdAt;
@@ -1423,13 +1355,10 @@
                 piece.y += piece.dy;
                 piece.element.style.left = piece.x + 'px';
                 piece.element.style.top = piece.y + 'px';
-
-                // Fade out effect
                 const opacity = 1 - timeElapsed / piece.life;
                 piece.element.style.opacity = opacity;
             }
 
-            // Update particles
             for (let i = particles.length - 1; i >= 0; i--) {
                 const particle = particles[i];
                 const timeElapsed = timestamp - particle.createdAt;
@@ -1445,7 +1374,6 @@
                 particle.element.style.left = particle.x + 'px';
                 particle.element.style.top = particle.y + 'px';
 
-                // Fade out effect
                 const opacity = 1 - timeElapsed / particle.life;
                 particle.element.style.opacity = opacity;
             }
@@ -1456,13 +1384,11 @@
         function getPosition(shape, t) {
             const width = main.clientWidth;
             const height = main.clientHeight;
-
-            // Adjusted play area to be smaller and centered
             const playArea = {
                 width: width * 0.5,
                 height: height * 0.5,
                 x: (width * 0.25) + 20,
-                y: (height * 0.25) + 100 //starting point
+                y: (height * 0.25) + 100
             };
 
             switch(shape) {
@@ -1490,6 +1416,12 @@
                     return getSpirographPosition(t, playArea);
                 case 'swirl':
                     return getSwirlPosition(t, playArea);
+                case 'plusSign':
+                    return getPlusPosition(t, playArea);
+                case 'heart':
+                    return getHeartPosition(t, playArea);
+                case 'freestyle':
+                    return getFreestylePosition(t, playArea);
             }
         }
 
@@ -1529,12 +1461,11 @@
         }
 
         function getFigure8Position(t, playArea) {
-            const a = (Math.min(playArea.width, playArea.height) / 4) * 1.5; // 50% larger
+            const a = (Math.min(playArea.width, playArea.height) / 4) * 1.5;
             const centerX = playArea.x + playArea.width / 2;
             const centerY = playArea.y + playArea.height / 2;
 
             const angle = 2 * Math.PI * t;
-
             const x = centerX + a * Math.sin(angle) * Math.cos(angle);
             const y = centerY + a * Math.sin(angle);
 
@@ -1542,14 +1473,11 @@
         }
 
         function getInfinityPosition(t, playArea) {
-            const a = (Math.min(playArea.width, playArea.height) / 4) * 1.5; // 50% larger
+            const a = (Math.min(playArea.width, playArea.height) / 4) * 1.5;
             const centerX = playArea.x + playArea.width / 2;
             const centerY = playArea.y + playArea.height / 2;
-
             const angle = 2 * Math.PI * t - Math.PI / 2;
-
             const denom = 1 + Math.cos(angle) * Math.cos(angle);
-
             const x = centerX + (a * Math.sin(angle)) / denom;
             const y = centerY + (a * Math.sin(angle) * Math.cos(angle)) / denom;
 
@@ -1560,23 +1488,18 @@
             const a = (Math.min(playArea.width, playArea.height) / 4) * 1.5;
             const centerX = playArea.x + playArea.width / 2;
             const centerY = playArea.y + playArea.height / 2;
-
             const angle = 2 * Math.PI * t;
-
             const x = centerX + a * Math.cos(2 * angle) * Math.cos(angle);
             const y = centerY + a * Math.cos(2 * angle) * Math.sin(angle);
-
             return { x: x - 20, y: y - 20 };
         }
 
         function getCurvilinearTrianglePosition(t, playArea) {
-            const a = (Math.min(playArea.width, playArea.height) / 6) * 1.5; // Smaller size
+            const a = (Math.min(playArea.width, playArea.height) / 6) * 1.5;
             const b = a / 2;
             const centerX = playArea.x + playArea.width / 2;
             const centerY = playArea.y + playArea.height / 2;
-
             const angle = 2 * Math.PI * t;
-
             const x = centerX + a * Math.sin(angle) + b * Math.sin(3 * angle);
             const y = centerY + a * Math.cos(angle) + b * Math.cos(3 * angle);
 
@@ -1587,15 +1510,11 @@
             const R = 100;
             const r = 30;
             const d = 60;
-
             const centerX = playArea.x + playArea.width / 2;
             const centerY = (playArea.y + playArea.height / 2) - 100;
-
             const angle = 2 * Math.PI * t * 0.5;
-
             const x = centerX + (R + r) * Math.cos(angle) - d * Math.cos(((R + r) / r) * angle);
             const y = centerY + (R + r) * Math.sin(angle) - d * Math.sin(((R + r) / r) * angle);
-
             return { x: x - 20, y: y - 20 };
         }
 
@@ -1603,16 +1522,231 @@
             const centerX = playArea.x + playArea.width / 2;
             const centerY = playArea.y + playArea.height / 2;
             const maxRadius = Math.min(playArea.width, playArea.height) / 2;
-
-            // Swirl parameters
-            const maxTurns = 2; // Number of turns in the swirl (adjust as desired)
-            const angle = maxTurns * 2 * Math.PI * t; // Angle from 0 to maxTurns * 2π
-            const radius = (maxRadius / (maxTurns * 2 * Math.PI)) * angle; // Linearly increasing radius
-
+            const maxTurns = 2;
+            const angle = maxTurns * 2 * Math.PI * t;
+            const radius = (maxRadius / (maxTurns * 2 * Math.PI)) * angle;
             const x = centerX + radius * Math.cos(angle);
             const y = centerY + radius * Math.sin(angle);
 
             return { x: x - 20, y: y - 20 };
+        }
+
+        function getPlusPosition(t, playArea) {
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+
+            // Previously: R = Math.min(playArea.width, playArea.height) / 4
+            // Increase R by ~40%
+            const R = (Math.min(playArea.width, playArea.height) / 4) * 1.4; 
+            const w = R / 3; // half-thickness of the plus arms
+
+            // Define vertices of the plus sign shape
+            const vertices = [
+                [centerX - w, centerY - R],
+                [centerX + w, centerY - R],
+                [centerX + w, centerY - w],
+                [centerX + R, centerY - w],
+                [centerX + R, centerY + w],
+                [centerX + w, centerY + w],
+                [centerX + w, centerY + R],
+                [centerX - w, centerY + R],
+                [centerX - w, centerY + w],
+                [centerX - R, centerY + w],
+                [centerX - R, centerY - w],
+                [centerX - w, centerY - w],
+            ];
+
+            // Calculate perimeter
+            let perimeter = 0;
+            for (let i = 0; i < vertices.length; i++) {
+                const j = (i + 1) % vertices.length;
+                const dx = vertices[j][0] - vertices[i][0];
+                const dy = vertices[j][1] - vertices[i][1];
+                perimeter += Math.sqrt(dx * dx + dy * dy);
+            }
+
+            // Find position along perimeter
+            const distance = t * perimeter;
+            let accumulated = 0;
+            for (let i = 0; i < vertices.length; i++) {
+                const j = (i + 1) % vertices.length;
+                const x1 = vertices[i][0];
+                const y1 = vertices[i][1];
+                const x2 = vertices[j][0];
+                const y2 = vertices[j][1];
+                const segLength = Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
+
+                if (accumulated + segLength >= distance) {
+                    const ratio = (distance - accumulated) / segLength;
+                    const x = x1 + (x2 - x1) * ratio;
+                    const y = y1 + (y2 - y1) * ratio;
+                    return { x: x - 20, y: y - 20 };
+                }
+                accumulated += segLength;
+            }
+
+            // Fallback
+            return { x: centerX - 20, y: centerY - 20 };
+        }
+
+        function getHeartPosition(t, playArea) {
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+            const scale = (Math.min(playArea.width, playArea.height) / 30) * 0.9; 
+            const angle = 2 * Math.PI * t;
+            const x = centerX + scale * 16 * Math.pow(Math.sin(angle), 3);
+            const y = centerY - scale * (13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle));
+            return { x: x - 20, y: y - 60 };
+        }
+
+        // Freestyle drawing logic
+        let freestylePoints = [];
+        let freestyleActive = false;
+        let freestyleOverlayPoints = [];
+        const freestyleButton = document.getElementById('freestyleButton');
+        const freestyleOverlay = document.getElementById('freestyleOverlay');
+        const freestyleFinishButton = document.getElementById('freestyleFinishButton');
+        const freestyleCancelButton = document.getElementById('freestyleCancelButton');
+
+        let draggingPoint = null;
+
+        freestyleButton.addEventListener('click', function() {
+            freestyleOverlay.style.display = 'block';
+            freestyleActive = true;
+            freestylePoints = [];
+            // remove old points if any
+            freestyleOverlayPoints.forEach(p => p.elem.remove());
+            freestyleOverlayPoints = [];
+        });
+
+        freestyleOverlay.addEventListener('click', function(e) {
+            if (!freestyleActive) return;
+            // If we are dragging, don't add new point
+            if (draggingPoint) return;
+
+            const rect = freestyleOverlay.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            freestylePoints.push([x, y]);
+
+            // Create a black dot
+            const pointElem = document.createElement('div');
+            pointElem.classList.add('freestyle-point');
+            pointElem.style.left = (x * rect.width - 5) + 'px';
+            pointElem.style.top = (y * rect.height - 5) + 'px';
+
+            pointElem.addEventListener('mousedown', (ev) => {
+                ev.stopPropagation();
+                draggingPoint = { elem: pointElem, index: freestyleOverlayPoints.indexOf(pObj) };
+                document.addEventListener('mousemove', onDragMove);
+                document.addEventListener('mouseup', onDragEnd);
+            });
+
+            let pObj = {elem: pointElem, x, y};
+            freestyleOverlayPoints.push(pObj);
+            freestyleOverlay.appendChild(pointElem);
+        });
+
+        function onDragMove(e) {
+            if (!draggingPoint) return;
+            const rect = freestyleOverlay.getBoundingClientRect();
+            const nx = (e.clientX - rect.left) / rect.width;
+            const ny = (e.clientY - rect.top) / rect.height;
+            const i = draggingPoint.index;
+            freestylePoints[i] = [nx, ny];
+            freestyleOverlayPoints[i].x = nx;
+            freestyleOverlayPoints[i].y = ny;
+            draggingPoint.elem.style.left = (nx * rect.width - 5) + 'px';
+            draggingPoint.elem.style.top = (ny * rect.height - 5) + 'px';
+        }
+
+        function onDragEnd(e) {
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            draggingPoint = null;
+        }
+
+        freestyleFinishButton.addEventListener('click', function() {
+            freestyleOverlay.style.display = 'none';
+            freestyleActive = false;
+
+            if (freestylePoints.length > 2) {
+                const shapeSelector = document.getElementById('shapeSelector');
+                let freestyleOption = Array.from(shapeSelector.options).find(opt => opt.value === 'freestyle');
+                if (!freestyleOption) {
+                    const opt = document.createElement('option');
+                    opt.value = 'freestyle';
+                    opt.textContent = 'Freestyle';
+                    shapeSelector.appendChild(opt);
+                }
+            } else {
+                alert("You need at least 3 points to form a shape.");
+            }
+        });
+
+        freestyleCancelButton.addEventListener('click', function() {
+            freestyleOverlay.style.display = 'none';
+            freestyleActive = false;
+            freestylePoints = [];
+            freestyleOverlayPoints.forEach(p => p.elem.remove());
+            freestyleOverlayPoints = [];
+        });
+
+        function getFreestylePosition(t, playArea) {
+            if (!freestylePoints || freestylePoints.length < 3) {
+                const centerX = playArea.x + playArea.width / 2;
+                const centerY = playArea.y + playArea.height / 2;
+                return { x: centerX - 20, y: centerY - 20 };
+            }
+
+            const vertices = freestylePoints.map(pt => {
+                const x = playArea.x + pt[0] * playArea.width;
+                const y = playArea.y + pt[1] * playArea.height;
+                return [x, y];
+            });
+
+            return getPointAlongPolygon(t, vertices, false); 
+        }
+
+        // Modified to handle non-closed path if closed = false
+        function getPointAlongPolygon(t, vertices, closed = true) {
+            let perimeter = 0;
+            const length = vertices.length;
+            let segments = closed ? length : (length - 1);
+            for (let i = 0; i < segments; i++) {
+                const j = i + 1 === length ? 0 : i + 1;
+                if (!closed && i === length - 1) break; 
+                const dx = vertices[j][0] - vertices[i][0];
+                const dy = vertices[j][1] - vertices[i][1];
+                perimeter += Math.sqrt(dx*dx + dy*dy);
+            }
+
+            const distance = t * perimeter;
+            let accumulated = 0;
+            for (let i = 0; i < segments; i++) {
+                const j = (i + 1 === length) ? 0 : i+1;
+                if (!closed && i === length - 1) break; 
+                const x1 = vertices[i][0];
+                const y1 = vertices[i][1];
+                const x2 = vertices[j][0];
+                const y2 = vertices[j][1];
+                const segLength = Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
+
+                if (accumulated + segLength >= distance) {
+                    const ratio = (distance - accumulated) / segLength;
+                    const x = x1 + (x2 - x1) * ratio;
+                    const y = y1 + (y2 - y1) * ratio;
+                    return { x: x - 20, y: y - 20 };
+                }
+                accumulated += segLength;
+            }
+
+            // If we got here, it means t took us beyond the last point in a non-closed path.
+            // Let's vanish: return something off-screen or just return last point.
+            // We'll just return the last point - this makes the shape "vanish" since 
+            // the squares can't go beyond the last point. They will jump next cycle.
+            const lastVert = vertices[vertices.length - 1];
+            return { x: lastVert[0] - 20, y: lastVert[1] - 20 };
         }
 
         function shootBall() {
@@ -1623,51 +1757,50 @@
             const mainRect = main.getBoundingClientRect();
             let startX, startY, dx, dy;
 
-            // Define shot locations and directions
             switch (shotLocation) {
-                case 1: // Bottom Center
+                case 1:
                     startX = mainRect.width / 2 - 7.5;
                     startY = mainRect.height - 20;
                     dx = 0;
                     dy = -1;
                     break;
-                case 2: // Bottom Right
+                case 2:
                     startX = mainRect.width - 20;
                     startY = mainRect.height - 20;
                     dx = -1;
                     dy = -1;
                     break;
-                case 3: // Middle Right
+                case 3:
                     startX = mainRect.width - 20;
                     startY = mainRect.height / 2 - 7.5;
                     dx = -1;
                     dy = 0;
                     break;
-                case 4: // Top Right
+                case 4:
                     startX = mainRect.width - 20;
                     startY = 5;
                     dx = -1;
                     dy = 1;
                     break;
-                case 5: // Top Center
+                case 5:
                     startX = mainRect.width / 2 - 7.5;
                     startY = 5;
                     dx = 0;
                     dy = 1;
                     break;
-                case 6: // Top Left
+                case 6:
                     startX = 5;
                     startY = 5;
                     dx = 1;
                     dy = 1;
                     break;
-                case 7: // Middle Left
+                case 7:
                     startX = 5;
                     startY = mainRect.height / 2 - 7.5;
                     dx = 1;
                     dy = 0;
                     break;
-                case 8: // Bottom Left
+                case 8:
                     startX = 5;
                     startY = mainRect.height - 20;
                     dx = 1;
@@ -1675,8 +1808,7 @@
                     break;
             }
 
-            // Normalize direction vector
-            const length = Math.sqrt(dx * dx + dy * dy);
+            const length = Math.sqrt(dx*dx + dy*dy);
             dx /= length;
             dy /= length;
 
@@ -1705,7 +1837,6 @@
             const squareRect = square.element.getBoundingClientRect();
             const mainRect = main.getBoundingClientRect();
 
-            // Adjust squareRect to be relative to the main container
             const adjustedSquareRect = {
                 x: squareRect.left - mainRect.left,
                 y: squareRect.top - mainRect.top,
@@ -1721,22 +1852,6 @@
             );
         }
 
-        function setBackground() {
-            chrome.storage.local.get('background', function(result) {
-                if (result.background) {
-                    // Get the element with id 'root' and set the background
-                    var rootElement = document.getElementById('root');
-                    if (rootElement) {
-                        rootElement.style.backgroundImage = `url(${result.background})`;
-                        rootElement.style.backgroundPosition = "center";
-                        rootElement.style.backgroundSize = "cover"; 
-                        rootElement.style.backgroundAttachment = "fixed"
-                    }
-                }
-            });
-        }
-
-        // Initialize the animation
         requestAnimationFrame(animate);
     </script>
 </body>
