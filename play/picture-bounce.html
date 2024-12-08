@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Physics Playground</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        #sidebar { width: 200px; background: #f0f0f0; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        #canvas-container { flex-grow: 1; position: relative; }
+        canvas { width: 100%; height: 100%; }
+        .btn {
+            padding: 8px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:hover { background: #45a049; }
+        .active { background: #45a049; }
+        .control-group {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .size-display {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        /* Leaderboard styles */
+        #leaderboard {
+            position: absolute;
+            top: 20px;
+            left: 220px;
+            width: 200px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 9999;
+        }
+
+        #leaderboard-header {
+            background: #4CAF50;
+            color: #fff;
+            padding: 10px;
+            cursor: move;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #leaderboard-body {
+            max-height: 200px;
+            overflow: auto;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+        }
+
+        .leaderboard-entry img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+        }
+
+        .leaderboard-entry .username {
+            flex-grow: 1;
+        }
+
+        .leaderboard-entry:last-child {
+            border-bottom: none;
+        }
+
+        .color-input {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h3>Controls</h3>
+        <button id="connectPoints" class="btn">Connect Points</button>
+        <button id="clearPoints" class="btn">Clear Points</button>
+        <button id="spawnPoint" class="btn">Set Spawn Point</button>
+        <button id="spawnBall" class="btn">Spawn Ball</button>
+        <button id="clear" class="btn">Clear All</button>
+        <button id="setThreshold" class="btn">Set Threshold</button>
+        <button id="clearLeaderboard" class="btn">Clear Leaderboard</button>
+
+        <div class="control-group">
+            <label for="ballSize">Ball Size</label>
+            <input type="range" id="ballSize" min="5" max="30" value="10" step="1">
+            <div class="size-display">Size: <span id="sizeValue">10</span>px</div>
+        </div>
+
+        <div class="control-group">
+            <label>Colors</label>
+            <small>Pick colors for shapes, particles, and threshold:</small>
+            <label for="shapeColor">Shape Color</label>
+            <input type="color" id="shapeColor" class="color-input" value="#4CAF50">
+
+            <label for="particleColor">Particle Color</label>
+            <input type="color" id="particleColor" class="color-input" value="#0000FF">
+
+            <label for="thresholdColor">Threshold Color</label>
+            <input type="color" id="thresholdColor" class="color-input" value="#FF0000">
+        </div>
+
+        <div>
+            <p>Instructions:</p>
+            <small>
+                1. Click to place points<br>
+                2. Click 'Connect Points' to create shape<br>
+                3. Drag shapes to move them<br>
+                4. Set spawn point for balls<br>
+                5. Click 'Spawn Ball' to add balls<br>
+                6. Adjust ball size with slider<br>
+                7. Set threshold line to award points when balls cross it.<br>
+                8. "Clear All" clears shapes/balls/spawn/threshold/particles (not leaderboard).<br>
+                9. "Clear Leaderboard" clears the leaderboard.<br>
+                10. Leaderboard starts empty until a ball spawns for a user.<br>
+                11. Collisions create dust particles at the exact point of contact in chosen particle color.<br>
+                12. Leaderboard sorts from highest to lowest score.
+            </small>
+        </div>
+        <div id="mode-indicator" style="margin-top: 10px; font-size: 14px;">
+            Current Mode: Drawing Points
+        </div>
+    </div>
+    <div id="canvas-container"></div>
+
+    <!-- Leaderboard container -->
+    <div id="leaderboard">
+        <div id="leaderboard-header">Leaderboard</div>
+        <div id="leaderboard-body"></div>
+    </div>
+
+    <script>
+        // Matter.js module aliases
+        const Engine = Matter.Engine,
+              Render = Matter.Render,
+              Runner = Matter.Runner,
+              Bodies = Matter.Bodies,
+              Composite = Matter.Composite,
+              Events = Matter.Events,
+              Constraint = Matter.Constraint,
+              Vector = Matter.Vector,
+              Mouse = Matter.Mouse,
+              MouseConstraint = Matter.MouseConstraint;
+
+        // Variables
+        let points = [];
+        let spawnPoint = null;
+        let shapes = [];
+        let currentMode = 'points';
+        let selectedShape = null;
+        let originalPosition = null;
+        let mouseMoveListener = null;
+        let thresholdY = null;
+
+        let particles = []; // store dust particles
+
+        // A fixed set of 10 users with stable Picsum images and usernames (not on leaderboard until first spawn)
+        const userPool = [
+            {username: 'User1',  profilePic: 'https://picsum.photos/id/1/30/30'},
+            {username: 'User2',  profilePic: 'https://picsum.photos/id/2/40/31'},
+            {username: 'User3',  profilePic: 'https://picsum.photos/id/3/50/32'},
+            {username: 'User4',  profilePic: 'https://picsum.photos/id/4/60/33'},
+            {username: 'User5',  profilePic: 'https://picsum.photos/id/5/70/34'},
+            {username: 'User6',  profilePic: 'https://picsum.photos/id/6/80/35'},
+            {username: 'User7',  profilePic: 'https://picsum.photos/id/7/90/36'},
+            {username: 'User8',  profilePic: 'https://picsum.photos/id/8/10/37'},
+            {username: 'User9',  profilePic: 'https://picsum.photos/id/9/20/38'},
+            {username: 'User10', profilePic: 'https://picsum.photos/id/10/23/39'}
+        ];
+
+        // Leaderboard data
+        let leaderboardData = [];
+
+        // Colors chosen by user
+        let shapeColor = document.getElementById('shapeColor').value;
+        let particleColor = document.getElementById('particleColor').value;
+        let thresholdColor = document.getElementById('thresholdColor').value;
+
+        document.getElementById('shapeColor').addEventListener('input', (e) => {
+            shapeColor = e.target.value;
+        });
+        document.getElementById('particleColor').addEventListener('input', (e) => {
+            particleColor = e.target.value;
+        });
+        document.getElementById('thresholdColor').addEventListener('input', (e) => {
+            thresholdColor = e.target.value;
+        });
+
+        // Create engine
+        const engine = Engine.create({
+            enableSleeping: false,
+            constraintIterations: 4
+        });
+        engine.gravity.y = 0.4;
+
+        // Create renderer
+        const render = Render.create({
+            element: document.querySelector('#canvas-container'),
+            engine: engine,
+            options: {
+                width: 800,
+                height: 600,
+                wireframes: false,
+                background: '#fff'
+            }
+        });
+
+        // Add ball size control
+        const ballSizeSlider = document.getElementById('ballSize');
+        const sizeValueDisplay = document.getElementById('sizeValue');
+        
+        ballSizeSlider.addEventListener('input', (event) => {
+            sizeValueDisplay.textContent = event.target.value;
+        });
+
+        // Setup canvas
+        function resizeCanvas() {
+            const container = document.querySelector('#canvas-container');
+            render.canvas.width = container.clientWidth;
+            render.canvas.height = container.clientHeight;
+            render.options.width = container.clientWidth;
+            render.options.height = container.clientHeight;
+        }
+
+        // Add boundaries
+        function addBoundaries() {
+            const thickness = 60;
+            const walls = [
+                Bodies.rectangle(render.canvas.width / 2, -30, render.canvas.width, thickness, { 
+                    isStatic: true,
+                    restitution: 1,
+                    friction: 0
+                }),
+                Bodies.rectangle(render.canvas.width / 2, render.canvas.height + 30, render.canvas.width, thickness, { 
+                    isStatic: true,
+                    restitution: 1,
+                    friction: 0
+                }),
+                Bodies.rectangle(-30, render.canvas.height / 2, thickness, render.canvas.height, { 
+                    isStatic: true,
+                    restitution: 1,
+                    friction: 0
+                }),
+                Bodies.rectangle(render.canvas.width + 30, render.canvas.height / 2, thickness, render.canvas.height, { 
+                    isStatic: true,
+                    restitution: 1,
+                    friction: 0
+                })
+            ];
+            Composite.add(engine.world, walls);
+        }
+
+        // Function to update mode indicator
+        function updateModeIndicator() {
+            let modeText;
+            if (currentMode === 'points') modeText = 'Drawing Points';
+            else if (currentMode === 'spawn') modeText = 'Setting Spawn Point';
+            else if (currentMode === 'threshold') modeText = 'Setting Threshold';
+            document.getElementById('mode-indicator').textContent = `Current Mode: ${modeText}`;
+        }
+
+        // Mouse and constraint setup
+        const mouse = Mouse.create(render.canvas);
+        const mouseConstraint = MouseConstraint.create(engine, {
+            mouse: mouse,
+            constraint: {
+                stiffness: 1,
+                render: { visible: false }
+            }
+        });
+
+        // Add mouse constraint
+        Composite.add(engine.world, mouseConstraint);
+        render.mouse = mouse;
+
+        // Event listeners for dragging shapes
+        window.addEventListener('resize', resizeCanvas);
+        
+        render.canvas.addEventListener('mousedown', (event) => {
+            const rect = render.canvas.getBoundingClientRect();
+            const mousePosition = {
+                x: (event.clientX - rect.left) / render.canvas.clientWidth * render.canvas.width,
+                y: (event.clientY - rect.top) / render.canvas.clientHeight * render.canvas.height
+            };
+
+            const bodies = Composite.allBodies(engine.world);
+            const clickedBody = bodies.find(body => {
+                if (body.label === 'spawnPoint' || !body.isStatic) return false;
+                return Matter.Bounds.contains(body.bounds, mousePosition);
+            });
+
+            if (clickedBody) {
+                selectedShape = clickedBody;
+                originalPosition = { ...mousePosition };
+                
+                mouseMoveListener = (moveEvent) => {
+                    const newRect = render.canvas.getBoundingClientRect();
+                    const newMousePosition = {
+                        x: (moveEvent.clientX - newRect.left) / render.canvas.clientWidth * render.canvas.width,
+                        y: (moveEvent.clientY - newRect.top) / render.canvas.clientHeight * render.canvas.height
+                    };
+
+                    const deltaX = newMousePosition.x - originalPosition.x;
+                    const deltaY = newMousePosition.y - originalPosition.y;
+
+                    Matter.Body.setPosition(selectedShape, {
+                        x: selectedShape.position.x + deltaX,
+                        y: selectedShape.position.y + deltaY
+                    });
+
+                    originalPosition = newMousePosition;
+                };
+
+                render.canvas.addEventListener('mousemove', mouseMoveListener);
+            }
+        });
+
+        render.canvas.addEventListener('mouseup', () => {
+            if (mouseMoveListener) {
+                render.canvas.removeEventListener('mousemove', mouseMoveListener);
+                mouseMoveListener = null;
+            }
+            selectedShape = null;
+        });
+
+        render.canvas.addEventListener('mouseleave', () => {
+            if (mouseMoveListener) {
+                render.canvas.removeEventListener('mousemove', mouseMoveListener);
+                mouseMoveListener = null;
+            }
+            selectedShape = null;
+        });
+
+        // Canvas click handler depending on mode
+        render.canvas.addEventListener('click', (event) => {
+            if (selectedShape) return;
+
+            const rect = render.canvas.getBoundingClientRect();
+            const x = (event.clientX - rect.left) / rect.width * render.canvas.width;
+            const y = (event.clientY - rect.top) / rect.height * render.canvas.height;
+
+            if (currentMode === 'spawn') {
+                const bodies = Composite.allBodies(engine.world);
+                const oldIndicator = bodies.find(b => b.label === 'spawnPoint');
+                if (oldIndicator) {
+                    Composite.remove(engine.world, oldIndicator);
+                }
+
+                spawnPoint = { x, y };
+                const indicator = Bodies.circle(x, y, 5, {
+                    isStatic: true,
+                    label: 'spawnPoint',
+                    render: { fillStyle: '#F35e66' }
+                });
+                Composite.add(engine.world, indicator);
+
+                currentMode = 'points';
+                document.getElementById('spawnPoint').classList.remove('active');
+                updateModeIndicator();
+            } else if (currentMode === 'threshold') {
+                // Set the threshold line
+                thresholdY = y;
+                // Switch back to points mode
+                currentMode = 'points';
+                document.getElementById('setThreshold').classList.remove('active');
+                updateModeIndicator();
+            } else {
+                // Default behavior: adding points for shapes
+                points.push({ x, y });
+            }
+        });
+
+        // Button event listeners
+        document.getElementById('connectPoints').addEventListener('click', () => {
+            if (points.length >= 3) {
+                const center = {
+                    x: points.reduce((sum, p) => sum + p.x, 0) / points.length,
+                    y: points.reduce((sum, p) => sum + p.y, 0) / points.length
+                };
+
+                const vertices = points.map(p => ({
+                    x: p.x - center.x,
+                    y: p.y - center.y
+                }));
+
+                const shape = Bodies.fromVertices(center.x, center.y, [vertices], {
+                    isStatic: true,
+                    restitution: 1,
+                    friction: 0,
+                    render: { fillStyle: shapeColor }
+                });
+
+                Matter.Body.setPosition(shape, {
+                    x: center.x,
+                    y: center.y
+                });
+
+                shapes.push(shape);
+                Composite.add(engine.world, shape);
+                points = [];
+            }
+        });
+
+        document.getElementById('clearPoints').addEventListener('click', () => {
+            points = [];
+        });
+
+        document.getElementById('spawnPoint').addEventListener('click', () => {
+            const btn = document.getElementById('spawnPoint');
+            if (currentMode === 'spawn') {
+                currentMode = 'points';
+                btn.classList.remove('active');
+            } else {
+                currentMode = 'spawn';
+                btn.classList.add('active');
+            }
+            updateModeIndicator();
+        });
+
+        document.getElementById('setThreshold').addEventListener('click', () => {
+            const btn = document.getElementById('setThreshold');
+            if (currentMode === 'threshold') {
+                currentMode = 'points';
+                btn.classList.remove('active');
+            } else {
+                currentMode = 'threshold';
+                btn.classList.add('active');
+            }
+            updateModeIndicator();
+        });
+
+        document.getElementById('clear').addEventListener('click', () => {
+            // Clear all shapes, balls, spawn points, threshold, and particles
+            Composite.clear(engine.world);
+            points = [];
+            spawnPoint = null;
+            shapes = [];
+            thresholdY = null;
+            particles = [];
+            currentMode = 'points';
+            document.getElementById('spawnPoint').classList.remove('active');
+            document.getElementById('setThreshold').classList.remove('active');
+            updateModeIndicator();
+            addBoundaries();
+        });
+
+        document.getElementById('clearLeaderboard').addEventListener('click', () => {
+            leaderboardData = [];
+            renderLeaderboard();
+        });
+
+        function addUserToLeaderboard(username, profilePicUrl) {
+            const index = leaderboardData.findIndex(u => u.username === username);
+            if (index === -1) {
+                leaderboardData.push({
+                    username: username,
+                    profilePic: profilePicUrl,
+                    score: 0
+                });
+            }
+            sortLeaderboard();
+            renderLeaderboard();
+            return leaderboardData.findIndex(u => u.username === username);
+        }
+
+        function sortLeaderboard() {
+            // Sort highest to lowest score
+            leaderboardData.sort((a,b) => b.score - a.score);
+        }
+
+        function renderLeaderboard() {
+            const lbBody = document.getElementById('leaderboard-body');
+            lbBody.innerHTML = '';
+            leaderboardData.forEach(entry => {
+                const div = document.createElement('div');
+                div.classList.add('leaderboard-entry');
+                
+                const img = document.createElement('img');
+                img.src = entry.profilePic;
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.classList.add('username');
+                nameSpan.textContent = entry.username;
+                
+                const scoreSpan = document.createElement('span');
+                scoreSpan.textContent = entry.score;
+                
+                div.appendChild(img);
+                div.appendChild(nameSpan);
+                div.appendChild(scoreSpan);
+                lbBody.appendChild(div);
+            });
+        }
+
+        window.addEventListener('assignUserEvent', function(event) {
+            const user = {
+                username: event.detail.username,
+                photoUrl: event.detail.photoUrl,
+                gift_name: 'rose'
+            };
+            assignUserToBall(user);
+        });
+
+        function assignUserToBall(user) {
+            if (!spawnPoint) {
+                console.log("No spawn point set. Please set a spawn point before spawning balls.");
+                return;
+            }
+
+            const ballSize = parseInt(ballSizeSlider.value);
+
+            // If user not on the leaderboard, add them now
+            const userIndex = addUserToLeaderboard(user.username, user.photoUrl);
+
+            // Create ball texture
+            const ballImage = new Image();
+            ballImage.src = user.photoUrl;
+
+            const ball = Bodies.circle(spawnPoint.x, spawnPoint.y, ballSize, {
+                restitution: 1,
+                friction: 0,
+                frictionAir: 0.001,
+                density: 0.001,
+                render: { 
+                    fillStyle: 'transparent'
+                },
+                texture: ballImage
+            });
+
+            // Store user info in the ball
+            ball.userIndex = userIndex;
+            ball.hasScored = false; // track if this ball has already scored
+            
+            Matter.Body.setVelocity(ball, {
+                x: (Math.random() - 0.5) * 5,
+                y: Math.random() * -5
+            });
+
+            Composite.add(engine.world, ball);
+        }
+
+        document.getElementById('spawnBall').addEventListener('click', () => {
+            if (!spawnPoint) {
+                console.log("No spawn point set. Please set a spawn point before spawning balls.");
+                return;
+            }
+
+            const ballSize = parseInt(ballSizeSlider.value);
+            // Pick a random user from the userPool
+            const chosenUser = userPool[Math.floor(Math.random() * userPool.length)];
+
+            // If user not on the leaderboard, add them now
+            const userIndex = addUserToLeaderboard(chosenUser.username, chosenUser.profilePic);
+
+            // Create ball texture
+            const ballImage = new Image();
+            ballImage.src = chosenUser.profilePic;
+
+            const ball = Bodies.circle(spawnPoint.x, spawnPoint.y, ballSize, {
+                restitution: 1,
+                friction: 0,
+                frictionAir: 0.001,
+                density: 0.001,
+                render: { 
+                    fillStyle: 'transparent'
+                },
+                texture: ballImage
+            });
+
+            // Store user info in the ball
+            ball.userIndex = userIndex;
+            ball.hasScored = false; // track if this ball has already scored
+            
+            Matter.Body.setVelocity(ball, {
+                x: (Math.random() - 0.5) * 5,
+                y: Math.random() * -5
+            });
+
+            Composite.add(engine.world, ball);
+        });
+
+        // Create dust particles at a collision point
+        function createDustParticles(x, y, count=5) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    size: 4,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    alpha: 1.0
+                });
+            }
+        }
+
+        // Listen for collisions to create dust
+        Events.on(engine, 'collisionStart', (event) => {
+            event.pairs.forEach(pair => {
+                const { bodyA, bodyB } = pair;
+
+                const isABall = bodyA.circleRadius && !bodyA.isStatic;
+                const isBBall = bodyB.circleRadius && !bodyB.isStatic;
+                const isAShape = bodyA.isStatic && bodyA.label !== 'spawnPoint';
+                const isBShape = bodyB.isStatic && bodyB.label !== 'spawnPoint';
+
+                if ((isABall && isBShape) || (isBBall && isAShape)) {
+                    // Exact point of contact
+                    if (pair.collision && pair.collision.supports && pair.collision.supports[0]) {
+                        const cx = pair.collision.supports[0].x;
+                        const cy = pair.collision.supports[0].y;
+                        createDustParticles(cx, cy, 10);
+                    }
+                }
+            });
+        });
+
+        // Matter.js event handlers
+        Events.on(engine, 'afterUpdate', () => {
+            const balls = Composite.allBodies(engine.world).filter(body => !body.isStatic && body.circleRadius);
+
+            // Check threshold crossing for scoring
+            if (thresholdY !== null) {
+                balls.forEach(ball => {
+                    if (!ball.hasScored && typeof ball.userIndex !== 'undefined') {
+                        // If ball crosses the threshold line going downward
+                        if (ball.position.y > thresholdY) {
+                            // Increment that user's score
+                            if (leaderboardData[ball.userIndex]) {
+                                leaderboardData[ball.userIndex].score += 1;
+                                ball.hasScored = true;
+                                sortLeaderboard();
+                                renderLeaderboard();
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Update particles (move and fade)
+            particles = particles.filter(p => p.alpha > 0);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.02; // fade out
+                if (p.alpha < 0) p.alpha = 0;
+            });
+
+            // Maintain minimum velocity
+            balls.forEach(ball => {
+                const velocity = Vector.magnitude(ball.velocity);
+                const minVelocity = 3;  // Minimum velocity set to 3
+                const targetVelocity = Math.max(minVelocity, velocity);
+                
+                if (velocity < targetVelocity) {
+                    const angle = Math.atan2(ball.velocity.y, ball.velocity.x);
+                    Matter.Body.setVelocity(ball, {
+                        x: Math.cos(angle) * targetVelocity,
+                        y: Math.sin(angle) * targetVelocity
+                    });
+                }
+            });
+        });
+
+        Events.on(render, 'afterRender', () => {
+            const ctx = render.context;
+            
+            // Draw balls with circular clipping
+            const balls = Composite.allBodies(engine.world).filter(body => !body.isStatic && body.circleRadius);
+            balls.forEach(ball => {
+                if (ball.texture) {
+                    ctx.save();
+                    ctx.translate(ball.position.x, ball.position.y);
+                    ctx.rotate(ball.angle);
+                    
+                    // Create circular clipping path
+                    ctx.beginPath();
+                    ctx.arc(0, 0, ball.circleRadius, 0, Math.PI * 2);
+                    ctx.clip();
+                    
+                    ctx.drawImage(ball.texture, -ball.circleRadius, -ball.circleRadius, 
+                                  ball.circleRadius * 2, ball.circleRadius * 2);
+                    ctx.restore();
+                }
+            });
+            
+            // Draw points and preview (with shape color)
+            ctx.strokeStyle = shapeColor;
+            ctx.fillStyle = shapeColor;
+
+            points.forEach((point, index) => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                if (index > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(points[index - 1].x, points[index - 1].y);
+                    ctx.lineTo(point.x, point.y);
+                    ctx.stroke();
+                }
+            });
+            
+            if (points.length >= 2) {
+                ctx.beginPath();
+                ctx.moveTo(points[points.length - 1].x, points[points.length - 1].y);
+                ctx.lineTo(points[0].x, points[0].y);
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Draw threshold line if set
+            if (thresholdY !== null) {
+                ctx.beginPath();
+                ctx.moveTo(0, thresholdY);
+                ctx.lineTo(render.canvas.width, thresholdY);
+                ctx.strokeStyle = thresholdColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Indicator on left side
+                ctx.fillStyle = thresholdColor;
+                ctx.font = '12px sans-serif';
+                ctx.fillText('Threshold', 5, thresholdY - 5);
+            }
+
+            // Draw particles with chosen particle color
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = particleColor;
+                ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+                ctx.restore();
+            });
+        });
+
+        // Start the engine
+        resizeCanvas();
+        Render.run(render);
+        const runner = Runner.create();
+        Runner.run(runner, engine);
+        addBoundaries();
+        updateModeIndicator();
+
+        // Leaderboard starts empty, no initial users added
+        // Make leaderboard draggable
+        const leaderboard = document.getElementById('leaderboard');
+        const leaderboardHeader = document.getElementById('leaderboard-header');
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDraggingLeaderboard = false;
+
+        leaderboardHeader.addEventListener('mousedown', (e) => {
+            isDraggingLeaderboard = true;
+            offsetX = e.clientX - leaderboard.offsetLeft;
+            offsetY = e.clientY - leaderboard.offsetTop;
+            document.addEventListener('mousemove', dragLeaderboard);
+            document.addEventListener('mouseup', stopDraggingLeaderboard);
+        });
+
+        function dragLeaderboard(e) {
+            if (isDraggingLeaderboard) {
+                leaderboard.style.left = (e.clientX - offsetX) + 'px';
+                leaderboard.style.top = (e.clientY - offsetY) + 'px';
+            }
+        }
+
+        function stopDraggingLeaderboard() {
+            isDraggingLeaderboard = false;
+            document.removeEventListener('mousemove', dragLeaderboard);
+            document.removeEventListener('mouseup', stopDraggingLeaderboard);
+        }
+    </script>
+</body>
+</html>
