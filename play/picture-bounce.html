@@ -193,6 +193,7 @@
 
         // Leaderboard data
         let leaderboardData = [];
+        let activeBalls = new Map();
 
         // Colors chosen by user
         let shapeColor = document.getElementById('shapeColor').value;
@@ -460,6 +461,7 @@
             shapes = [];
             thresholdY = null;
             particles = [];
+            activeBalls.clear();
             currentMode = 'points';
             document.getElementById('spawnPoint').classList.remove('active');
             document.getElementById('setThreshold').classList.remove('active');
@@ -530,6 +532,11 @@
                 return;
             }
 
+            if (activeBalls.has(user.username)) {
+                console.log(`${user.username} already has an active ball`);
+                return;
+            }
+
             const ballSize = parseInt(ballSizeSlider.value);
 
             // If user not on the leaderboard, add them now
@@ -559,6 +566,7 @@
                 y: Math.random() * -5
             });
 
+            activeBalls.set(user.username, ball);
             Composite.add(engine.world, ball);
         }
 
@@ -571,6 +579,11 @@
             const ballSize = parseInt(ballSizeSlider.value);
             // Pick a random user from the userPool
             const chosenUser = userPool[Math.floor(Math.random() * userPool.length)];
+
+            if (activeBalls.has(chosenUser.username)) {
+                console.log(`${chosenUser.username} already has an active ball`);
+                return;
+            }
 
             // If user not on the leaderboard, add them now
             const userIndex = addUserToLeaderboard(chosenUser.username, chosenUser.profilePic);
@@ -598,7 +611,7 @@
                 x: (Math.random() - 0.5) * 5,
                 y: Math.random() * -5
             });
-
+            activeBalls.set(chosenUser.username, ball);
             Composite.add(engine.world, ball);
         });
 
