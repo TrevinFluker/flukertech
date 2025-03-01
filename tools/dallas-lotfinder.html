@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Search</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBvaMotvobLA5whZc-oXHTRhBhu_DDL-ZY&callback=initMap" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .search-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .range-inputs {
+            display: flex;
+            gap: 10px;
+        }
+        .range-inputs input {
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            font-size: 16px;
+            grid-column: span 3;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            width: auto;
+            margin: 0 5px;
+            padding: 8px 16px;
+        }
+        .pagination button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .no-results {
+            text-align: center;
+            margin: 40px 0;
+            font-style: italic;
+        }
+        .results-summary {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        #mapContainer {
+            height: 600px;
+            width: 100%;
+            margin: 20px 0;
+            display: none;
+            border: 1px solid #ddd;
+        }
+        .map-info-window {
+            max-width: 300px;
+            padding: 5px;
+        }
+        .map-info-window h3 {
+            margin-top: 5px;
+            margin-bottom: 8px;
+        }
+        .map-info-window p {
+            margin: 4px 0;
+        }
+        .view-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .view-toggle button {
+            width: auto;
+            padding: 8px 16px;
+            margin: 0 10px;
+        }
+        .map-search-link {
+            color: #2196F3;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Property Database Search</h1>
+    
+    <form id="searchForm">
+        <div class="search-container">
+            <!-- Text search fields -->
+            <div class="form-group">
+                <label for="address">Address (contains)</label>
+                <input type="text" id="address" name="address">
+            </div>
+            
+            <div class="form-group">
+                <label for="city">City (contains)</label>
+                <input type="text" id="city" name="city">
+            </div>
+            
+            <div class="form-group">
+                <label for="county">County (contains)</label>
+                <input type="text" id="county" name="county">
+            </div>
+            
+            <div class="form-group">
+                <label for="usedesc">Use Description (contains)</label>
+                <input type="text" id="usedesc" name="usedesc">
+            </div>
+            
+            <div class="form-group">
+                <label for="zoning_description">Zoning Description (contains)</label>
+                <input type="text" id="zoning_description" name="zoning_description">
+            </div>
+            
+            <div class="form-group">
+                <label for="owner">Owner (contains)</label>
+                <input type="text" id="owner" name="owner">
+            </div>
+            
+            <!-- Exact match fields -->
+            <div class="form-group">
+                <label for="usecode">Use Code (exact match)</label>
+                <input type="number" id="usecode" name="usecode">
+            </div>
+            
+            <div class="form-group">
+                <label for="zoning">Zoning (exact match)</label>
+                <input type="number" id="zoning" name="zoning">
+            </div>
+            
+            <!-- Range fields -->
+            <div class="form-group">
+                <label>Year Built (range)</label>
+                <div class="range-inputs">
+                    <input type="number" id="min_yearbuilt" name="min_yearbuilt" placeholder="Min">
+                    <input type="number" id="max_yearbuilt" name="max_yearbuilt" placeholder="Max">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Land Value (range)</label>
+                <div class="range-inputs">
+                    <input type="number" id="min_landval" name="min_landval" placeholder="Min">
+                    <input type="number" id="max_landval" name="max_landval" placeholder="Max">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Improvement Value (range)</label>
+                <div class="range-inputs">
+                    <input type="number" id="min_improvval" name="min_improvval" placeholder="Min">
+                    <input type="number" id="max_improvval" name="max_improvval" placeholder="Max">
+                </div>
+            </div>
+            
+            <button type="submit">Search Properties</button>
+            <button type="button" id="mapViewBtn" style="background-color: #2196F3;" disabled>Show Map View</button>
+        </div>
+    </form>
+    
+    <div id="resultsContainer" style="display: none;">
+        <div class="results-summary" id="resultsSummary"></div>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Address</th>
+                    <th>City</th>
+                    <th>County</th>
+                    <th>Use</th>
+                    <th>Zoning</th>
+                    <th>Year Built</th>
+                    <th>Land Value</th>
+                    <th>Impr. Value</th>
+                    <th>Owner</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+                <!-- Results will be inserted here -->
+            </tbody>
+        </table>
+        
+        <div class="pagination" id="pagination">
+            <button id="prevPage" disabled>Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextPage" disabled>Next</button>
+        </div>
+    </div>
+    
+    <div id="mapContainer">
+        <!-- Map will be rendered here -->
+    </div>
+    
+    <div class="view-toggle" id="viewToggle" style="display: none;">
+        <button id="tableViewBtn">Table View</button>
+        <button id="mapViewBtn2">Map View</button>
+    </div>
+    
+    <div id="noResults" class="no-results" style="display: none;">
+        No properties found matching your search criteria.
+    </div>
+    
+    <script>
+        // API endpoint
+        const API_URL = 'https://lotserver-3a3aa7c8c6bc.herokuapp.com/api/properties';
+        
+        // State variables
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentSearchParams = {};
+        let allMapResults = [];
+        let map;
+        let markers = [];
+        let infoWindow;
+        
+        // DOM elements
+        const searchForm = document.getElementById('searchForm');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsBody = document.getElementById('resultsBody');
+        const resultsSummary = document.getElementById('resultsSummary');
+        const noResults = document.getElementById('noResults');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+        const mapContainer = document.getElementById('mapContainer');
+        const mapViewBtn = document.getElementById('mapViewBtn');
+        const mapViewBtn2 = document.getElementById('mapViewBtn2');
+        const tableViewBtn = document.getElementById('tableViewBtn');
+        const viewToggle = document.getElementById('viewToggle');
+        
+        // Event listeners
+        searchForm.addEventListener('submit', handleSearch);
+        prevPageBtn.addEventListener('click', goToPrevPage);
+        nextPageBtn.addEventListener('click', goToNextPage);
+        mapViewBtn.addEventListener('click', showMapView);
+        mapViewBtn2.addEventListener('click', showMapView);
+        tableViewBtn.addEventListener('click', showTableView);
+        
+        // Initialize Google Map
+        function initMap() {
+            // Default center on Texas
+            map = new google.maps.Map(document.getElementById('mapContainer'), {
+                center: { lat: 31.9686, lng: -99.9018 }, // Center of Texas
+                zoom: 7
+            });
+            
+            infoWindow = new google.maps.InfoWindow();
+        }
+        
+        // Handle form submission
+        function handleSearch(event) {
+            event.preventDefault();
+            currentPage = 1;
+            
+            // Get form data
+            const formData = new FormData(searchForm);
+            const searchParams = {};
+            
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    searchParams[key] = value;
+                }
+            }
+            
+            currentSearchParams = searchParams;
+            fetchResults();
+        }
+        
+        // Fetch results from API
+        async function fetchResults() {
+            try {
+                // Prepare query parameters
+                const queryParams = new URLSearchParams({
+                    ...currentSearchParams,
+                    page: currentPage
+                });
+                
+                const response = await fetch(`${API_URL}?${queryParams}`);
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                displayResults(data);
+                
+                // Enable the map view button if there are results
+                mapViewBtn.disabled = data.totalResults === 0;
+            } catch (error) {
+                console.error('Error fetching results:', error);
+                alert('Error fetching results. Please try again.');
+            }
+        }
+        
+        // Fetch all results for map view (no pagination)
+        async function fetchAllForMap() {
+            try {
+                // Remove pagination parameters but keep search filters
+                const mapParams = { ...currentSearchParams, limit: 1000 };
+                const queryParams = new URLSearchParams(mapParams);
+                
+                const response = await fetch(`${API_URL}?${queryParams}`);
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                allMapResults = data.results;
+                populateMap();
+            } catch (error) {
+                console.error('Error fetching map data:', error);
+                alert('Error loading map data. Please try again.');
+            }
+        }
+        
+        // Display results in the table
+        function displayResults(data) {
+            if (data.totalResults === 0) {
+                resultsContainer.style.display = 'none';
+                viewToggle.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+            
+            // Update pagination info
+            totalPages = data.totalPages;
+            updatePaginationControls();
+            
+            // Show results container and view toggle
+            resultsContainer.style.display = 'block';
+            viewToggle.style.display = 'flex';
+            noResults.style.display = 'none';
+            
+            // Update results summary
+            resultsSummary.textContent = `Showing ${data.results.length} of ${data.totalResults} properties`;
+            
+            // Clear previous results
+            resultsBody.innerHTML = '';
+            
+            // Add new results
+            data.results.forEach(property => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${property.address || '-'}</td>
+                    <td>${property.city || '-'}</td>
+                    <td>${property.county || '-'}</td>
+                    <td>${property.usedesc || '-'}</td>
+                    <td>${property.zoning_description || '-'}</td>
+                    <td>${property.yearbuilt || '-'}</td>
+                    <td>${formatNumber(property.landval)}</td>
+                    <td>${formatNumber(property.improvval)}</td>
+                    <td>${property.owner || '-'}</td>
+                `;
+                
+                resultsBody.appendChild(row);
+            });
+        }
+        
+        // Populate markers on the map
+        function populateMap() {
+            // Clear existing markers
+            clearMarkers();
+            
+            if (allMapResults.length === 0) return;
+            
+            // Create bounds to adjust map view
+            const bounds = new google.maps.LatLngBounds();
+            
+            // Add markers for each property with lat/lon
+            allMapResults.forEach(property => {
+                // Only add markers for properties with valid coordinates
+                if (property.lat && property.lon) {
+                    const position = {
+                        lat: parseFloat(property.lat),
+                        lng: parseFloat(property.lon)
+                    };
+                    
+                    // Skip if coordinates are invalid
+                    if (isNaN(position.lat) || isNaN(position.lng)) return;
+                    
+                    // Create marker
+                    const marker = new google.maps.Marker({
+                        position,
+                        map,
+                        title: property.address || 'Property'
+                    });
+                    
+                    // Add marker to our array for tracking
+                    markers.push(marker);
+                    
+                    // Extend bounds to include this marker
+                    bounds.extend(position);
+                    
+                    // Create info window content
+                    const infoContent = `
+                        <div class="map-info-window">
+                            <h3>${property.address || 'Property'}</h3>
+                            <p><strong>City:</strong> ${property.city || '-'}</p>
+                            <p><strong>County:</strong> ${property.county || '-'}</p>
+                            <p><strong>Use:</strong> ${property.usedesc || '-'}</p>
+                            <p><strong>Year Built:</strong> ${property.yearbuilt || '-'}</p>
+                            <p><strong>Land Value:</strong> ${formatNumber(property.landval)}</p>
+                            <p><strong>Improvement Value:</strong> ${formatNumber(property.improvval)}</p>
+                            <p><strong>Owner:</strong> ${property.owner || '-'}</p>
+                            <p class="map-search-link" onclick="searchZillow('${property.address}', '${property.city}')">
+                                Search on Zillow
+                            </p>
+                        </div>
+                    `;
+                    
+                    // Add event listeners for marker
+                    marker.addListener('click', () => {
+                        searchZillow(property.address, property.city);
+                    });
+                    
+                    marker.addListener('mouseover', () => {
+                        infoWindow.setContent(infoContent);
+                        infoWindow.open(map, marker);
+                    });
+                }
+            });
+            
+            // Adjust map to fit all markers
+            if (markers.length > 0) {
+                map.fitBounds(bounds);
+                
+                // If there's only one marker, zoom out a bit
+                if (markers.length === 1) {
+                    map.setZoom(15);
+                }
+            }
+        }
+        
+        // Clear all markers from the map
+        function clearMarkers() {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+        }
+        
+        // Show map view
+        function showMapView() {
+            fetchAllForMap();
+            resultsContainer.style.display = 'none';
+            mapContainer.style.display = 'block';
+            
+            // If map object doesn't exist yet, wait for it to initialize
+            if (!map) {
+                setTimeout(() => {
+                    google.maps.event.trigger(map, 'resize');
+                }, 500);
+            } else {
+                google.maps.event.trigger(map, 'resize');
+            }
+        }
+        
+        // Show table view
+        function showTableView() {
+            mapContainer.style.display = 'none';
+            resultsContainer.style.display = 'block';
+        }
+        
+        // Open Google search for the property on Zillow
+        function searchZillow(address, city) {
+            if (!address) return;
+            
+            const searchQuery = encodeURIComponent(`${address}, ${city}, TX zillow`);
+            window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank');
+        }
+        
+        // Update pagination controls
+        function updatePaginationControls() {
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
+        }
+        
+        // Navigation functions
+        function goToPrevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchResults();
+            }
+        }
+        
+        function goToNextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                fetchResults();
+            }
+        }
+        
+        // Format number with commas
+        function formatNumber(num) {
+            if (num === undefined || num === null) return '-';
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+    </script>
+</body>
+</html>
