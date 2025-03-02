@@ -462,10 +462,6 @@
                     
                     // Add event listeners for marker
                     marker.addListener('click', () => {
-                        searchZillow(property.address, property.city);
-                    });
-                    
-                    marker.addListener('mouseover', () => {
                         infoWindow.setContent(infoContent);
                         infoWindow.open(map, marker);
                     });
