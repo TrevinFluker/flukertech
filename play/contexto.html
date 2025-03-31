@@ -3,999 +3,809 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Type to Play!</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>CONTEXTO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --green: #10B981;
-            --yellow: #F59E0B;
-            --red: #EF4444;
-        }
-
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
             font-family: 'Nunito', sans-serif;
-            background-color: #1F2937;
-            color: white;
-            min-height: 100vh;
+            font-weight: 700;
+            color: #423232;
         }
-
-        .wrapper {
-            width: 480px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .top-bar {
+        body {
+            background-color: #f8f4ed;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 4rem;
-            margin-bottom: 1rem;
+            padding: 20px;
         }
-
-        .title h1 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-align: center;
-            margin: 0;
-        }
-
-        .info-bar {
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-            position: relative;
-        }
-
-        .label {
-            color: #9CA3AF;
-        }
-
-        .word-input {
+        .container {
+            max-width: 500px;
             width: 100%;
-            padding: 0.75rem;
-            background-color: transparent;
-            border: 1px solid #4B5563;
-            border-radius: 0.375rem;
-            color: white;
-            font-size: 1rem;
-            margin-bottom: 1rem;
         }
-
-        .word-input:focus {
-            outline: none;
-            border-color: #6B7280;
-        }
-
-        .feedback-message {
-            text-align: center;
-            font-size: 0.875rem;
-            color: #D1D5DB;
-            margin-bottom: 1rem;
-            min-height: 1.25rem;
-        }
-
-        .instructions {
-            text-align: center;
-            font-size: 0.875rem;
-            color: #D1D5DB;
-            margin-bottom: 2rem;
-        }
-
-        .guess-history {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .guess-row {
-            position: relative;
-            background-color: #374151;
-            border-radius: 0.375rem;
-            overflow: hidden;
-        }
-
-        .guess-row.current {
-            border: 3px solid white;
-            margin-bottom: 10px;
-        }
-
-        .progress-bar {
-            position: absolute;
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-
-        .row-content {
-            position: relative;
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 0.75rem;
+            margin-bottom: 15px;
         }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3b302a;
         }
-
-        .user-avatar {
-            height: 40px;
-            width: 40px;
-            object-fit: cover;
-        }
-
-        .leaderboard {
-            position: fixed;
-            bottom: 18rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: white;
-            color: black;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            text-align: center;
-        }
-
-        .footer {
-            position: fixed;
-            bottom: 5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: white;
-            color: black;
-            padding: 0.25rem 1rem;
-            border-radius: 0.375rem;
-            text-align: center;
-        }
-
-        .close-button {
-            font-size: 0.75rem;
+        .menu-button {
+            background: none;
+            border: none;
+            font-size: 24px;
             cursor: pointer;
+            color: #3b302a;
         }
-
-        .sidepanel {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 250px;
-            height: 100%;
-            background-color: white;
-            color: black;
-            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
-            padding: 1rem;
+        .game-info {
+            margin-bottom: 15px;
+            font-size: 18px; /* Increased from 14px to 18px */
+            color: #3b302a;
+        }
+        .game-info .label {
+            font-weight: 400;
+        }
+        .input-container {
+            position: relative;
+            margin-bottom: 5px;
+        }
+        .word-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 18px; /* Increased from 16px to 18px */
+            outline: none;
+        }
+        .last-guess {
+            border: 2px solid #423232;
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            display: none;
+            font-size: 18px; /* Increased from default to 18px */
+            font-weight: 900; /* Extra bold when border is active */
+        }
+        .guesses-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: width 0.1s;
+            gap: 5px;
         }
-
-        .resize-handle {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 5px;
-            height: 100%;
-            background-color: #ccc;
-            cursor: ew-resize;
-        }
-
-        .resize-handle:hover {
-            background-color: #999;
-        }
-
-        .sidepanel h2 {
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .sidepanel input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            font-size: 1rem;
-        }
-
-        .sidepanel button {
-            width: 100%;
-            padding: 0.5rem;
-            background-color: black;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .sidepanel button:hover {
-            background-color: #374151;
-        }
-
-        /* New styles for the info icon & hover image */
-        .info-icon {
-            font-size: 16px; /* Adjust size as needed */
-            cursor: pointer;
-            vertical-align: baseline;
-            margin-left: 0;
-        }
-
-        .hover-image {
-            display: none;
-            position: absolute;
-            width: 300px; /* Adjust size as needed */
-        }
-
-        .info-container {
+        .guess-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 18px; /* Increased from 16px to 18px */
             position: relative;
-            display: inline-block;
+            overflow: hidden;
+            color: #333;
         }
-
-        .info-container:hover .hover-image {
-            display: block;
+        .guess-recent {
+            border: 2px solid #423232;
+            font-weight: 900; /* Extra bold when border is active */
         }
-
-        #usernameInput, #photoUrl {
-            margin-bottom: 0px;
-        }
-
-        .new-section {
-            margin-top:10px;
-        }
-
-        .arrow {
-            cursor: pointer;
-        }
-
-        .accordion-header {
-            text-align: center;
-        }
-
-        #scrapeUsername {
-            margin-bottom:0px;
-        }
-
-        .section-container {
-            border: 1px solid black;
-            border-radius: 5px;
-            padding: 5px;
-        }
-        .subsection-container {
-            border: 1px solid black;
-            border-radius: 5px;
-            padding: 5px;
-        }
-
-        .button-container {
-            margin-top:10px;
-            margin-bottom:15px;
-        }
-
-        /* Menu styles */
-        .menu-icon {
+        .progress-bar {
             position: absolute;
             top: 0;
-            right: 0;
-            font-size: 1.25rem;
-            cursor: pointer;
-            z-index: 15;
-            color: white;
+            left: 0;
+            height: 100%;
+            z-index: -1;
         }
-
-        .menu-dropdown {
+        .blue-bg .progress-bar {
+            background-color: #b6e0d8;
+        }
+        .yellow-bg .progress-bar {
+            background-color: #f6e4a1;
+        }
+        .red-bg .progress-bar {
+            background-color: #f2c4c4;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
             display: none;
-            position: absolute;
-            top: 1.5rem;
-            right: 0;
-            background-color: white;
-            min-width: 180px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            border-radius: 0.375rem;
-            z-index: 15;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
-
-        .menu-dropdown a {
-            color: black;
-            padding: 0.75rem 1rem;
-            text-decoration: none;
-            display: block;
-            font-size: 0.875rem;
+        .menu-modal {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: absolute;
+            top: 10%; /* Moved up to 10% from top */
+        }
+        .menu-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
             cursor: pointer;
             border-bottom: 1px solid #eee;
         }
-
-        .menu-dropdown a:last-child {
+        .menu-option:last-child {
             border-bottom: none;
         }
-
-        .menu-dropdown a:hover {
-            background-color: #f5f5f5;
-        }
-
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            z-index: 20;
-            justify-content: center;
-            align-items: center;
-            color: black;
-        }
-
-        .modal-content {
-            background-color: white;
-            max-width: 500px;
-            width: 90%;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            padding: 1.5rem;
-            position: relative;
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
+        .menu-option i {
+            margin-right: 10px;
+            width: 24px;
             text-align: center;
         }
-
-        .modal-body {
-            margin-bottom: 1.5rem;
-            font-size: 0.95rem;
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .select-game-modal {
+            background-color: #3b302a;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: white;
+            position: relative;
+            top: 10%; /* Moved up to 10% from top */
+        }
+        .select-game-header {
+            margin-bottom: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .random-button {
+            background-color: #b6e0d8;
+            color: #3b302a;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        .game-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .game-item {
+            background-color: #3b302a;
+            color: white;
+            border: 1px solid #6d5d53;
+            padding: 12px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .in-progress {
+            display: flex;
+            justify-content: space-between;
+        }
+        #loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #666;
+        }
+        .error {
+            padding: 10px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .how-to-play-content {
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            margin-top: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .how-to-play-content p {
+            margin-bottom: 10px;
             line-height: 1.5;
         }
+        .how-to-play-content strong {
+            font-weight: 800;
+        }
+        .congrats-content {
+            padding: 25px;
+            text-align: center;
+            line-height: 1.6;
+        }
+        .congrats-content p {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .congrats-content strong {
+            font-weight: 900;
+        }
+        .promo-text {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        .website-link {
+            background-color: #3b302a;
+            color: #f8f4ed;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: 800;
+            font-size: 20px;
+            display: inline-block;
+        }
 
-        .modal-close {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            font-size: 1.25rem;
+        #winningWordText, #finalGuessCount {
+            background-color: #3b302a;
+            color: #f8f4ed;
+            border-radius: 5px;
+            padding: 2px 4px;
+            font-weight: 800;
+        }
+        #playAgain {
+            display:block;
+            margin-top:50px;
+            cursor:pointer;
+            color: #b6e0d8;
+        }
+        
+        /* Custom word input styling */
+        .custom-game-input {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .custom-game-input input {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            color: #333;
+        }
+        .custom-game-input button {
+            padding: 10px;
+            background-color: #b6e0d8;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
             cursor: pointer;
+            color: #3b302a;
+        }
+        .custom-game-header {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="top-bar">
-            <div class="title">
-                <h1>TYPE TO PLAY!</h1>
-            </div>
+    <div class="container">
+        <div class="header">
+            <div class="title">CONTEXTO</div>
+            <button class="menu-button" id="menuButton">⋮</button>
         </div>
-
-        <div class="info-bar">
-            <span class="label">Game:</span> <span id="gameNumber">1</span>&nbsp;&nbsp;
-            <span class="label">Guesses:</span> <span id="guessCount">0</span>&nbsp;&nbsp;
-            <span class="label">Hints:</span> <span>2</span>
-            <div class="menu-icon" id="menuIcon">☰</div>
-            <div class="menu-dropdown" id="menuDropdown">
-                <a id="instructionsBtn">Game Instructions</a>
-                <a id="hintBtn">Hint</a>
-                <a id="giveUpBtn">Give Up</a>
-                <a id="selectGameBtn">Select Game</a>
-            </div>
+        <div class="game-info">
+            <span class="label" style="font-size: 14px;">GAME:</span> <span id="gameNumber">#923</span> 
+            <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span> 
+            <span class="label" style="font-size: 14px;">HINTS:</span> <span id="hintCount">8</span>
         </div>
-
-        <input type="text" class="word-input" id="wordInput" placeholder="type a word" autocomplete="off">
-        <div id="feedbackMessage" class="feedback-message"></div>
-
-        <div class="instructions">
-            Type to play; Words with lower numbers are closer to the secret. 🌹 for hint.
+        <div class="error" id="errorMessage"></div>
+        <div class="input-container">
+            <input type="text" class="word-input" id="wordInput" placeholder="type a word">
         </div>
-
-        <div class="guess-history" id="guessHistory">
-            <!-- Guess history will be populated by JavaScript -->
+        <div class="last-guess" id="lastGuess">
+            <!-- Last guess will be displayed here -->
+        </div>
+        <div id="loading">Loading game data...</div>
+        <div class="guesses-container" id="guessesContainer">
+            <!-- Guesses will be added here dynamically -->
         </div>
     </div>
 
-    <div class="leaderboard" id="leaderboard">
-        No winners yet!
-    </div>
-
-    <div class="footer">
-        <span>RunChatCapture.com</span>
-        <div class="close-button">✖️</div>
-    </div>
-
-    <div class="sidepanel">
-        <div class="resize-handle" id="resizeHandle"></div>
-        
-        <!-- Added info container -->
-        <div id="username_instruction" class="info-container">
-            <label style="display: inline-block;" for="username">Enter your TikTok username</label>
-            <span class="info-icon">&#x1F6C8;</span>
-            <img style="z-index: 1;" src="https://www.runchatcapture.com/assets/imgs/example.jpg" alt="Details" class="hover-image">
-        </div>
-        <input type="text" id="usernameInput" placeholder="Enter your username">
-        <button id="saveButton">Save Username</button>
-
-        <div id="photo_instruction" class="info-container new-section">
-            <label for="photoUrl">TikTok profile image URL</label>
-            <input type="text" id="photoUrl" placeholder="Enter image URL">
-            <button id="imageSave">Save Profile Photo</button>
-        </div>
-        <div class="info-container new-section" style="width:100%;">
-            <label style="display:block;" for="photoPreview">Image Preview</label>
-            <img id="photoPreview" alt="Image Preview" style="width:50px;height:50px;"/>
-        </div>
-        <!-- New Scraping Controls Accordion -->
-        <div class="info-container new-section section-container" style="width:100%;">
-            <div class="accordion">
-                <div class="accordion-header" onclick="toggleAccordion(this)">
-                    <span style="cursor: pointer;">Scraping Controls</span>
-                    <span class="arrow">&#9660;</span>
-                </div>
-                <div class="accordion-content">
-                    <p style="font-size:12.5px;">Use "Start Scraping" to connect this webpage to a TikTok chat. Go live, enter your username, and then click the button. Or test with another host's live.</p>
-                    <label style="margin-top:10px;display:block;" for="scrapeUsername">TikTok Username to scrape</label>
-                    <input type="text" id="scrapeUsername" placeholder="Enter TikTok username">
-                    <button id="startScrapingButton" onclick="startScraping()">Start Scraping</button>
-                </div>
+    <!-- Menu overlay -->
+    <div class="overlay" id="menuOverlay">
+        <div class="menu-modal">
+            <div class="menu-option" id="howToPlay">
+                <i>?</i> How to play
             </div>
-        </div>
-
-        <!-- New Contexto Controls Accordion -->
-        <div class="info-container new-section section-container" style="width:100%;">
-            <div class="accordion">
-                <div class="accordion-header" onclick="toggleAccordion(this)">
-                    <span style="cursor: pointer;">Contexto Controls</span>
-                    <span class="arrow">&#9650;</span>
-                </div>
-                <div class="accordion-content" style="display: block;">
-                    <div class="button-container">
-                        <p style="font-size:12.5px;">After clicking "Start Scraping" click the button below to start the game.</p>
-                        <button id="toggleGameButton" onclick="toggleGame()">Start Game</button>
-                    </div>
-                    <div class="accordion subsection-container">
-                        <div class="accordion-header" onclick="toggleAccordion(this)">
-                            <span style="cursor: pointer;">Game Info</span>
-                            <span class="arrow">&#9660;</span>
-                        </div>
-                        <div class="accordion-content" style="display: none;">
-                            <p>Placeholder text for Game Info.</p>
-                        </div>
-                    </div>
-                    <div class="accordion subsection-container">
-                        <div class="accordion-header" onclick="toggleAccordion(this)">
-                            <span style="cursor: pointer;">Game Settings</span>
-                            <span class="arrow">&#9660;</span>
-                        </div>
-                        <div class="accordion-content" style="display: none;">
-                            <label for="gameNumberInput">Game Number:</label>
-                            <input type="number" id="gameNumberInput" value="1" min="1">
-                            <button id="setGameButton">Set Game</button>
-                        </div>
-                    </div>
-                    <div class="accordion subsection-container">
-                        <div class="accordion-header" onclick="toggleAccordion(this)">
-                            <span style="cursor: pointer;">Account</span>
-                            <span class="arrow">&#9660;</span>
-                        </div>
-                        <div class="accordion-content" style="display: none;">
-                            <div class="button-container" style="margin-bottom:0px;">
-                                <button style="margin-bottom:5px;" onclick="manageSubscription()">Manage Subscription</button>
-                                <button style="margin-bottom:5px;" onclick="logout()">Log Out</button>
-                            </div>
-                            <p style="text-align: center;"><a href="#" onclick="sendFeedback()">Send Feedback To Developer</a></p>
-                        </div>
-                    </div>
-                </div>
+            <div class="menu-option" id="hintOption">
+                <i>💡</i> Hint
+            </div>
+            <div class="menu-option" id="giveUp">
+                <i>🏳️</i> Give up
+            </div>
+            <div class="menu-option" id="selectGame">
+                <i>🎮</i> Select a game
+            </div>
+            <div class="menu-option" id="settings">
+                <i>⚙️</i> Settings
+            </div>
+            <!-- Credits and Feedback sections removed -->
+            <div class="menu-option" id="faq">
+                <i>❓</i> FAQ
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
-    <div class="modal" id="instructionsModal">
-        <div class="modal-content">
-            <span class="modal-close" id="closeInstructionsModal">×</span>
-            <div class="modal-title">How to Play</div>
-            <div class="modal-body">
-                <p>Your task is to uncover the secret word. You can guess as many times as you like.</p>
-                <p>Each guess you enter is evaluated by an AI algorithm that has ranked words by how closely they match the secret word. Once you submit a guess, you'll see its ranking. Remember that the secret word is always ranked at number 1.</p>
-                <p>This AI model has analyzed thousands of texts and uses the contexts in which words appear to measure their similarity. Use your guesses and the rankings to zero in on the secret word!</p>
+    <!-- How to Play Content -->
+    <div class="overlay" id="howToPlayOverlay">
+        <div class="menu-modal">
+            <button class="close-modal" id="closeHowToPlay">✕</button>
+            <div class="how-to-play-content">
+                <p><strong>Find the secret word. You have unlimited guesses.</strong></p>
+                <p><strong>The words were sorted by an artificial intelligence algorithm according to how similar they were to the secret word.</strong></p>
+                <p><strong>After submitting a word, you will see its position. The secret word is number 1.</strong></p>
+                <p><strong>The algorithm analyzed thousands of texts. It uses the context in which words are used to calculate the similarity between them.</strong></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Congrats overlay -->
+    <div class="overlay" id="congratsOverlay">
+        <div class="menu-modal">
+            <div class="congrats-content">
+                <p><strong>Congrats!</strong></p>
+                <p>You got the word <strong id="winningWordText"></strong> in <strong id="finalGuessCount"></strong> guesses.</p>
+                <p class="promo-text">Automate this game for <br/>TikTok and Twitch at:</p>
+                <p><span class="website-link">RunChatCapture.com</span></p>
+                <p><strong id="playAgain">Play again</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Select Game overlay -->
+    <div class="overlay" id="selectGameOverlay">
+        <div class="select-game-modal">
+            <button class="close-modal" id="closeSelectGame">✕</button>
+            <div class="select-game-header">Create a custom game:</div>
+            <!-- Added custom game input section -->
+            <div class="custom-game-input">
+                <input type="text" id="customWordInput" placeholder="Enter a secret word">
+                <button id="createCustomGame">Create Game</button>
+                <button id="randomGame" class="random-button">Generate Random Game</button>
             </div>
         </div>
     </div>
 
     <script>
         // Game state
-        const gameState = {
-            gameNumber: 1,
-            guesses: [],
-            username: 'player',
-            hintRank: 300
-        };
-
-        // Calculate similarity percentage (inverted from rank)
-        function calculateSimilarity(rank) {
-            if (rank <= 10) return 95 - (rank * 1.5);
-            if (rank <= 100) return 80 - ((rank - 10) * 0.2);
-            if (rank <= 1000) return 60 - ((rank - 100) * 0.05);
-            return 10;
-        }
-
-        function getBarColor(similarity) {
-            if (similarity > 80) return 'var(--green)';
-            if (similarity > 60) return 'var(--yellow)';
-            return 'var(--red)';
-        }
-
-        // Replace the current renderGuessHistory function with this version
-        function renderGuessHistory() {
-            const historyContainer = document.getElementById('guessHistory');
-            historyContainer.innerHTML = '';
-
-            // Sort guesses by score (rank) from lowest to highest (1 is best)
-            const sortedGuesses = [...gameState.guesses].sort((a, b) => a.score - b.score);
-
-            sortedGuesses.forEach((guess, index) => {
-                const guessElement = document.createElement('div');
-                guessElement.className = 'guess-row' + (index === 0 && guess.score === 1 ? ' current' : '');
-
-                const progressBar = document.createElement('div');
-                progressBar.className = 'progress-bar';
-                progressBar.style.width = `${guess.similarity}%`;
-                progressBar.style.backgroundColor = getBarColor(guess.similarity);
-
-                const content = document.createElement('div');
-                content.className = 'row-content';
-                content.innerHTML = 
-                    `<span>${guess.word}</span>
-                    ${guess.user ? 
-                        `<span class="user-info">
-                            <img src="https://picsum.photos/40" alt="${guess.user}'s avatar" class="user-avatar">
-                            <span>${guess.user}</span>
-                        </span>`
-                    : ''}
-                    <span>${guess.score}</span>`;
-
-                guessElement.appendChild(progressBar);
-                guessElement.appendChild(content);
-                historyContainer.appendChild(guessElement);
-            });
-        }
-
-        // Function to make a guess
-        async function makeGuess(word) {
-            if (!word.trim()) return;
-            
-            try {
-                const response = await fetch(`https://cc-contexto-d01a6bbfa039.herokuapp.com/games/lookup?game_number=${gameState.gameNumber}&word=${word}`);
-                const data = await response.json();
-                
-                if (data.lemma && data.rank) {
-                    // Check if word was already guessed.
-                    if (isWordInGuessHistory(data.lemma)) {
-                        document.getElementById('feedbackMessage').textContent = `Already guessed: ${data.lemma}`;
-                        return;
-                    }
-
-                    // Successful guess
-                    document.getElementById('feedbackMessage').textContent = `${data.lemma}`;
-                    
-                    // Add to guess history
-                    const username = localStorage.getItem('tiktokUsername') || gameState.username;
-                    const newGuess = { 
-                        word: data.lemma, 
-                        user: username, 
-                        score: parseInt(data.rank), 
-                        similarity: calculateSimilarity(parseInt(data.rank)) 
-                    };
-                    
-                    // Add to beginning of array
-                    gameState.guesses.unshift(newGuess);
-                    
-                    // Update the guess count
-                    document.getElementById('guessCount').textContent = gameState.guesses.length;
-                    
-                    // Render the updated guess history
-                    renderGuessHistory();
-                    
-                    // Check if this is a winning guess (rank 1)
-                    if (parseInt(data.rank) === 1) {
-                        document.getElementById('leaderboard').textContent = `${username} found the word: ${data.lemma}!`;
-                    }
-                } else if (data.message) {
-                    // Failed guess
-                    document.getElementById('feedbackMessage').textContent = "I don't know that word";
-                }
-            } catch (error) {
-                console.error('Error making guess:', error);
-                document.getElementById('feedbackMessage').textContent = "Error connecting to the server";
-            }
-            
-            // Clear the input
-            wordInput.value = '';
-        }
-
-        // Function to set game number
-        function setGameNumber(number) {
-            if (number > 0) {
-                gameState.gameNumber = number;
-                document.getElementById('gameNumber').textContent = number;
-                gameState.guesses = [];
-                gameState.hintRank = 300; // Reset hint rank
-                renderGuessHistory();
-                document.getElementById('guessCount').textContent = '0';
-                document.getElementById('feedbackMessage').textContent = '';
-                document.getElementById('leaderboard').textContent = 'No winners yet!';
-            }
-        }
-
-        function setupMenu() {
-            const menuIcon = document.getElementById('menuIcon');
-            const menuDropdown = document.getElementById('menuDropdown');
-            const instructionsBtn = document.getElementById('instructionsBtn');
-            const hintBtn = document.getElementById('hintBtn');
-            const giveUpBtn = document.getElementById('giveUpBtn');
-            const selectGameBtn = document.getElementById('selectGameBtn');
-
-            // Toggle menu dropdown
-            menuIcon.addEventListener('click', function() {
-                if (menuDropdown.style.display === 'block') {
-                    menuDropdown.style.display = 'none';
-                } else {
-                    menuDropdown.style.display = 'block';
-                }
-            });
-
-            // Close menu when clicking elsewhere
-            document.addEventListener('click', function(event) {
-                if (!menuIcon.contains(event.target) && !menuDropdown.contains(event.target)) {
-                    menuDropdown.style.display = 'none';
-                }
-            });
-
-            // Instructions button
-            instructionsBtn.addEventListener('click', function() {
-                document.getElementById('feedbackMessage').textContent = 
-                    "Find the secret word by making guesses. Words with lower numbers are closer to the secret.";
-                menuDropdown.style.display = 'none';
-            });
-
-            // Hint functionality
-            hintBtn.addEventListener('click', function() {
-                getHint();
-                menuDropdown.style.display = 'none';
-            });
-
-            // Give Up functionality
-            giveUpBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to give up and see the answer?')) {
-                    getSolution();
-                }
-                menuDropdown.style.display = 'none';
-            });
-            
-            // Select Game functionality
-            selectGameBtn.addEventListener('click', function() {
-                const gameNum = prompt("Enter game number (1-99):", gameState.gameNumber);
-                
-                // Check if input is valid
-                if (gameNum !== null) {
-                    const gameNumber = parseInt(gameNum);
-                    if (!isNaN(gameNumber) && gameNumber > 0 && gameNumber <= 99) {
-                        setGameNumber(gameNumber);
-                        document.getElementById('gameNumberInput').value = gameNumber;
-                    } else {
-                        document.getElementById('feedbackMessage').textContent = "Please enter a valid game number (1-99)";
-                    }
-                }
-                menuDropdown.style.display = 'none';
-            });
-        }
-
-        async function getHint() {
-            try {
-                // Find the current lowest rank (best guess) to determine next hint rank
-                let lowestRank = gameState.hintRank;
-                if (gameState.guesses.length > 0) {
-                    // Get current lowest rank from guesses
-                    const sortedGuesses = [...gameState.guesses].sort((a, b) => a.score - b.score);
-                    const currentBestRank = sortedGuesses[0].score;
-                    
-                    // Set next hint rank to one lower than the best guess, but not less than 2
-                    lowestRank = Math.max(2, currentBestRank - 1);
-                    
-                    // Only use original hintRank if it would give a better hint
-                    if (lowestRank >= gameState.hintRank) {
-                        lowestRank = gameState.hintRank;
-                    }
-                }
-                
-                const response = await fetch(`https://cc-contexto-d01a6bbfa039.herokuapp.com/games/hint?game_number=${gameState.gameNumber}&rank=${lowestRank}`);
-                const data = await response.json();
-                
-                if (data.lemma && data.rank) {
-                    // Check if hint is already given
-                    if (isWordInGuessHistory(data.lemma)) {
-                        // Get a new hint with a different rank
-                        gameState.hintRank = Math.max(2, parseInt(data.rank) - 1);
-                        document.getElementById('feedbackMessage').textContent = `Closest hint already found: ${data.lemma}.`;
-                        return;
-                    }
-
-                    // Add to guess history with a special marker
-                    const newGuess = { 
-                        word: data.lemma, 
-                        user: 'HINT', 
-                        score: parseInt(data.rank), 
-                        similarity: calculateSimilarity(parseInt(data.rank)) 
-                    };
-                    
-                    gameState.guesses.unshift(newGuess);
-                    document.getElementById('guessCount').textContent = gameState.guesses.length;
-                    renderGuessHistory();
-                    
-                    // Decrease hint rank by 1 for next time, but not below 2
-                    gameState.hintRank = Math.max(2, lowestRank - 1);
-                    
-                    // Show feedback for the hint
-                    document.getElementById('feedbackMessage').textContent = `Hint: ${data.lemma} (rank ${data.rank})`;
-                } else {
-                    console.error('Hint response:', data);
-                    document.getElementById('feedbackMessage').textContent = "Couldn't get a hint";
-                }
-            } catch (error) {
-                console.error('Error getting hint:', error);
-                document.getElementById('feedbackMessage').textContent = "Error getting hint";
-            }
-        }
-
-        // Function to get the solution (give up)
-        async function getSolution() {
-            try {
-                const response = await fetch(`https://cc-contexto-d01a6bbfa039.herokuapp.com/games/hint?game_number=${gameState.gameNumber}&rank=1`);
-                const data = await response.json();
-                
-                if (data.lemma && data.rank) {
-                    // Check if you've already found the answer
-                    if (isWordInGuessHistory(data.lemma)) {
-                        document.getElementById('feedbackMessage').textContent = `You already found the answer: ${data.lemma}`;
-                        document.getElementById('leaderboard').textContent = `The answer was: ${data.lemma}`;
-                        return;
-                    }
-
-                    // Add to guess history
-                    const newGuess = { 
-                        word: data.lemma, 
-                        user: 'ANSWER', 
-                        score: parseInt(data.rank), 
-                        similarity: 100 
-                    };
-                    
-                    gameState.guesses.unshift(newGuess);
-                    document.getElementById('guessCount').textContent = gameState.guesses.length;
-                    renderGuessHistory();
-                    
-                    // Update leaderboard
-                    document.getElementById('leaderboard').textContent = `The answer was: ${data.lemma}`;
-                    
-                    // Show feedback
-                    document.getElementById('feedbackMessage').textContent = `The secret word was: ${data.lemma}`;
-                } else {
-                    console.error('Solution response:', data);
-                    document.getElementById('feedbackMessage').textContent = "Couldn't get the solution";
-                }
-            } catch (error) {
-                console.error('Error getting solution:', error);
-                document.getElementById('feedbackMessage').textContent = "Error getting solution";
-            }
-        }
-
-        // Handle input submission
+        let gameData = null;
+        let guesses = [];
+        let targetWord = "";
+        let mostRecentGuessLemma = null;
+        
+        // DOM elements
         const wordInput = document.getElementById('wordInput');
+        const guessesContainer = document.getElementById('guessesContainer');
+        const lastGuessContainer = document.getElementById('lastGuess');
+        const menuButton = document.getElementById('menuButton');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const selectGameOverlay = document.getElementById('selectGameOverlay');
+        const howToPlayOverlay = document.getElementById('howToPlayOverlay');
+        const congratsOverlay = document.getElementById('congratsOverlay');
+        const selectGameOption = document.getElementById('selectGame');
+        const playAgain = document.getElementById('playAgain');
+        const closeSelectGame = document.getElementById('closeSelectGame');
+        const closeHowToPlay = document.getElementById('closeHowToPlay');
+        const guessCountDisplay = document.getElementById('guessCount');
+        const loadingElement = document.getElementById('loading');
+        const errorMessageElement = document.getElementById('errorMessage');
+        const customWordInput = document.getElementById('customWordInput');
+        const createCustomGameButton = document.getElementById('createCustomGame');
+
+        // API endpoint base URL
+        const API_BASE_URL = 'http://67.207.92.164';
+        
+        // Generate a random game index between 0 and 900
+        const randomGameIndex = Math.floor(Math.random() * 901);
+        
+        // Initialize the game
+        async function initGame(gameIndex = null) {
+            // Clear previous state
+            guesses = [];
+            mostRecentGuessLemma = null;
+            guessesContainer.innerHTML = '';
+            lastGuessContainer.style.display = 'none';
+            loadingElement.style.display = 'block';
+            errorMessageElement.style.display = 'none';
+            
+            // If no game index provided, use the random one
+            if (gameIndex === null) {
+                gameIndex = randomGameIndex;
+            }
+            
+            try {
+                // Update the game number display immediately
+                document.getElementById('gameNumber').textContent = `#${gameIndex}`;
+                // Fetch game data from the API
+                const response = await fetch(`${API_BASE_URL}/game?index=${gameIndex}`);
+                
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch game data from game endpoint');
+                }
+                
+                gameData = await response.json();
+                
+                // Set target word as the word with rank 1
+                const targetWordObj = gameData.results.find(item => parseInt(item.rank) === 1);
+                targetWord = targetWordObj ? targetWordObj.lemma : "unknown";
+                
+                // Hide loading indicator
+                loadingElement.style.display = 'none';
+                
+                // Update UI
+                updateGuessCount();
+            } catch (error) {
+                console.error('Error fetching game data:', error);
+                errorMessageElement.textContent = 'Failed to load game data. Please check your connection.';
+                errorMessageElement.style.display = 'block';
+                loadingElement.style.display = 'none';
+            }
+        }
+        
+        // Initialize a custom game with a specific word
+        async function initCustomGame(word) {
+            // Clear previous state
+            guesses = [];
+            mostRecentGuessLemma = null;
+            guessesContainer.innerHTML = '';
+            lastGuessContainer.style.display = 'none';
+            loadingElement.style.display = 'block';
+            errorMessageElement.style.display = 'none';
+            
+            try {
+                // Update the game number display to show it's a custom game
+                document.getElementById('gameNumber').textContent = 'Custom';
+                
+                // Fetch game data from the API using the word
+                const response = await fetch(`${API_BASE_URL}/rank?word=${word}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate custom game');
+                }
+                
+                gameData = await response.json();
+                
+                // Set target word
+                targetWord = word;
+                
+                // Hide loading indicator
+                loadingElement.style.display = 'none';
+                
+                // Update UI
+                updateGuessCount();
+                
+                return true;
+            } catch (error) {
+                console.error('Error creating custom game:', error);
+                errorMessageElement.textContent = 'Failed to create custom game. Please try another word.';
+                errorMessageElement.style.display = 'block';
+                loadingElement.style.display = 'none';
+                return false;
+            }
+        }
+
+        // Find rank for a word
+        function findWordRank(word) {
+            word = word.toLowerCase().trim();
+            
+            if (!gameData || !gameData.results) {
+                return {
+                    lemma: word,
+                    rank: 10000 + Math.floor(Math.random() * 1000),
+                    word: word
+                };
+            }
+            
+            // First try to find exact match
+            const matchedItem = gameData.results.find(item => 
+                item.word?.toLowerCase() === word || 
+                item.lemma?.toLowerCase() === word
+            );
+            
+            if (matchedItem) {
+                return {
+                    lemma: matchedItem.lemma,
+                    rank: parseInt(matchedItem.rank),
+                    word: word
+                };
+            }
+            
+            // If no match found, return a high rank number to indicate it's far
+            return {
+                lemma: word,
+                rank: 10000 + Math.floor(Math.random() * 1000), // Random high number
+                word: word
+            };
+        }
+
+        // Handle word submission
+        function submitWord(word) {
+            if (!word || word.trim() === '' || !gameData) return;
+            
+            const result = findWordRank(word);
+            
+            // Clear any error messages
+            errorMessageElement.style.display = 'none';
+            
+            // Check if already guessed
+            const alreadyGuessed = guesses.some(g => g.lemma.toLowerCase() === result.lemma.toLowerCase());
+            
+            // Set as most recent guess regardless of whether it's already been guessed
+            mostRecentGuessLemma = result.lemma;
+            updateLastGuess(result);
+            
+            if (!alreadyGuessed) {
+                // Only add to guesses list if it's a new word
+                guesses.push(result);
+                
+                // Sort guesses by rank (lowest first)
+                guesses.sort((a, b) => a.rank - b.rank);
+                
+                // Limit to 50 guesses in the list - keep the closest ones
+                if (guesses.length > 50) {
+                    guesses = guesses.slice(0, 50);
+                }
+                
+                // Update the guess count
+                updateGuessCount();
+            }
+            
+            // Always render the guesses list to update the highlighting
+            renderPreviousGuesses();
+            
+            // Clear input
+            wordInput.value = '';
+            
+            // Check if solved
+            if (result.rank === 1) {
+                // Set text in congrats modal
+                document.getElementById('winningWordText').textContent = result.lemma;
+                document.getElementById('finalGuessCount').textContent = guesses.length;
+                
+                // Show congrats modal
+                congratsOverlay.style.display = 'flex';
+            }
+        }
+        
+        // Update the last guess display
+        function updateLastGuess(guess) {
+            if (!guess) {
+                lastGuessContainer.style.display = 'none';
+                return;
+            }
+            
+            lastGuessContainer.style.display = 'flex';
+            
+            // Determine background color class based on rank
+            let bgClass = '';
+            if (guess.rank < 300) {
+                bgClass = 'blue-bg';
+            } else if (guess.rank <= 1500) {
+                bgClass = 'yellow-bg';
+            } else {
+                bgClass = 'red-bg';
+            }
+            
+            // Calculate progress width percentage (inverse relationship with rank)
+            // Rank 1 = 100%, Rank 3000+ = 5%
+            const progressWidth = Math.max(5, 100 - (guess.rank / 30));
+            
+            lastGuessContainer.className = 'last-guess ' + bgClass;
+            lastGuessContainer.innerHTML = `
+                <div class="progress-bar" style="width: ${progressWidth}%"></div>
+                <span>${guess.lemma}</span>
+                <span>${guess.rank}</span>
+            `;
+        }
+
+        // Render previous guesses
+        function renderPreviousGuesses() {
+            guessesContainer.innerHTML = '';
+            
+            guesses.forEach(guess => {
+                const guessElement = document.createElement('div');
+                guessElement.classList.add('guess-item');
+                
+                // Mark the guess that matches the most recent guess
+                if (guess.lemma.toLowerCase() === mostRecentGuessLemma.toLowerCase()) {
+                    guessElement.classList.add('guess-recent');
+                }
+                
+                // Determine background color class based on rank
+                if (guess.rank < 300) {
+                    guessElement.classList.add('blue-bg');
+                } else if (guess.rank <= 1500) {
+                    guessElement.classList.add('yellow-bg');
+                } else {
+                    guessElement.classList.add('red-bg');
+                }
+                
+                // Calculate progress width percentage (inverse relationship with rank)
+                // Rank 1 = 100%, Rank 3000+ = 5%
+                const progressWidth = Math.max(5, 100 - (guess.rank / 30));
+                
+                guessElement.innerHTML = `
+                    <div class="progress-bar" style="width: ${progressWidth}%"></div>
+                    <span>${guess.lemma}</span>
+                    <span>${guess.rank}</span>
+                `;
+                
+                guessesContainer.appendChild(guessElement);
+            });
+        }
+
+        // Update guess count display
+        function updateGuessCount() {
+            guessCountDisplay.textContent = guesses.length;
+        }
+
+        // Event listeners
         wordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && wordInput.value.trim()) {
-                makeGuess(wordInput.value.trim());
+            if (e.key === 'Enter') {
+                submitWord(wordInput.value);
             }
         });
 
-        // Handle tiktok username saving
-        const usernameInput = document.getElementById('usernameInput');
-        const photoInput = document.getElementById('photoUrl');
-        const saveButton = document.getElementById('saveButton');
-        const savePhotoButton = document.getElementById('imageSave');
+        menuButton.addEventListener('click', () => {
+            menuOverlay.style.display = 'flex';
+        });
 
-        saveButton.addEventListener('click', () => {
-            let username = usernameInput.value.trim();
-
-            // Remove @ symbol if it exists
-            if (username.startsWith('@')) {
-                username = username.slice(1);
-            }
-
-            if (username) {
-                localStorage.setItem('tiktokUsername', username);
-                gameState.username = username;
-                alert(`Username "${username}" saved successfully!`);
-            } else {
-                alert("Please enter a valid TikTok username.");
+        menuOverlay.addEventListener('click', (e) => {
+            if (e.target === menuOverlay) {
+                menuOverlay.style.display = 'none';
             }
         });
 
-        savePhotoButton.addEventListener('click', () => {
-            let profilePhoto = photoInput.value.trim();
-            if (profilePhoto) {
-                localStorage.setItem('photoUrl', profilePhoto);
-                alert(`Profile photo saved successfully!`)
-            }
+        selectGameOption.addEventListener('click', () => {
+            menuOverlay.style.display = 'none';
+            selectGameOverlay.style.display = 'flex';
         });
 
-        function toggleAccordion(element) {
-            const content = element.nextElementSibling;
-            const arrow = element.querySelector('.arrow');
-            if (content.style.display === "none" || content.style.display === "") {
-                content.style.display = "block";
-                arrow.innerHTML = "&#9650;"; // Up arrow
-            } else {
-                content.style.display = "none";
-                arrow.innerHTML = "&#9660;"; // Down arrow
-            }
-        }
-
-        function startScraping() {
-            var username = document.getElementById('scrapeUsername').value;
-            if (username.length > 0) {//fix
-                localStorage.setItem('tiktokTestUsername', username);
-                alert("Starting scraping for username: " + username);
-            } else {
-                alert("Add the username of the TikTok live you want to scrape. Add another user's to test or your own if you're ready to go live.")
-            }
-        }
-
-        // Handle close button
-        document.querySelector('.close-button').addEventListener('click', () => {
-            document.querySelector('.footer').style.display = 'none';
+        playAgain.addEventListener('click', () => {
+            congratsOverlay.style.display = 'none';
+            selectGameOverlay.style.display = 'flex';
         });
 
-        // Save button for photo URL
-        document.getElementById('imageSave').addEventListener('click', function() {
-            const photoUrl = document.getElementById('photoUrl').value;
-            if (photoUrl) {
-                localStorage.setItem('photoUrl', photoUrl);
-                updatePhotoPreview(photoUrl);
-                console.log('Photo URL is saved');
-            } else {
-                console.log("no photo URL added");
-            }
+        closeSelectGame.addEventListener('click', () => {
+            selectGameOverlay.style.display = 'none';
         });
 
-        function toggleGame() {
-            const toggleButton = document.getElementById('toggleGameButton');
-            if (toggleButton.innerText === "Start Game") {
-                toggleButton.innerText = "Stop Game";
-                console.log("Game started");
-            } else {
-                toggleButton.innerText = "Start Game";
-                console.log("Game stopped");
-            }
-        }
-
-        function updatePhotoPreview(url) {
-            const photoPreview = document.getElementById('photoPreview');
-            if (url) {
-                photoPreview.src = url;
-                photoPreview.style.display = 'block';
-            } else {
-                photoPreview.style.display = 'none';
-            }
-        }
-
-        function manageSubscription() {
-            console.log("Manage Subscription button clicked.");
-            // Add logic to handle subscription management
-        }
-
-        function logout() {
-            console.log("Log Out button clicked.");
-            // Add logic to handle user logout
-        }
-
-        function sendFeedback() {
-            console.log("Send Feedback button clicked.");
-            // Add logic to send feedback to the developer
-        }
-
-        function isWordInGuessHistory(word) {
-            return gameState.guesses.some(guess => guess.word.toLowerCase() === word.toLowerCase());
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedUsername = localStorage.getItem('tiktokUsername');
-            if (savedUsername) {
-                usernameInput.value = savedUsername;
-                gameState.username = savedUsername;
-            } else {
-                alert("TikTok username must be added before you can host interactive contexto");
-            }
-
-            const testUsernameInput = document.getElementById('scrapeUsername');
-            const testUsername = localStorage.getItem('tiktokTestUsername');
-            if (testUsername) {
-                testUsernameInput.value = testUsername;
-            }
-
-            const photoUrl = localStorage.getItem('photoUrl');
-            const photoPreview = document.getElementById('photoPreview');
-            
-            if (photoUrl) {
-                photoInput.value = photoUrl;
-                photoPreview.src = photoUrl;
-            }
-            
-            // Set game button event listener
-            const setGameButton = document.getElementById('setGameButton');
-            const gameNumberInput = document.getElementById('gameNumberInput');
-            
-            setGameButton.addEventListener('click', () => {
-                setGameNumber(parseInt(gameNumberInput.value));
+        if (closeHowToPlay) {
+            closeHowToPlay.addEventListener('click', () => {
+                howToPlayOverlay.style.display = 'none';
             });
-            
-            // Setup menu functionality
-            setupMenu();
-        });
+        }
 
-        // Sidepanel resizing functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidepanel = document.querySelector('.sidepanel');
-            const resizeHandle = document.getElementById('resizeHandle');
-            let isResizing = false;
-            let lastX;
-            
-            // Set minimum and maximum width constraints
-            const minWidth = 180;
-            const maxWidth = 500;
-            
-            resizeHandle.addEventListener('mousedown', function(e) {
-                isResizing = true;
-                lastX = e.clientX;
-                document.body.style.cursor = 'ew-resize';
-                e.preventDefault();
-            });
-            
-            document.addEventListener('mousemove', function(e) {
-                if (!isResizing) return;
-                
-                const delta = lastX - e.clientX;
-                lastX = e.clientX;
-                
-                // Calculate new width ensuring it stays within constraints
-                let newWidth = parseInt(getComputedStyle(sidepanel).width) + delta;
-                if (newWidth < minWidth) newWidth = minWidth;
-                if (newWidth > maxWidth) newWidth = maxWidth;
-                
-                sidepanel.style.width = newWidth + 'px';
-            });
-            
-            document.addEventListener('mouseup', function() {
-                isResizing = false;
-                document.body.style.cursor = '';
-                
-                // Save the current width to localStorage for persistence
-                const currentWidth = getComputedStyle(sidepanel).width;
-                localStorage.setItem('sidepanelWidth', currentWidth);
-            });
-            
-            // Restore saved width on page load
-            const savedWidth = localStorage.getItem('sidepanelWidth');
-            if (savedWidth) {
-                sidepanel.style.width = savedWidth;
+        howToPlayOverlay.addEventListener('click', (e) => {
+            if (e.target === howToPlayOverlay) {
+                howToPlayOverlay.style.display = 'none';
             }
         });
+        
+        congratsOverlay.addEventListener('click', (e) => {
+            if (e.target === congratsOverlay) {
+                congratsOverlay.style.display = 'none';
+            }
+        });
+
+        selectGameOverlay.addEventListener('click', (e) => {
+            if (e.target === selectGameOverlay) {
+                selectGameOverlay.style.display = 'none';
+            }
+        });
+
+        // When Play Again is clicked, show custom game creation dialog
+        playAgain.addEventListener('click', () => {
+            congratsOverlay.style.display = 'none';
+            selectGameOverlay.style.display = 'flex';
+        });
+        
+        // Add event listener for random game button
+        document.getElementById('randomGame').addEventListener('click', () => {
+            selectGameOverlay.style.display = 'none';
+            // Generate a new random game index
+            const newRandomIndex = Math.floor(Math.random() * 901);
+            initGame(newRandomIndex);
+        });
+        
+        // Add custom word input event listeners
+        createCustomGameButton.addEventListener('click', () => {
+            const customWord = customWordInput.value.trim();
+            if (customWord) {
+                selectGameOverlay.style.display = 'none';
+                initCustomGame(customWord);
+                customWordInput.value = ''; // Clear the input
+            }
+        });
+        
+        customWordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const customWord = customWordInput.value.trim();
+                if (customWord) {
+                    selectGameOverlay.style.display = 'none';
+                    initCustomGame(customWord);
+                    customWordInput.value = ''; // Clear the input
+                }
+            }
+        });
+
+        // Menu options
+        document.getElementById('howToPlay').addEventListener('click', () => {
+            menuOverlay.style.display = 'none';
+            howToPlayOverlay.style.display = 'flex';
+        });
+
+        document.getElementById('hintOption').addEventListener('click', () => {
+            menuOverlay.style.display = 'none';
+            
+            // Enter the next lemma above the current one
+            if (guesses.length > 0) {
+                // Get the current best guess (lowest rank)
+                const bestGuessRank = guesses[0].rank;
+                
+                // Find a hint word with better rank than our current best
+                if (gameData && gameData.results) {
+                    // Find the next best word in the results
+                    for (let i = bestGuessRank - 2; i >= 0; i--) {
+                        const nextBestWord = gameData.results.find(item => parseInt(item.rank) === i + 1);
+                        if (nextBestWord) {
+                            // Enter this word as a hint
+                            submitWord(nextBestWord.lemma);
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            // If we can't provide a hint or no guesses yet, give a generic hint
+            alert('Hint: No better hint available. Try common words.');
+        });
+
+        document.getElementById('giveUp').addEventListener('click', () => {
+            menuOverlay.style.display = 'none';
+            
+            // Automatically enter the winning word (rank 1)
+            if (gameData && gameData.results) {
+                const winningWord = gameData.results.find(item => parseInt(item.rank) === 1);
+                if (winningWord) {
+                    submitWord(winningWord.lemma);
+                } else {
+                    // Fallback if for some reason we can't find the winning word
+                    alert('The target word was: ' + targetWord);
+                }
+            } else {
+                alert('The target word was: ' + targetWord);
+            }
+        });
+
+        // Initialize game on load with a random index
+        const randomIndex = Math.floor(Math.random() * 901);
+        initGame(randomIndex);
     </script>
 </body>
 </html>
