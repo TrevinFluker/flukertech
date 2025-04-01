@@ -48,7 +48,7 @@
             color: #3b302a;
         }
         .game-info .label {
-            font-weight: 400;
+            font-weight: 700;
         }
         .input-container {
             position: relative;
@@ -63,8 +63,8 @@
             outline: none;
         }
         .last-guess {
-            border: 2px solid #423232;
-            border-radius: 5px;
+            border: 3px solid #423232;
+            border-radius: 8px;
             padding: 10px 15px;
             margin-bottom: 15px;
             display: flex;
@@ -92,8 +92,9 @@
             color: #333;
         }
         .guess-recent {
-            border: 2px solid #423232;
+            border: 3px solid #423232;
             font-weight: 900; /* Extra bold when border is active */
+            border-radius: 8px;
         }
         .progress-bar {
             position: absolute;
@@ -101,6 +102,7 @@
             left: 0;
             height: 100%;
             z-index: -1;
+            border-radius: 5px;
         }
         .blue-bg .progress-bar {
             background-color: #b6e0d8;
@@ -124,7 +126,7 @@
             z-index: 1000;
         }
         .menu-modal {
-            background-color: white;
+            background-color: #f8f4ed;
             border-radius: 10px;
             padding: 20px;
             max-width: 400px;
@@ -159,7 +161,7 @@
             cursor: pointer;
         }
         .select-game-modal {
-            background-color: #3b302a;
+            background-color: #f8f4ed;
             border-radius: 10px;
             padding: 20px;
             max-width: 400px;
@@ -168,7 +170,7 @@
             overflow-y: auto;
             color: white;
             position: relative;
-            top: 10%; /* Moved up to 10% from top */
+            top: auto; /* Moved up to 10% from top */
         }
         .select-game-header {
             margin-bottom: 20px;
@@ -218,7 +220,7 @@
         }
         .how-to-play-content {
             padding: 15px;
-            background-color: white;
+            background-color: #f8f4ed;
             border-radius: 10px;
             margin-top: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -380,7 +382,7 @@
     <div class="overlay" id="selectGameOverlay">
         <div class="select-game-modal">
             <button class="close-modal" id="closeSelectGame">✕</button>
-            <div class="select-game-header">Create a custom game:</div>
+            <div class="select-game-header">Create custom game or select randomly:</div>
             <!-- Added custom game input section -->
             <div class="custom-game-input">
                 <input type="text" id="customWordInput" placeholder="Enter a secret word">
@@ -613,7 +615,7 @@
             
             // Calculate progress width percentage (inverse relationship with rank)
             // Rank 1 = 100%, Rank 3000+ = 5%
-            const progressWidth = Math.max(5, 100 - (guess.rank / 30));
+            const progressWidth = Math.max(1, 100 - (guess.rank / 30));
             
             lastGuessContainer.className = 'last-guess ' + bgClass;
             lastGuessContainer.innerHTML = `
@@ -647,7 +649,7 @@
                 
                 // Calculate progress width percentage (inverse relationship with rank)
                 // Rank 1 = 100%, Rank 3000+ = 5%
-                const progressWidth = Math.max(5, 100 - (guess.rank / 30));
+                const progressWidth = Math.max(1, 100 - (guess.rank / 30));
                 
                 guessElement.innerHTML = `
                     <div class="progress-bar" style="width: ${progressWidth}%"></div>
