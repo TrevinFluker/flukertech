@@ -30,6 +30,18 @@
             align-items: center;
             margin-bottom: 15px;
         }
+
+        .title-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .unlimited-img {
+            height: 20px;
+            width: auto;
+        }
+
         .title {
             font-size: 24px;
             font-weight: bold;
@@ -306,8 +318,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="title">CONTEXTO</div>
-            <button class="menu-button" id="menuButton">⋮</button>
+            <div class="title-container">
+                <img src="https://www.runchatcapture.com/assets/imgs/unlimited.png" alt="Unlimited" class="unlimited-img">
+                <div class="title">CONTEXTO</div>
+            </div>
+            <button class="menu-button" id="menuButton" style="width: 30px;">⋮</button>
         </div>
         <div class="game-info">
             <span class="label" style="font-size: 14px;">GAME:</span> <span id="gameNumber">#923</span> 
