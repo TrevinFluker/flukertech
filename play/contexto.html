@@ -182,7 +182,7 @@
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            color: white;
+            color: #423232;
             position: relative;
             top: auto; /* Moved up to 10% from top */
         }
@@ -315,6 +315,123 @@
             margin-bottom: 10px;
             font-size: 16px;
         }
+
+        /* Password input styling */
+        .password-input-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-input-container input {
+            width: 100%;
+            padding-right: 40px;
+        }
+
+        .eye-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            z-index: 10;
+        }
+
+        #eyeToggle {
+            background-color: white;
+            padding: 8px;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #b6e0d8;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #423232;
+        }
+
+        /* Word check message */
+        .word-check-container {
+            display: none;
+            text-align: center;
+            color: #423232;
+            margin: 20px 0;
+        }
+
+        .word-check-container p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .word-check-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        .word-check-buttons button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .continue-btn {
+            padding: 10px;
+            background-color: #b6e0d8;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #3b302a;
+        }
+
+        .back-btn {
+            background-color: #f2c4c4;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #3b302a;
+        }
+
+        /* Success message */
+        .success-message {
+            display: none;
+            text-align: center;
+            color: #423232;
+            margin: 20px 0;
+        }
+
+        .success-message p {
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 800;
+        }
     </style>
 </head>
 <body>
@@ -399,12 +516,36 @@
     <div class="overlay" id="selectGameOverlay">
         <div class="select-game-modal">
             <button class="close-modal" id="closeSelectGame">✕</button>
-            <div class="select-game-header">Create custom game or select randomly:</div>
-            <!-- Added custom game input section -->
-            <div class="custom-game-input">
-                <input type="text" id="customWordInput" placeholder="Enter a secret word">
-                <button id="createCustomGame">Create Game</button>
-                <button id="randomGame" class="random-button">Generate Random Game</button>
+            
+            <!-- Game Creation UI -->
+            <div id="gameCreationUI">
+                <div class="select-game-header">Create custom game or select randomly:</div>
+                <div class="custom-game-input">
+                    <div class="password-input-container">
+                        <input type="text" id="customWordInput" placeholder="Enter a secret word">
+                        <button class="eye-toggle" id="eyeToggle">👁️</button>
+                    </div>
+                    <button id="createCustomGame">Create Game</button>
+                    <button id="randomGame" class="random-button">Generate Random Game</button>
+                </div>
+                <div class="loading-text" id="loadingGame" style="display: none;">
+                    <span class="spinner"></span> Creating your game...
+                </div>
+            </div>
+            
+            <!-- Word Check UI -->
+            <div id="wordCheckUI" class="word-check-container">
+                <p>This word is not within the vocabulary, would you like to accept the closest similar secret word?</p>
+                <div class="word-check-buttons">
+                    <button id="backToInput" class="back-btn">Back</button>
+                    <button id="acceptSimilarWord" class="continue-btn">Continue</button>
+                </div>
+            </div>
+            
+            <!-- Success Message UI -->
+            <div id="successMessageUI" class="success-message">
+                <p>Your game has been created!</p>
+                <button id="continueToGame" class="continue-btn">Continue</button>
             </div>
         </div>
     </div>
@@ -434,6 +575,17 @@
         const errorMessageElement = document.getElementById('errorMessage');
         const customWordInput = document.getElementById('customWordInput');
         const createCustomGameButton = document.getElementById('createCustomGame');
+        const eyeToggle = document.getElementById('eyeToggle');
+        const gameCreationUI = document.getElementById('gameCreationUI');
+        const wordCheckUI = document.getElementById('wordCheckUI');
+        const successMessageUI = document.getElementById('successMessageUI');
+        const loadingGame = document.getElementById('loadingGame');
+        const backToInput = document.getElementById('backToInput');
+        const acceptSimilarWord = document.getElementById('acceptSimilarWord');
+        const continueToGame = document.getElementById('continueToGame');
+
+        // Add a variable to store suggested word when vocabulary check fails
+        let suggestedWord = "";
 
         // API endpoint base URL
         const API_BASE_URL = 'https://ccbackend.com';
@@ -500,7 +652,15 @@
                 // Update the game number display to show it's a custom game
                 document.getElementById('gameNumber').textContent = 'Custom';
                 
-                // Fetch game data from the API using the word
+                // If we already have gameData (from the success flow), use it
+                if (gameData && targetWord === word) {
+                    // We already have the data, no need to fetch again
+                    loadingElement.style.display = 'none';
+                    updateGuessCount();
+                    return true;
+                }
+                
+                // Otherwise fetch game data from the API
                 const response = await fetch(`${API_BASE_URL}/rank?word=${word}`);
                 
                 if (!response.ok) {
@@ -752,13 +912,33 @@
             initGame(newRandomIndex);
         });
         
+        // Toggle password visibility
+        eyeToggle.addEventListener('click', () => {
+            if (customWordInput.type === 'password') {
+                customWordInput.type = 'text';
+                eyeToggle.textContent = '👁️';
+            } else {
+                customWordInput.type = 'password';
+                eyeToggle.textContent = '🚫';
+            }
+        });
+
+        // Set initial state to password
+        customWordInput.type = 'password';
+        eyeToggle.textContent = '🚫';
+
         // Add custom word input event listeners
         createCustomGameButton.addEventListener('click', () => {
             const customWord = customWordInput.value.trim();
             if (customWord) {
-                selectGameOverlay.style.display = 'none';
-                initCustomGame(customWord);
-                customWordInput.value = ''; // Clear the input
+                // Show loading spinner
+                gameCreationUI.style.display = 'block';
+                wordCheckUI.style.display = 'none';
+                successMessageUI.style.display = 'none';
+                loadingGame.style.display = 'flex';
+                
+                // Start the game creation process
+                checkCustomWordValidity(customWord);
             }
         });
         
@@ -766,11 +946,117 @@
             if (e.key === 'Enter') {
                 const customWord = customWordInput.value.trim();
                 if (customWord) {
-                    selectGameOverlay.style.display = 'none';
-                    initCustomGame(customWord);
-                    customWordInput.value = ''; // Clear the input
+                    // Show loading spinner
+                    gameCreationUI.style.display = 'block';
+                    wordCheckUI.style.display = 'none';
+                    successMessageUI.style.display = 'none';
+                    loadingGame.style.display = 'flex';
+                    
+                    // Start the game creation process
+                    checkCustomWordValidity(customWord);
                 }
             }
+        });
+
+        //Function to handle game creation process
+        async function checkCustomWordValidity(word) {
+            try {
+            
+                // Fetch game data from the API using the word
+                const response = await fetch(`${API_BASE_URL}/rank?word=${word}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate custom game');
+                }
+                
+                const data = await response.json();
+                
+                // Check if the word is in the vocabulary
+                const rank1Word = data.results.find(item => parseInt(item.rank) === 1);
+                
+                if (!rank1Word || rank1Word.lemma.toLowerCase() !== word.toLowerCase()) {
+                    // Word not found exactly, store the suggested word
+                    suggestedWord = rank1Word ? rank1Word.lemma : data.results[0]?.lemma || word;
+                    
+                    // Store the fetched data to avoid another API call
+                    gameData = data;
+                    
+                    // Hide loading spinner and show word check UI
+                    loadingGame.style.display = 'none';
+                    gameCreationUI.style.display = 'none';
+                    wordCheckUI.style.display = 'block';
+                } else {
+                    // Word found, show success message
+                    loadingGame.style.display = 'none';
+                    gameCreationUI.style.display = 'none';
+                    successMessageUI.style.display = 'block';
+                    
+                    // Store game data for later use
+                    gameData = data;
+                    targetWord = word;
+                }
+            } catch (error) {
+                console.error('Error creating custom game:', error);
+                loadingGame.style.display = 'none';
+                errorMessageElement.textContent = 'Failed to create custom game. Please try another word.';
+                errorMessageElement.style.display = 'block';
+            }
+        }
+
+        // Handle button clicks for word check UI
+        backToInput.addEventListener('click', () => {
+            // Go back to input screen
+            wordCheckUI.style.display = 'none';
+            gameCreationUI.style.display = 'block';
+        });
+
+        acceptSimilarWord.addEventListener('click', () => {
+            // Accept the suggested word
+            wordCheckUI.style.display = 'none';
+            
+            // Clear previous state
+            guesses = [];
+            mostRecentGuessLemma = null;
+            guessesContainer.innerHTML = '';
+            lastGuessContainer.style.display = 'none';
+
+            // Set the target word to the suggested word
+            targetWord = suggestedWord;
+            
+            // Update UI
+            document.getElementById('gameNumber').textContent = 'Custom';
+            updateGuessCount();
+            
+            // Close the modal and reset UI
+            selectGameOverlay.style.display = 'none';
+            gameCreationUI.style.display = 'block';
+            customWordInput.value = '';
+            
+            // Hide loading indicator on main screen
+            loadingElement.style.display = 'none';
+        });
+
+        // Handle continue button in success message
+        continueToGame.addEventListener('click', () => {
+            // Clear previous state
+            guesses = [];
+            mostRecentGuessLemma = null;
+            guessesContainer.innerHTML = '';
+            lastGuessContainer.style.display = 'none';
+            
+            // Update UI
+            document.getElementById('gameNumber').textContent = 'Custom';
+            updateGuessCount();
+            
+            // Close the modal and reset UI
+            selectGameOverlay.style.display = 'none';
+            loadingGame.style.display = 'none';
+            gameCreationUI.style.display = 'block';
+            successMessageUI.style.display = 'none';
+            customWordInput.value = '';
+            
+            // Hide loading indicator on main screen
+            loadingElement.style.display = 'none';
         });
 
         // Menu options
