@@ -167,6 +167,14 @@
             max-width: 600px;
             border-radius: var(--border-radius);
             margin: 20px 0;
+            position: relative;
+            top: -213px;
+        }
+        .preview-clipper {
+            height: 350px; /* adjust to how much you want visible */
+            overflow: hidden;
+            position: relative;
+            border-radius: 10px;
         }
         
         /* Instructions Section */
@@ -290,7 +298,9 @@
 
         <!-- Download Section -->
         <div class="download-section">
-            <img src="/api/placeholder/600/350" alt="Interactive Contexto Preview" class="preview-image">
+            <div class="preview-clipper">
+                <img class="preview-image" src="https://www.runchatcapture.com/assets/imgs/contexto_gif.gif" alt="Interactive Contexto Preview">
+            </div>
             <p>Interactive Contexto allows you to engage your viewers with an exciting word-guessing game during your live streams.</p>
             <a href="https://www.runchatcapture.com/assets/zips/ChatCaptureDeploy1_1_6.zip" class="download-button" download>Download Zip File (v1.1.6)</a>
             <p>File size: 421 KB • Last updated: April 2, 2025</p>
@@ -301,38 +311,40 @@
             <h2>Installation Instructions</h2>
 
             <div class="step">
-                <h3>Step 1: Extract the Zip File</h3>
-                <p>After downloading the zip file, locate it in your downloads folder and extract it to a location where you won't accidentally delete it.</p>
-                <img src="/api/placeholder/800/400" alt="Extract zip file" class="step-image">
+                <h3>Step 1: Download the zip file</h3>
+                <p>After downloading the zip file, locate it in your downloads folder.</p>
+                <img src="/assets/imgs/ins1.png" alt="Extract zip file" class="step-image">
                 <div class="step-note">
                     <p><strong>Note:</strong> The extension folder needs to remain on your computer as long as you want to use the extension. Don't delete it after installation.</p>
                 </div>
             </div>
 
             <div class="step">
-                <h3>Step 2: Open Chrome Extensions Page</h3>
-                <p>Open Google Chrome and type <strong>chrome://extensions</strong> in the address bar, then press Enter.</p>
-                <img src="/api/placeholder/800/400" alt="Chrome extensions page" class="step-image">
+                <h3>Step 2: Extract the contents of the zip</h3>
+                <p>Right click the zip file and extract.</p>
+                <img src="/assets/imgs/ins2.png" alt="Chrome extensions page" class="step-image">
             </div>
 
             <div class="step">
-                <h3>Step 3: Enable Developer Mode</h3>
-                <p>In the top-right corner of the Extensions page, toggle on "Developer mode".</p>
-                <img src="/api/placeholder/800/200" alt="Enable developer mode" class="step-image">
+                <h3>Step 3: Open Chrome Extensions Page</h3>
+                <p>1) Open Google Chrome and type <strong>chrome://extensions</strong> in the address bar, then press Enter.</p>
+                <p>2) In the top-right corner of the Extensions page, toggle on "Developer mode".</p>
+                <p>3) Click the "Load unpacked" button in the top-left corner.</p>
+                <img src="/assets/imgs/ins4.png" alt="Chrome extensions page" class="step-image">
             </div>
 
             <div class="step">
                 <h3>Step 4: Load Unpacked Extension</h3>
                 <p>Click the "Load unpacked" button in the top-left corner.</p>
-                <img src="/api/placeholder/800/300" alt="Load unpacked button" class="step-image">
+                <img src="" alt="Load unpacked button" class="step-image">
                 <p>Navigate to the folder where you extracted the zip file and select the folder (not the zip file itself).</p>
-                <img src="/api/placeholder/800/400" alt="Select folder" class="step-image">
+                <img src="/assets/imgs/ins5.png" alt="Select folder" class="step-image">
             </div>
 
             <div class="step">
                 <h3>Step 5: Verify Installation</h3>
                 <p>You should now see "Chat Capture: Contexto" in your list of extensions. Make sure it's enabled by checking that the toggle is on.</p>
-                <img src="/api/placeholder/800/200" alt="Verify installation" class="step-image">
+                <img src="/assets/imgs/ins6.png" alt="Verify installation" class="step-image">
                 <div class="step-note">
                     <p><strong>Tip:</strong> Pin the extension to your toolbar by clicking the puzzle piece icon in Chrome's toolbar and then the pin icon next to Chat Capture: Contexto.</p>
                 </div>
