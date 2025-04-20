@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CONTEXTO</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Add Typo.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typo-js/1.2.2/typo.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -63,6 +65,12 @@
         }
         .game-info .label {
             font-weight: 700;
+        }
+        .spellcheck-toggle {
+            cursor: pointer;
+            vertical-align: bottom;
+            margin-left: 5px;
+            height: 24px;
         }
         .input-container {
             position: relative;
@@ -445,8 +453,9 @@
         </div>
         <div class="game-info">
             <span class="label" style="font-size: 14px;">GAME:</span> <span id="gameNumber">#923</span> 
-            <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span> 
             <!-- <span class="label" style="font-size: 14px;">HINTS:</span> <span id="hintCount">8</span> -->
+            <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span>
+            <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" id="spellcheckToggle" class="spellcheck-toggle" alt="Toggle Spellcheck">
         </div>
         <div class="error" id="errorMessage"></div>
         <div class="input-container">
@@ -556,6 +565,8 @@
         let guesses = [];
         let targetWord = "";
         let mostRecentGuessLemma = null;
+        let dictionary = null;
+        let spellcheckEnabled = true;
         
         // DOM elements
         const wordInput = document.getElementById('wordInput');
@@ -583,6 +594,7 @@
         const backToInput = document.getElementById('backToInput');
         const acceptSimilarWord = document.getElementById('acceptSimilarWord');
         const continueToGame = document.getElementById('continueToGame');
+        const spellcheckToggle = document.getElementById('spellcheckToggle');
 
         // Add a variable to store suggested word when vocabulary check fails
         let suggestedWord = "";
@@ -593,6 +605,19 @@
         // Generate a random game index between 0 and 900
         const randomGameIndex = Math.floor(Math.random() * 301);
         
+        // Initialize dictionary
+        async function initDictionary() {
+            try {
+                const response = await fetch('https://cdn.jsdelivr.net/npm/word-list-json@1.0.0/words.json');
+                const words = await response.json();
+                dictionary = new Set(words.map(word => word.toLowerCase()));
+                console.log(dictionary)
+            } catch (error) {
+                console.error('Failed to load dictionary:', error);
+                dictionary = null;
+            }
+        }
+
         // Initialize the game
         async function initGame(gameIndex = null) {
             // Clear previous state
@@ -722,52 +747,91 @@
             };
         }
 
-        // Handle word submission
-        function submitWord(word) {
-            if (!word || word.trim() === '' || !gameData) return;
+        // Spellcheck using local dictionary first, then API as fallback
+        async function checkSpelling(word) {
+            if (!spellcheckEnabled) return true;
             
-            const result = findWordRank(word);
+            word = word.toLowerCase();
             
-            // Clear any error messages
-            errorMessageElement.style.display = 'none';
-            
-            // Check if already guessed
-            const alreadyGuessed = guesses.some(g => g.lemma.toLowerCase() === result.lemma.toLowerCase());
-            
-            // Set as most recent guess regardless of whether it's already been guessed
-            mostRecentGuessLemma = result.lemma;
-            updateLastGuess(result);
-            
-            if (!alreadyGuessed) {
-                // Only add to guesses list if it's a new word
-                guesses.push(result);
-                
-                // Sort guesses by rank (lowest first)
-                guesses.sort((a, b) => a.rank - b.rank);
-                
-                // Limit to 50 guesses in the list - keep the closest ones
-                if (guesses.length > 50) {
-                    guesses = guesses.slice(0, 50);
-                }
-                
-                // Update the guess count
-                updateGuessCount();
+            // Check local dictionary first if available
+            if (dictionary) {
+                const isInDictionary = dictionary.has(word);
+                if (isInDictionary) return true;
             }
             
-            // Always render the guesses list to update the highlighting
-            renderPreviousGuesses();
+            // If word not found in local dictionary or dictionary not loaded, try API
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                console.log(response)
+                return response.ok;
+            } catch (error) {
+                console.error('Spellcheck failed:', error);
+                return true; // If API fails, allow the word
+            }
+        }
+
+        // Handle word submission
+        async function submitWord(word) {
+            if (!word || word.trim() === '' || !gameData) return;
             
-            // Clear input
-            wordInput.value = '';
+            word = word.toLowerCase().trim();
             
-            // Check if solved
-            if (result.rank === 1) {
-                // Set text in congrats modal
-                document.getElementById('winningWordText').textContent = result.lemma;
-                document.getElementById('finalGuessCount').textContent = guesses.length;
+            try {
+                // Check spelling
+                const isValidWord = await checkSpelling(word);
+                if (!isValidWord) {
+                    errorMessageElement.textContent = 'Not a valid English word';
+                    errorMessageElement.style.display = 'block';
+                    return;
+                }
                 
-                // Show congrats modal
-                congratsOverlay.style.display = 'flex';
+                const result = findWordRank(word);
+                
+                // Clear any error messages
+                errorMessageElement.style.display = 'none';
+                
+                // Check if already guessed
+                const alreadyGuessed = guesses.some(g => g.lemma.toLowerCase() === result.lemma.toLowerCase());
+                
+                // Set as most recent guess regardless of whether it's already been guessed
+                mostRecentGuessLemma = result.lemma;
+                updateLastGuess(result);
+                
+                if (!alreadyGuessed) {
+                    // Only add to guesses list if it's a new word
+                    guesses.push(result);
+                    
+                    // Sort guesses by rank (lowest first)
+                    guesses.sort((a, b) => a.rank - b.rank);
+                    
+                    // Limit to 50 guesses in the list - keep the closest ones
+                    if (guesses.length > 50) {
+                        guesses = guesses.slice(0, 50);
+                    }
+                    
+                    // Update the guess count
+                    updateGuessCount();
+                }
+                
+                // Always render the guesses list to update the highlighting
+                renderPreviousGuesses();
+                
+                // Clear input
+                wordInput.value = '';
+                
+                // Check if solved
+                if (result.rank === 1) {
+                    // Set text in congrats modal
+                    document.getElementById('winningWordText').textContent = result.lemma;
+                    document.getElementById('finalGuessCount').textContent = guesses.length;
+                    
+                    // Show congrats modal
+                    congratsOverlay.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Error submitting word:', error);
+                errorMessageElement.textContent = 'An error occurred. Please try again later.';
+                errorMessageElement.style.display = 'block';
             }
         }
         
@@ -1111,6 +1175,15 @@
         // Initialize game on load with a random index
         const randomIndex = Math.floor(Math.random() * 301);
         initGame(randomIndex);
+        initDictionary(); // Initialize the dictionary
+
+        // Initialize spellcheck toggle
+        spellcheckToggle.addEventListener('click', () => {
+            spellcheckEnabled = !spellcheckEnabled;
+            spellcheckToggle.src = spellcheckEnabled 
+                ? 'https://www.runchatcapture.com/assets/imgs/spellcheck.png'
+                : 'https://www.runchatcapture.com/assets/imgs/nospellcheck.png';
+        });
     </script>
 </body>
 </html>
