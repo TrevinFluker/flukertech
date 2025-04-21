@@ -440,6 +440,35 @@
             font-size: 18px;
             font-weight: 800;
         }
+
+        .icon-key {
+            margin-top: 30px;
+            border-top: 2px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .icon-key h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 800;
+        }
+        
+        .icon-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .icon-item img {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+        }
+        
+        .icon-item p {
+            margin: 0;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -458,10 +487,10 @@
             <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" id="spellcheckToggle" class="spellcheck-toggle" alt="Toggle Spellcheck">
             <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" id="dupesToggle" class="spellcheck-toggle" alt="Toggle Duplicate Guesses">
         </div>
-        <div class="error" id="errorMessage"></div>
         <div class="input-container">
             <input type="text" class="word-input" id="wordInput" placeholder="type a word">
         </div>
+        <div class="error" id="errorMessage"></div>
         <div class="last-guess" id="lastGuess">
             <!-- Last guess will be displayed here -->
         </div>
@@ -505,6 +534,26 @@
                 <p><strong>The words were sorted by an artificial intelligence algorithm according to how similar they were to the secret word.</strong></p>
                 <p><strong>After submitting a word, you will see its position. The secret word is number 1.</strong></p>
                 <p><strong>The algorithm analyzed thousands of texts. It uses the context in which words are used to calculate the similarity between them.</strong></p>
+                
+                <div class="icon-key">
+                    <h3>Icon Key</h3>
+                    <div class="icon-item">
+                        <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" alt="Spellcheck On">
+                        <p>Spellcheck is enabled - words will be checked against a dictionary</p>
+                    </div>
+                    <div class="icon-item">
+                        <img src="https://www.runchatcapture.com/assets/imgs/nospellcheck.png" alt="Spellcheck Off">
+                        <p>Spellcheck is disabled - any word will be accepted</p>
+                    </div>
+                    <div class="icon-item">
+                        <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" alt="Accept Duplicates">
+                        <p>Duplicate guesses are allowed</p>
+                    </div>
+                    <div class="icon-item">
+                        <img src="https://www.runchatcapture.com/assets/imgs/blockdupes.png" alt="Block Duplicates">
+                        <p>Duplicate guesses are blocked</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
