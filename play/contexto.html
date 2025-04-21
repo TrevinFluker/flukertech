@@ -456,6 +456,7 @@
             <!-- <span class="label" style="font-size: 14px;">HINTS:</span> <span id="hintCount">8</span> -->
             <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span>
             <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" id="spellcheckToggle" class="spellcheck-toggle" alt="Toggle Spellcheck">
+            <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" id="dupesToggle" class="spellcheck-toggle" alt="Toggle Duplicate Guesses">
         </div>
         <div class="error" id="errorMessage"></div>
         <div class="input-container">
@@ -567,6 +568,7 @@
         let mostRecentGuessLemma = null;
         let dictionary = null;
         let spellcheckEnabled = true;
+        let allowDuplicates = true;
         
         // DOM elements
         const wordInput = document.getElementById('wordInput');
@@ -792,6 +794,13 @@
                 
                 // Check if already guessed
                 const alreadyGuessed = guesses.some(g => g.lemma.toLowerCase() === result.lemma.toLowerCase());
+                
+                // If duplicates are not allowed and word was already guessed, show error
+                if (!allowDuplicates && alreadyGuessed) {
+                    errorMessageElement.textContent = 'Word already guessed';
+                    errorMessageElement.style.display = 'block';
+                    return;
+                }
                 
                 // Set as most recent guess regardless of whether it's already been guessed
                 mostRecentGuessLemma = result.lemma;
@@ -1183,6 +1192,15 @@
             spellcheckToggle.src = spellcheckEnabled 
                 ? 'https://www.runchatcapture.com/assets/imgs/spellcheck.png'
                 : 'https://www.runchatcapture.com/assets/imgs/nospellcheck.png';
+        });
+
+        // Initialize duplicate guesses toggle
+        const dupesToggle = document.getElementById('dupesToggle');
+        dupesToggle.addEventListener('click', () => {
+            allowDuplicates = !allowDuplicates;
+            dupesToggle.src = allowDuplicates 
+                ? 'https://www.runchatcapture.com/assets/imgs/acceptdupes.png'
+                : 'https://www.runchatcapture.com/assets/imgs/blockdupes.png';
         });
     </script>
 </body>
