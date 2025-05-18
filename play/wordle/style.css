@@ -105,7 +105,7 @@ h1 {
     padding: 0;
     min-width: 42px;
     height: 58px;
-    font-size: 14px;
+    font-size: 22px;
     font-weight: 600;
     cursor: pointer;
     text-transform: uppercase;
@@ -129,6 +129,10 @@ h1 {
 
 .key-wide {
     min-width: 65px;
+}
+
+.key.key-wide[data-key="enter"] {
+    font-size: 15px;
 }
 
 .correct {

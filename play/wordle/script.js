@@ -27,6 +27,9 @@ let maxRows = 5; // Default number of rows
 let wordLength = 5; // Default word length
 let boardWidth = 350; // Default board width
 let guessFlow = 'down'; // Default guess flow
+let simulateGuessesInterval = null;
+let simulateGuessesActive = false;
+let simulateTyping = false;
 
 // DOM elements
 const board = document.getElementById('board');
@@ -488,6 +491,18 @@ function initializeSettingsPanel() {
 
     // Initialize profile settings
     initializeProfileSettings();
+
+    // After other settings panel logic:
+    const simulateGuessesCheckbox = document.getElementById('simulate-guesses');
+    if (simulateGuessesCheckbox) {
+        simulateGuessesCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                simulateGuessesStart();
+            } else {
+                simulateGuessesStop();
+            }
+        });
+    }
 }
 
 // Profile Image Functions
@@ -650,4 +665,65 @@ function shiftRowsDown() {
         }
         topRow.classList.remove('fade-out');
     }, 150);
+}
+
+function simulateGuessesStart() {
+    if (simulateGuessesInterval) return;
+    simulateGuessesActive = true;
+    simulateGuessesInterval = setInterval(() => {
+        if (!simulateGuessesActive || isGameOver || simulateTyping) return;
+        // Pick a random word that is NOT the target word
+        const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
+        if (possibleWords.length === 0) return;
+        const guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+        // Simulate a random user
+        const randomNumber = Math.floor(Math.random() * 1000);
+        const user = {
+            username: 'user' + randomNumber,
+            photoUrl: 'https://picsum.photos/40?' + Math.random(),
+            gift_name: '',
+            comment: 'candy'
+        };
+        simulateAudienceTyping(guessWord, user);
+    }, 1000);
+}
+
+function simulateGuessesStop() {
+    simulateGuessesActive = false;
+    if (simulateGuessesInterval) {
+        clearInterval(simulateGuessesInterval);
+        simulateGuessesInterval = null;
+    }
+}
+
+function simulateAudienceTyping(word, user) {
+    simulateTyping = true;
+    let idx = 0;
+    // Save the current profile image for this guess
+    const originalProfile = localStorage.getItem('wordleProfileImage');
+    localStorage.setItem('wordleProfileImage', user.photoUrl);
+
+    function typeNextLetter() {
+        if (idx < word.length) {
+            const letter = word[idx];
+            const keyBtn = document.querySelector(`.key[data-key="${letter}"]`);
+            if (keyBtn) keyBtn.click();
+            idx++;
+            setTimeout(typeNextLetter, 80); // Fast typing
+        } else {
+            // Press enter
+            const enterBtn = document.querySelector('.key[data-key="enter"]');
+            if (enterBtn) enterBtn.click();
+            // Restore the original profile image for the next guess
+            setTimeout(() => {
+                if (originalProfile) {
+                    localStorage.setItem('wordleProfileImage', originalProfile);
+                } else {
+                    localStorage.removeItem('wordleProfileImage');
+                }
+                simulateTyping = false;
+            }, 100);
+        }
+    }
+    typeNextLetter();
 }
