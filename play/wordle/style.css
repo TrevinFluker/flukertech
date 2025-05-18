@@ -352,6 +352,12 @@ h1 {
     height: 24px;
 }
 
+.settings-toggle.simulate-active {
+    background-color: #2ecc40 !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(46,204,64,0.3);
+}
+
 .setting-item {
     margin: 15px 0;
     display: flex;

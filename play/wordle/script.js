@@ -396,6 +396,12 @@ function initializeSettingsPanel() {
 
     // Toggle settings panel
     settingsToggle.addEventListener('click', () => {
+        if (simulateGuessesActive) {
+            simulateGuessesStop();
+            // Also uncheck the toggle if present
+            const simulateGuessesCheckbox = document.getElementById('simulate-guesses');
+            if (simulateGuessesCheckbox) simulateGuessesCheckbox.checked = false;
+        }
         settingsPanel.classList.toggle('open');
     });
 
@@ -670,6 +676,10 @@ function shiftRowsDown() {
 function simulateGuessesStart() {
     if (simulateGuessesInterval) return;
     simulateGuessesActive = true;
+    const indicator = document.getElementById('simulate-indicator');
+    if (indicator) indicator.style.display = 'block';
+    const cog = document.getElementById('settings-toggle');
+    if (cog) cog.classList.add('simulate-active');
     simulateGuessesInterval = setInterval(() => {
         if (!simulateGuessesActive || isGameOver || simulateTyping) return;
         // Pick a random word that is NOT the target word
@@ -690,6 +700,10 @@ function simulateGuessesStart() {
 
 function simulateGuessesStop() {
     simulateGuessesActive = false;
+    const indicator = document.getElementById('simulate-indicator');
+    if (indicator) indicator.style.display = 'none';
+    const cog = document.getElementById('settings-toggle');
+    if (cog) cog.classList.remove('simulate-active');
     if (simulateGuessesInterval) {
         clearInterval(simulateGuessesInterval);
         simulateGuessesInterval = null;
