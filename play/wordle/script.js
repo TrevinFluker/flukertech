@@ -509,6 +509,27 @@ function initializeSettingsPanel() {
             }
         });
     }
+
+    // Hide/show keyboard logic
+    const hideKeyboardCheckbox = document.getElementById('hide-keyboard');
+    const keyboard = document.querySelector('.keyboard');
+    if (hideKeyboardCheckbox && keyboard) {
+        hideKeyboardCheckbox.addEventListener('change', function() {
+            keyboard.style.display = this.checked ? 'none' : '';
+        });
+        // On load, respect the checkbox state
+        keyboard.style.display = hideKeyboardCheckbox.checked ? 'none' : '';
+    }
+
+    // Keyboard visibility (visibility: hidden)
+    const keyboardVisibilityOffCheckbox = document.getElementById('keyboard-visibility-off');
+    if (keyboardVisibilityOffCheckbox && keyboard) {
+        keyboardVisibilityOffCheckbox.addEventListener('change', function() {
+            keyboard.style.visibility = this.checked ? 'hidden' : 'visible';
+        });
+        // On load, respect the checkbox state
+        keyboard.style.visibility = keyboardVisibilityOffCheckbox.checked ? 'hidden' : 'visible';
+    }
 }
 
 // Profile Image Functions
