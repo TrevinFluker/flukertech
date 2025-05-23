@@ -35,6 +35,8 @@ let groupGuessStacks = {};
 let groupGuessInterval = null;
 let lastBarOrder = [];
 let lastBarRects = {};
+let requiredGuesses = 5; // Default value for required agreed guesses
+let stackHeight = 220; // Default stack height in pixels
 
 // DOM elements
 const board = document.getElementById('board');
@@ -398,6 +400,12 @@ function initializeSettingsPanel() {
     const decreaseWidthBtn = document.getElementById('decrease-width');
     const increaseWidthBtn = document.getElementById('increase-width');
     const guessFlowSelect = document.getElementById('guess-flow');
+    const requiredGuessesInput = document.getElementById('required-guesses');
+    const decreaseGuessesBtn = document.getElementById('decrease-guesses');
+    const increaseGuessesBtn = document.getElementById('increase-guesses');
+    const stackHeightInput = document.getElementById('stack-height');
+    const decreaseHeightBtn = document.getElementById('decrease-height');
+    const increaseHeightBtn = document.getElementById('increase-height');
 
     // Toggle settings panel
     settingsToggle.addEventListener('click', () => {
@@ -498,6 +506,43 @@ function initializeSettingsPanel() {
         guessFlow = guessFlowSelect.value;
         initializeGame();
     });
+
+    // Handle required guesses changes
+    function updateRequiredGuesses(newCount) {
+        if (newCount >= 3 && newCount <= 7) {
+            requiredGuesses = newCount;
+            requiredGuessesInput.value = newCount;
+            // Automated stack height scale
+            const heightScale = {3: 120, 4: 160, 5: 220, 6: 248, 7: 288};
+            stackHeight = heightScale[newCount] || 220;
+            stackHeightInput.value = stackHeight;
+            const barChart = document.getElementById('group-guess-bar-chart');
+            if (barChart) {
+                barChart.style.height = `${stackHeight}px`;
+                barChart.style.minHeight = `${stackHeight}px`;
+            }
+        }
+    }
+
+    requiredGuessesInput.addEventListener('change', () => {
+        const newCount = parseInt(requiredGuessesInput.value);
+        updateRequiredGuesses(newCount);
+    });
+
+    decreaseGuessesBtn.addEventListener('click', () => {
+        const newCount = parseInt(requiredGuessesInput.value) - 1;
+        updateRequiredGuesses(newCount);
+    });
+
+    increaseGuessesBtn.addEventListener('click', () => {
+        const newCount = parseInt(requiredGuessesInput.value) + 1;
+        updateRequiredGuesses(newCount);
+    });
+
+    // Disable manual editing of stack height
+    stackHeightInput.readOnly = true;
+    decreaseHeightBtn.disabled = true;
+    increaseHeightBtn.disabled = true;
 
     // Close panel when clicking outside
     document.addEventListener('click', (e) => {
@@ -860,7 +905,11 @@ function startGroupGuessBar() {
     groupGuessStacks = {};
     lastBarOrder = [];
     const barChart = document.getElementById('group-guess-bar-chart');
-    if (barChart) barChart.style.display = 'flex';
+    if (barChart) {
+        barChart.style.display = 'flex';
+        barChart.style.height = `${stackHeight}px`;
+        barChart.style.minHeight = `${stackHeight}px`;
+    }
     const keyboard = document.querySelector('.keyboard');
     if (keyboard) keyboard.style.visibility = 'hidden';
     setCogSimulateActive();
@@ -882,8 +931,8 @@ function startGroupGuessBar() {
         // Add to stack
         if (!groupGuessStacks[guessWord]) groupGuessStacks[guessWord] = [];
         groupGuessStacks[guessWord].push(user);
-        // If stack reaches 5, enter the word and remove the stack
-        if (groupGuessStacks[guessWord].length >= 5) {
+        // If stack reaches required number, enter the word and remove the stack
+        if (groupGuessStacks[guessWord].length >= requiredGuesses) {
             // Use the top photo (last user added)
             enterGroupGuessWord(guessWord, groupGuessStacks[guessWord][groupGuessStacks[guessWord].length - 1]);
             delete groupGuessStacks[guessWord];

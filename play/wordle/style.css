@@ -534,6 +534,7 @@ h1 {
     overflow-x: auto;
     background: none;
     scrollbar-width: none; /* Firefox */
+    transition: height 0.3s ease, min-height 0.3s ease;
 }
 #group-guess-bar-chart::-webkit-scrollbar {
     display: none; /* Chrome, Safari */
@@ -586,6 +587,12 @@ h1 {
     object-fit: cover;
     z-index: 1;
     display: block;
+    transition: transform 0.2s ease;
+}
+
+.bar-user-img:hover {
+    transform: scale(1.1);
+    z-index: 2;
 }
 
 .bar-stack .bar-user-img + .bar-user-img {
