@@ -30,6 +30,11 @@ let guessFlow = 'down'; // Default guess flow
 let simulateGuessesInterval = null;
 let simulateGuessesActive = false;
 let simulateTyping = false;
+let groupGuessBarActive = false;
+let groupGuessStacks = {};
+let groupGuessInterval = null;
+let lastBarOrder = [];
+let lastBarRects = {};
 
 // DOM elements
 const board = document.getElementById('board');
@@ -396,12 +401,20 @@ function initializeSettingsPanel() {
 
     // Toggle settings panel
     settingsToggle.addEventListener('click', () => {
+        let turnedOff = false;
         if (simulateGuessesActive) {
             simulateGuessesStop();
-            // Also uncheck the toggle if present
             const simulateGuessesCheckbox = document.getElementById('simulate-guesses');
             if (simulateGuessesCheckbox) simulateGuessesCheckbox.checked = false;
+            turnedOff = true;
         }
+        if (groupGuessBarActive) {
+            stopGroupGuessBar();
+            const groupGuessBarCheckbox = document.getElementById('group-guess-bar');
+            if (groupGuessBarCheckbox) groupGuessBarCheckbox.checked = false;
+            turnedOff = true;
+        }
+        if (turnedOff) unsetCogSimulateActive();
         settingsPanel.classList.toggle('open');
     });
 
@@ -515,10 +528,10 @@ function initializeSettingsPanel() {
     const keyboard = document.querySelector('.keyboard');
     if (hideKeyboardCheckbox && keyboard) {
         hideKeyboardCheckbox.addEventListener('change', function() {
-            keyboard.style.display = this.checked ? 'none' : '';
+            keyboard.style.visibility = this.checked ? 'hidden' : 'visible';
         });
         // On load, respect the checkbox state
-        keyboard.style.display = hideKeyboardCheckbox.checked ? 'none' : '';
+        keyboard.style.visibility = hideKeyboardCheckbox.checked ? 'hidden' : 'visible';
     }
 
     // Keyboard visibility (visibility: hidden)
@@ -529,6 +542,18 @@ function initializeSettingsPanel() {
         });
         // On load, respect the checkbox state
         keyboard.style.visibility = keyboardVisibilityOffCheckbox.checked ? 'hidden' : 'visible';
+    }
+
+    // Group guess bar chart logic
+    const groupGuessBarCheckbox = document.getElementById('group-guess-bar');
+    if (groupGuessBarCheckbox) {
+        groupGuessBarCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                startGroupGuessBar();
+            } else {
+                stopGroupGuessBar();
+            }
+        });
     }
 }
 
@@ -694,13 +719,21 @@ function shiftRowsDown() {
     }, 150);
 }
 
+function setCogSimulateActive() {
+    const cog = document.getElementById('settings-toggle');
+    if (cog) cog.classList.add('simulate-active');
+}
+function unsetCogSimulateActive() {
+    const cog = document.getElementById('settings-toggle');
+    if (cog) cog.classList.remove('simulate-active');
+}
+
 function simulateGuessesStart() {
     if (simulateGuessesInterval) return;
     simulateGuessesActive = true;
     const indicator = document.getElementById('simulate-indicator');
     if (indicator) indicator.style.display = 'block';
-    const cog = document.getElementById('settings-toggle');
-    if (cog) cog.classList.add('simulate-active');
+    setCogSimulateActive();
     simulateGuessesInterval = setInterval(() => {
         if (!simulateGuessesActive || isGameOver || simulateTyping) return;
         // Pick a random word that is NOT the target word
@@ -723,8 +756,7 @@ function simulateGuessesStop() {
     simulateGuessesActive = false;
     const indicator = document.getElementById('simulate-indicator');
     if (indicator) indicator.style.display = 'none';
-    const cog = document.getElementById('settings-toggle');
-    if (cog) cog.classList.remove('simulate-active');
+    if (!groupGuessBarActive) unsetCogSimulateActive();
     if (simulateGuessesInterval) {
         clearInterval(simulateGuessesInterval);
         simulateGuessesInterval = null;
@@ -750,6 +782,155 @@ function simulateAudienceTyping(word, user) {
             const enterBtn = document.querySelector('.key[data-key="enter"]');
             if (enterBtn) enterBtn.click();
             // Restore the original profile image for the next guess
+            setTimeout(() => {
+                if (originalProfile) {
+                    localStorage.setItem('wordleProfileImage', originalProfile);
+                } else {
+                    localStorage.removeItem('wordleProfileImage');
+                }
+                simulateTyping = false;
+            }, 100);
+        }
+    }
+    typeNextLetter();
+}
+
+function renderGroupGuessBarChart() {
+    const barChart = document.getElementById('group-guess-bar-chart');
+    if (!barChart) return;
+    // Convert stacks to array and sort by stack height desc, then by word
+    const stacksArr = Object.entries(groupGuessStacks)
+        .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
+        .slice(0, 7);
+    // FLIP: measure old positions
+    const prevRects = {};
+    if (barChart.children.length) {
+        for (let i = 0; i < barChart.children.length; i++) {
+            const el = barChart.children[i];
+            const word = el.getAttribute('data-word');
+            if (word) prevRects[word] = el.getBoundingClientRect();
+        }
+    }
+    // Render new order
+    barChart.innerHTML = '';
+    stacksArr.forEach(([word, users], idx) => {
+        const stackDiv = document.createElement('div');
+        stackDiv.className = 'bar-stack';
+        stackDiv.setAttribute('data-word', word);
+        stackDiv.style.zIndex = (stacksArr.length - idx + 1).toString();
+        // Word label
+        const label = document.createElement('div');
+        label.className = 'bar-word-label';
+        label.textContent = word.toUpperCase();
+        stackDiv.appendChild(label);
+        // User images (stacked)
+        users.forEach(user => {
+            const img = document.createElement('img');
+            img.className = 'bar-user-img';
+            img.src = user.photoUrl;
+            img.title = user.username;
+            stackDiv.appendChild(img);
+        });
+        barChart.appendChild(stackDiv);
+    });
+    // FLIP: animate position changes
+    setTimeout(() => {
+        for (let i = 0; i < barChart.children.length; i++) {
+            const el = barChart.children[i];
+            const word = el.getAttribute('data-word');
+            if (word && prevRects[word]) {
+                const newRect = el.getBoundingClientRect();
+                const dx = prevRects[word].left - newRect.left;
+                if (dx !== 0) {
+                    el.style.transform = `translateX(${dx}px)`;
+                    el.style.transition = 'none';
+                    // Force reflow
+                    void el.offsetWidth;
+                    el.style.transition = '';
+                    el.style.transform = '';
+                }
+            }
+        }
+    }, 0);
+    lastBarOrder = stacksArr.map(([word]) => word);
+}
+
+function startGroupGuessBar() {
+    groupGuessBarActive = true;
+    groupGuessStacks = {};
+    lastBarOrder = [];
+    const barChart = document.getElementById('group-guess-bar-chart');
+    if (barChart) barChart.style.display = 'flex';
+    const keyboard = document.querySelector('.keyboard');
+    if (keyboard) keyboard.style.visibility = 'hidden';
+    setCogSimulateActive();
+    if (groupGuessInterval) clearInterval(groupGuessInterval);
+    groupGuessInterval = setInterval(() => {
+        if (!groupGuessBarActive || isGameOver) return;
+        // Pick a random word that is NOT the target word
+        const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
+        if (possibleWords.length === 0) return;
+        const guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+        // Simulate a random user
+        const randomNumber = Math.floor(Math.random() * 1000);
+        const user = {
+            username: 'user' + randomNumber,
+            photoUrl: 'https://picsum.photos/40?' + Math.random(),
+            gift_name: '',
+            comment: 'candy'
+        };
+        // Add to stack
+        if (!groupGuessStacks[guessWord]) groupGuessStacks[guessWord] = [];
+        groupGuessStacks[guessWord].push(user);
+        // If stack reaches 5, enter the word and remove the stack
+        if (groupGuessStacks[guessWord].length >= 5) {
+            // Use the top photo (last user added)
+            enterGroupGuessWord(guessWord, groupGuessStacks[guessWord][groupGuessStacks[guessWord].length - 1]);
+            delete groupGuessStacks[guessWord];
+        }
+        // Only keep 7 stacks
+        const stackWords = Object.keys(groupGuessStacks);
+        if (stackWords.length > 7) {
+            // Remove the smallest stack (rightmost)
+            let minWord = stackWords[0];
+            for (const w of stackWords) {
+                if (groupGuessStacks[w].length < groupGuessStacks[minWord].length) minWord = w;
+            }
+            delete groupGuessStacks[minWord];
+        }
+        renderGroupGuessBarChart();
+    }, 1000);
+    renderGroupGuessBarChart();
+}
+
+function stopGroupGuessBar() {
+    groupGuessBarActive = false;
+    if (!simulateGuessesActive) unsetCogSimulateActive();
+    if (groupGuessInterval) clearInterval(groupGuessInterval);
+    groupGuessInterval = null;
+    const barChart = document.getElementById('group-guess-bar-chart');
+    if (barChart) barChart.style.display = 'none';
+    const keyboard = document.querySelector('.keyboard');
+    if (keyboard) keyboard.style.visibility = 'visible';
+    groupGuessStacks = {};
+}
+
+function enterGroupGuessWord(word, user) {
+    // Use the same logic as simulateAudienceTyping, but with the top user's image
+    simulateTyping = true;
+    let idx = 0;
+    const originalProfile = localStorage.getItem('wordleProfileImage');
+    localStorage.setItem('wordleProfileImage', user.photoUrl);
+    function typeNextLetter() {
+        if (idx < word.length) {
+            const letter = word[idx];
+            const keyBtn = document.querySelector(`.key[data-key="${letter}"]`);
+            if (keyBtn) keyBtn.click();
+            idx++;
+            setTimeout(typeNextLetter, 80);
+        } else {
+            const enterBtn = document.querySelector('.key[data-key="enter"]');
+            if (enterBtn) enterBtn.click();
             setTimeout(() => {
                 if (originalProfile) {
                     localStorage.setItem('wordleProfileImage', originalProfile);
