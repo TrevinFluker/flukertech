@@ -1,86 +1,4 @@
-const gameData = {
-    "Entertainment": {
-        "movies where the main character is": [
-            "the villain", "a badass", "depressed", "an animal", "secretly the villain",
-            "a genius", "alone", "betrayed", "a ghost", "crazy"
-        ],
-        "tv shows about": [
-            "witches", "lawyers", "cults", "time travel", "magic",
-            "vikings", "family", "aliens", "ghosts", "alaska"
-        ]
-    },
-    "Culture": {
-        "does santa have a": [
-            "brother", "birthday", "phone number", "dog", "pilot's license",
-            "wife", "phone", "pipe", "son", "middle name"
-        ],
-        "new yorkers are": [
-            "kind but not nice", "known for", "unfriendly", "nice", "born all over the world",
-            "terrible", "ruining florida", "tough", "self absorbed", "direct"
-        ]
-    },
-    "Question of the Day": {
-        "can you drink expired": [
-            "beer", "milk after 1 day", "milk", "coffee", "orange juice",
-            "tea", "protein powder", "gatorade", "coke", "kombucha"
-        ],
-        "they call me": [
-            "magic", "trinity", "laquifa", "stacy", "mr tibbs",
-            "the breeze", "mellow yellow", "bruce", "magic release date", "jeeg"
-        ]
-    },
-    "Food": {
-        "are there seeds in": [
-            "bananas", "blueberries", "pineapple", "limes", "raspberries",
-            "oranges", "warts", "grapes", "mangoes", "pine cones"
-        ],
-        "beef jerky is": [
-            "too expensive", "it healthy", "made from what", "bad for you", "jerked beef",
-            "good for you", "wet", "too dry", "what part of the cow", "so good"
-        ]
-    },
-    "Questions": {
-        "how to get rid of": [
-            "ants", "gnats", "hiccups", "bed bugs", "dandruff",
-            "fruit flies", "carpenter bees", "flies", "acne scars", "hickeys"
-        ],
-        "how to build a": [
-            "deck", "sex room netflix series", "house", "website", "retaining wall",
-            "raised garden bed", "chicken coop", "shed", "pc", "fence"
-        ]
-    },
-    "Names": {
-        "aaron": [
-            "judge", "rodgers", "rodgers tattoo", "carter", "rodgers girlfriend",
-            "donald", "judge stats", "paul", "rodgers new tattoo", "taylor johnson"
-        ],
-        "adam": [
-            "sandler wife", "sandler", "and eve", "sandler movies", "driver",
-            "neumann", "demos", "sandler net worth", "project", "west"
-        ]
-    },
-    "Animals": {
-        "can you milk a": [
-            "horse", "cat", "pig", "sheep", "male cow",
-            "chicken", "whale", "bull", "dog", "snake"
-        ],
-        "best way to pet a": [
-            "cat", "dog", "bunny", "guinea pig", "bearded dragon",
-            "horse", "kitten", "chihuahua", "chicken", "puppy"
-        ]
-    },
-    "People": {
-        "can you die from too much": [
-            "sex", "oxygen", "sleep", "pleasure", "coffee",
-            "stress", "vitamin c", "exercise", "protein", "spice"
-        ],
-        "why is my son so": [
-            "angry", "angry with me", "mean to me", "clingy", "attached to me",
-            "skinny", "annoying", "emotional", "hyper", "sensitive"
-        ]
-    }
-};
-window.gameData = gameData;
+let gameData = null;
 
 let currentGame = null;
 let score = 0;
@@ -88,29 +6,43 @@ let revealedCount = 0;
 let simulateCommentCount = 0;
 
 // Initialize category dropdown
-function initCategories() {
-    const select = document.getElementById('categorySelect');
-    const categoryEmojis = {
-        "Entertainment": "🎬",
-        "Culture": "🏛️", 
-        "Question of the Day": "❓",
-        "Food": "🍕",
-        "Questions": "🤔",
-        "Names": "👤",
-        "Animals": "🐾",
-        "People": "👥"
-    };
-    
-    Object.keys(gameData).forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = `${categoryEmojis[category]} ${category}`;
-        select.appendChild(option);
-    });
+async function initCategories() {
+    try {
+        const response = await fetch('https://www.runchatcapture.com/data/gf.json');
+        gameData = await response.json();
+        window.gameData = gameData;
+
+        const select = document.getElementById('categorySelect');
+        const categoryEmojis = {
+            "Entertainment": "🎬",
+            "Culture": "🏛️", 
+            "Question of the Day": "❓",
+            "Food": "🍕",
+            "Questions": "🤔",
+            "Names": "👤",
+            "Animals": "🐾",
+            "People": "👥"
+        };
+        
+        Object.keys(gameData).forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = `${categoryEmojis[category] || '📋'} ${category}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading game data:', error);
+        alert('Failed to load game data. Please refresh the page.');
+    }
 }
 
 // Start new game
 function startGame(category) {
+    if (!gameData) {
+        alert('Game data not loaded. Please refresh the page.');
+        return;
+    }
+
     const prompts = Object.keys(gameData[category]);
     const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
     const answers = gameData[category][randomPrompt];
@@ -479,41 +411,34 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderAutomationModal() {
         automationModalBody.innerHTML = '';
         if (!window.gameData) return;
+
         Object.keys(window.gameData).forEach(category => {
             const catId = `automation-cat-${category}`;
             const catDiv = document.createElement('div');
-            catDiv.className = 'automation-category';
-            // Category checkbox
-            const catLabel = document.createElement('label');
-            catLabel.className = 'automation-category-label';
+            catDiv.className = 'automation-category-flat';
+
+            // Category row with checkbox
+            const catRow = document.createElement('div');
+            catRow.className = 'automation-category-row';
             const catCheckbox = document.createElement('input');
             catCheckbox.type = 'checkbox';
             catCheckbox.id = catId;
-            
-            // Check if category should be checked based on its prompts
-            const categoryConfig = automationConfig[category];
-            const allPromptsDisabled = categoryConfig && 
-                Array.isArray(categoryConfig.disabledPrompts) && 
-                categoryConfig.disabledPrompts.length === Object.keys(window.gameData[category]).length;
-            catCheckbox.checked = !allPromptsDisabled;
+            catRow.appendChild(catCheckbox);
+            catRow.appendChild(document.createTextNode(category + " ▼"));
+            catDiv.appendChild(catRow);
 
-            // Add change event listener to category checkbox
-            catCheckbox.addEventListener('change', function() {
-                const promptCheckboxes = catDiv.querySelectorAll('.automation-prompt-label input[type="checkbox"]');
-                promptCheckboxes.forEach(promptCheckbox => {
-                    promptCheckbox.checked = this.checked;
-                });
-            });
-            catLabel.appendChild(catCheckbox);
-            catLabel.appendChild(document.createTextNode(category));
-            catDiv.appendChild(catLabel);
+            // Prompts container (hidden by default)
+            const promptsContainer = document.createElement('div');
+            promptsContainer.className = 'automation-prompts-hidden';
+
             // Prompts
-            const promptsDiv = document.createElement('div');
-            promptsDiv.className = 'automation-prompts';
-            Object.keys(window.gameData[category]).forEach(prompt => {
+            const categoryConfig = automationConfig[category];
+            const prompts = Object.keys(window.gameData[category]);
+            const promptCheckboxes = [];
+            prompts.forEach(prompt => {
                 const promptId = `automation-prompt-${category}-${prompt}`;
-                const promptLabel = document.createElement('label');
-                promptLabel.className = 'automation-prompt-label';
+                const promptRow = document.createElement('div');
+                promptRow.className = 'automation-prompt-row';
                 const promptCheckbox = document.createElement('input');
                 promptCheckbox.type = 'checkbox';
                 promptCheckbox.id = promptId;
@@ -522,24 +447,44 @@ document.addEventListener('DOMContentLoaded', function() {
                     Array.isArray(categoryConfig.disabledPrompts) &&
                     categoryConfig.disabledPrompts.includes(prompt)
                 );
-                // Add change event listener to prompt checkbox
-                promptCheckbox.addEventListener('change', function() {
-                    const categoryCheckbox = document.getElementById(catId);
-                    if (this.checked) {
-                        // If any prompt is checked, ensure the category is checked
-                        categoryCheckbox.checked = true;
-                    } else {
-                        // If all prompts are unchecked, uncheck the category
-                        const allPromptsUnchecked = Array.from(promptsDiv.querySelectorAll('input[type="checkbox"]'))
-                            .every(cb => !cb.checked);
-                        categoryCheckbox.checked = !allPromptsUnchecked;
-                    }
-                });
-                promptLabel.appendChild(promptCheckbox);
-                promptLabel.appendChild(document.createTextNode(prompt));
-                promptsDiv.appendChild(promptLabel);
+                promptCheckboxes.push(promptCheckbox);
+                promptRow.appendChild(promptCheckbox);
+                promptRow.appendChild(document.createTextNode(prompt));
+                promptsContainer.appendChild(promptRow);
             });
-            catDiv.appendChild(promptsDiv);
+            catDiv.appendChild(promptsContainer);
+
+            // Set category checkbox state based on prompts
+            function updateCategoryCheckbox() {
+                const anyChecked = promptCheckboxes.some(cb => cb.checked);
+                catCheckbox.checked = anyChecked;
+            }
+            updateCategoryCheckbox();
+
+            // Category checkbox event: check/uncheck all prompts
+            catCheckbox.addEventListener('change', function() {
+                promptCheckboxes.forEach(cb => {
+                    cb.checked = catCheckbox.checked;
+                });
+            });
+
+            // Prompt checkbox event: update category checkbox
+            promptCheckboxes.forEach(cb => {
+                cb.addEventListener('change', updateCategoryCheckbox);
+            });
+
+            // Toggle prompt visibility on category row click (not on checkbox click)
+            catRow.addEventListener('click', function(e) {
+                if (e.target.type === 'checkbox') return;
+                if (promptsContainer.classList.contains('automation-prompts-hidden')) {
+                    promptsContainer.classList.remove('automation-prompts-hidden');
+                    promptsContainer.classList.add('automation-prompts-visible');
+                } else {
+                    promptsContainer.classList.remove('automation-prompts-visible');
+                    promptsContainer.classList.add('automation-prompts-hidden');
+                }
+            });
+
             automationModalBody.appendChild(catDiv);
         });
     }

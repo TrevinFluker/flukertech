@@ -621,27 +621,96 @@ body {
     display: flex;
     justify-content: flex-end;
 }
-.automation-category {
-    margin-bottom: 12px;
+.automation-categories {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eee;
 }
 .automation-category-label {
-    font-weight: bold;
-    color: #222;
-    margin-bottom: 4px;
     display: flex;
     align-items: center;
     gap: 8px;
-}
-.automation-prompts {
-    margin-left: 24px;
-    margin-top: 4px;
+    font-weight: bold;
+    color: #222;
     margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+.automation-category-accordion {
+    margin-bottom: 12px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.automation-accordion-header {
+    padding: 12px 16px;
+    background: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #444;
+    user-select: none;
+}
+.automation-accordion-header input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+.automation-accordion-header:hover {
+    background: #f1f3f4;
+}
+.automation-accordion-icon {
+    margin-left: auto;
+    font-size: 0.9rem;
+    color: #666;
+}
+.automation-accordion-content {
+    display: none;
+    padding: 12px 16px;
+    background: #fff;
+}
+.automation-accordion-content.open {
+    display: block;
 }
 .automation-prompt-label {
     display: flex;
     align-items: center;
     gap: 6px;
     color: #444;
-    font-size: 1rem;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    padding: 4px 0;
+}
+.automation-category-flat {
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+.automation-category-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    color: #222;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+.automation-prompt-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #444;
+    font-size: 0.98rem;
+    margin-left: 24px;
     margin-bottom: 2px;
+    padding: 2px 0;
+}
+.automation-prompts-hidden {
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+}
+.automation-prompts-visible {
+    visibility: visible;
+    height: auto;
 }
