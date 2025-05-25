@@ -80,10 +80,12 @@ const gameData = {
         ]
     }
 };
+window.gameData = gameData;
 
 let currentGame = null;
 let score = 0;
 let revealedCount = 0;
+let simulateCommentCount = 0;
 
 // Initialize category dropdown
 function initCategories() {
@@ -120,6 +122,7 @@ function startGame(category) {
         revealed: new Array(answers.length).fill(false),
         guessed: new Set()
     };
+    window.currentGame = currentGame;
     
     revealedCount = 0;
     score = 0;
@@ -150,9 +153,12 @@ function renderGame() {
         
         const points = (10 - index) * 1000;
         
-        // Get user info from localStorage
-        const userImg = localStorage.getItem('profileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
-        const username = localStorage.getItem('profileUsername') || '';
+        let userImg = localStorage.getItem('profileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
+        let username = localStorage.getItem('profileUsername') || '';
+        if (currentGame.revealed[index] && currentGame.userInfo && currentGame.userInfo[index]) {
+            userImg = currentGame.userInfo[index].photoUrl;
+            username = currentGame.userInfo[index].username;
+        }
 
         suggestion.innerHTML = `
             <span class="suggestion-icon">🔍</span>
@@ -174,48 +180,39 @@ function renderGame() {
 }
 
 // Check guess against answers using the provided logic
-function checkGuess(guess) {
+function checkGuess(guess, userInfo) {
     if (!guess || !currentGame) return;
-    
     guess = guess.trim();
     if (currentGame.guessed.has(guess.toLowerCase())) return;
-    
     currentGame.guessed.add(guess.toLowerCase());
-    
-    // Create answers array in the format expected by the matching function
     const answersForMatching = currentGame.answers.map((answer, index) => ({
         answer: answer,
         found: currentGame.revealed[index],
         index: index
     }));
-    
-    // Use the provided matching logic
     const matches = checkGuessLogic(guess, answersForMatching);
-    
     let found = matches.length > 0;
-    
-    // Reveal all matched answers
     matches.forEach(match => {
         if (!currentGame.revealed[match.index]) {
             currentGame.revealed[match.index] = true;
             const points = (10 - match.index) * 1000;
             score += points;
             revealedCount++;
+            // Store user info if provided
+            if (!currentGame.userInfo) currentGame.userInfo = {};
+            if (userInfo) {
+                currentGame.userInfo[match.index] = userInfo;
+            }
         }
     });
-    
     if (!found) {
-        // Show wrong animation on covered answers
         const coveredAnswers = document.querySelectorAll('.answer-covered');
         coveredAnswers.forEach(answer => {
             answer.classList.add('wrong');
             setTimeout(() => answer.classList.remove('wrong'), 300);
         });
     }
-    
     renderGame();
-    
-    // Check if all answers are revealed
     if (revealedCount === currentGame.answers.length) {
         setTimeout(() => {
             alert(`Congratulations! You found all answers! Final Score: ${score.toLocaleString()}`);
@@ -337,3 +334,303 @@ document.getElementById('categorySelect').addEventListener('change', function(e)
 
 // Initialize the game
 initCategories();
+
+window.registerSimulatedComment = function(user) {
+    const container = document.getElementById('simulatedComments');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'simulated-comment-row';
+    row.innerHTML = `
+        <span class="simulated-comment-user">
+            <img class="simulated-comment-img" src="${user.photoUrl}" alt="User" />
+            <span class="simulated-comment-username">${user.username}</span>
+        </span>
+        <span class="simulated-comment-guess">${user.comment}</span>
+    `;
+    container.prepend(row);
+    while (container.children.length > 10) {
+        container.removeChild(container.lastChild);
+    }
+    if (typeof checkGuess === 'function') {
+        checkGuess(user.comment, { username: user.username, photoUrl: user.photoUrl });
+    }
+};
+
+window.simulateComment = function(forceAnswer) {
+    let user;
+    if (forceAnswer && window.currentGame && Array.isArray(window.currentGame.answers)) {
+        const unrevealed = window.currentGame.answers.filter((a, i) => !window.currentGame.revealed[i]);
+        if (unrevealed.length > 0) {
+            const answer = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+            user = {
+                username: 'user' + Math.floor(Math.random() * 1000),
+                photoUrl: 'https://picsum.photos/40?' + Math.random(),
+                comment: answer
+            };
+        }
+    }
+    if (!user) {
+        const randomNumber = Math.floor(Math.random() * 1000);
+        const randomComment = Math.floor(Math.random() * 10);
+        const comments = [
+            'This is a comment',
+            'This is another comment',
+            'This is a third comment',
+            'This is a fourth comment',
+            'This is a fifth comment',
+            'This is a sixth comment',
+            'This is a seventh comment',
+            'This is a eighth comment',
+            'This is a ninth comment',
+            'This is a tenth comment'
+        ];
+        user = {
+            username: 'user' + randomNumber,
+            photoUrl: 'https://picsum.photos/40?' + Math.random(),
+            comment: comments[randomComment]
+        };
+    }
+    if (typeof window.handleSimulatedComment === 'function') {
+        window.handleSimulatedComment(user);
+    }
+};
+
+// Sidepanel functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const settingsIcon = document.getElementById('settingsIcon');
+    const sidepanel = document.getElementById('sidepanel');
+    let imageUpload = document.getElementById('imageUpload');
+    let profileImage = document.getElementById('profileImage');
+
+    // Load profile image from localStorage
+    const savedImage = localStorage.getItem('profileImage');
+    if (profileImage) {
+        profileImage.src = savedImage || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
+    }
+
+    // Username logic
+    const usernameInput = document.getElementById('profileUsername');
+    const usernameError = document.getElementById('profileUsernameError');
+    if (usernameInput) {
+        // Load username from localStorage
+        const savedUsername = localStorage.getItem('profileUsername') || '';
+        usernameInput.value = savedUsername;
+        // Save on input
+        usernameInput.addEventListener('input', function() {
+            const value = usernameInput.value.trim();
+            if (value) {
+                localStorage.setItem('profileUsername', value);
+            }
+        });
+    }
+
+    // Simulate Comments toggle logic
+    const simulateToggle = document.getElementById('simulateCommentsToggle');
+    let simulateInterval = null;
+    let answerInterval = null;
+    if (simulateToggle) {
+        simulateToggle.addEventListener('change', function() {
+            const cog = document.getElementById('settingsIcon');
+            if (simulateToggle.checked) {
+                if (cog) cog.classList.add('active-simulate');
+                startSimulateComments();
+            } else {
+                if (cog) cog.classList.remove('active-simulate');
+                stopSimulateComments();
+            }
+        });
+    }
+    function startSimulateComments() {
+        stopSimulateComments();
+        simulateInterval = setInterval(() => {
+            const count = Math.floor(Math.random() * 2) + 2; // 2 or 3
+            for (let i = 0; i < count; i++) {
+                window.simulateComment && window.simulateComment(false);
+            }
+        }, 1000);
+        answerInterval = setInterval(() => {
+            window.simulateComment && window.simulateComment(true);
+        }, 3000);
+    }
+    function stopSimulateComments() {
+        if (simulateInterval) clearInterval(simulateInterval);
+        simulateInterval = null;
+        if (answerInterval) clearInterval(answerInterval);
+        answerInterval = null;
+    }
+    // Expose handler for simulation
+    window.handleSimulatedComment = function(user) {
+        if (typeof window.registerSimulatedComment === 'function') {
+            window.registerSimulatedComment(user);
+        }
+    };
+
+    // Automation Flow modal logic
+    const automationBtn = document.getElementById('automationFlowConfigureBtn');
+    const automationModal = document.getElementById('automationFlowModal');
+    const automationModalClose = document.getElementById('automationFlowModalClose');
+    const automationModalBody = document.getElementById('automationFlowModalBody');
+    const automationModalSave = document.getElementById('automationFlowModalSave');
+    let automationConfig = {};
+    // Load config from localStorage
+    try {
+        automationConfig = JSON.parse(localStorage.getItem('automationFlowConfig') || '{}');
+    } catch (e) { automationConfig = {}; }
+    function renderAutomationModal() {
+        automationModalBody.innerHTML = '';
+        if (!window.gameData) return;
+        Object.keys(window.gameData).forEach(category => {
+            const catId = `automation-cat-${category}`;
+            const catDiv = document.createElement('div');
+            catDiv.className = 'automation-category';
+            // Category checkbox
+            const catLabel = document.createElement('label');
+            catLabel.className = 'automation-category-label';
+            const catCheckbox = document.createElement('input');
+            catCheckbox.type = 'checkbox';
+            catCheckbox.id = catId;
+            
+            // Check if category should be checked based on its prompts
+            const categoryConfig = automationConfig[category];
+            const allPromptsDisabled = categoryConfig && 
+                Array.isArray(categoryConfig.disabledPrompts) && 
+                categoryConfig.disabledPrompts.length === Object.keys(window.gameData[category]).length;
+            catCheckbox.checked = !allPromptsDisabled;
+
+            // Add change event listener to category checkbox
+            catCheckbox.addEventListener('change', function() {
+                const promptCheckboxes = catDiv.querySelectorAll('.automation-prompt-label input[type="checkbox"]');
+                promptCheckboxes.forEach(promptCheckbox => {
+                    promptCheckbox.checked = this.checked;
+                });
+            });
+            catLabel.appendChild(catCheckbox);
+            catLabel.appendChild(document.createTextNode(category));
+            catDiv.appendChild(catLabel);
+            // Prompts
+            const promptsDiv = document.createElement('div');
+            promptsDiv.className = 'automation-prompts';
+            Object.keys(window.gameData[category]).forEach(prompt => {
+                const promptId = `automation-prompt-${category}-${prompt}`;
+                const promptLabel = document.createElement('label');
+                promptLabel.className = 'automation-prompt-label';
+                const promptCheckbox = document.createElement('input');
+                promptCheckbox.type = 'checkbox';
+                promptCheckbox.id = promptId;
+                promptCheckbox.checked = !(
+                    categoryConfig &&
+                    Array.isArray(categoryConfig.disabledPrompts) &&
+                    categoryConfig.disabledPrompts.includes(prompt)
+                );
+                // Add change event listener to prompt checkbox
+                promptCheckbox.addEventListener('change', function() {
+                    const categoryCheckbox = document.getElementById(catId);
+                    if (this.checked) {
+                        // If any prompt is checked, ensure the category is checked
+                        categoryCheckbox.checked = true;
+                    } else {
+                        // If all prompts are unchecked, uncheck the category
+                        const allPromptsUnchecked = Array.from(promptsDiv.querySelectorAll('input[type="checkbox"]'))
+                            .every(cb => !cb.checked);
+                        categoryCheckbox.checked = !allPromptsUnchecked;
+                    }
+                });
+                promptLabel.appendChild(promptCheckbox);
+                promptLabel.appendChild(document.createTextNode(prompt));
+                promptsDiv.appendChild(promptLabel);
+            });
+            catDiv.appendChild(promptsDiv);
+            automationModalBody.appendChild(catDiv);
+        });
+    }
+    if (automationBtn && automationModal && automationModalClose) {
+        automationBtn.addEventListener('click', () => {
+            renderAutomationModal();
+            automationModal.style.display = 'flex';
+        });
+        automationModalClose.addEventListener('click', () => {
+            automationModal.style.display = 'none';
+        });
+        automationModalSave.addEventListener('click', () => {
+            // Read config from checkboxes
+            const newConfig = {};
+            Object.keys(window.gameData).forEach(category => {
+                const catId = `automation-cat-${category}`;
+                const catChecked = document.getElementById(catId).checked;
+                if (!catChecked) {
+                    // If category is unchecked, mark it as false and include all prompts as disabled
+                    newConfig[category] = {
+                        disabledPrompts: Object.keys(window.gameData[category])
+                    };
+                } else {
+                    // Check prompts only if category is checked
+                    const disabledPrompts = [];
+                    Object.keys(window.gameData[category]).forEach(prompt => {
+                        const promptId = `automation-prompt-${category}-${prompt}`;
+                        if (!document.getElementById(promptId).checked) {
+                            disabledPrompts.push(prompt);
+                        }
+                    });
+                    if (disabledPrompts.length > 0) {
+                        newConfig[category] = { disabledPrompts };
+                    }
+                }
+            });
+            automationConfig = newConfig;
+            localStorage.setItem('automationFlowConfig', JSON.stringify(automationConfig));
+            automationModal.style.display = 'none';
+        });
+    }
+
+    // Initialize event listeners
+    initializeEventListeners();
+
+    function initializeEventListeners() {
+        // Toggle sidepanel
+        settingsIcon.addEventListener('click', () => {
+            sidepanel.classList.toggle('open');
+        });
+
+        // Close button in header
+        const closeBtn = document.getElementById('sidepanelClose');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                sidepanel.classList.remove('open');
+            });
+        }
+
+        // Multiple accordions
+        const accordionHeaders = sidepanel.querySelectorAll('.accordion-header');
+        accordionHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const content = this.nextElementSibling;
+                content.classList.toggle('open');
+                const icon = this.querySelector('.accordion-icon');
+                icon.textContent = content.classList.contains('open') ? '▼' : '▲';
+            });
+        });
+
+        // Handle image upload
+        if (imageUpload) {
+            imageUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imageData = e.target.result;
+                        profileImage.src = imageData;
+                        localStorage.setItem('profileImage', imageData);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Close sidepanel when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!sidepanel.contains(e.target) && !settingsIcon.contains(e.target)) {
+                sidepanel.classList.remove('open');
+            }
+        });
+    }
+});
