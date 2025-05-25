@@ -42,6 +42,7 @@
             <div class="buttons-container">
                 <!-- <button class="btn" onclick="newGame()">Guess</button> -->
                 <button class="btn" onclick="giveUp()">Give Up</button>
+                <button class="btn" id="nextGameBtn" type="button">Next Game</button>
             </div>
         </div>
     </div>
@@ -83,6 +84,13 @@
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <label class="game-settings-label" style="font-weight: bold;">Automation Flow</label>
                         <button id="automationFlowConfigureBtn" class="btn" type="button">Configure</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-direction: column; align-items: flex-start;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label class="game-settings-label" style="font-weight: bold;">Game History</label>
+                            <span id="gameHistoryPercent" style="font-size: 0.98rem; color: #fff;"></span>
+                        </div>
+                        <button id="gameHistoryManageBtn" class="btn" type="button" style="margin-top: 6px;">Manage History</button>
                     </div>
                 </div>
             </div>

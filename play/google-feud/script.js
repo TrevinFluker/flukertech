@@ -579,3 +579,212 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// --- Game History Storage ---
+function storePlayedGame(category, prompt) {
+    let playedGames = {};
+    try {
+        playedGames = JSON.parse(localStorage.getItem('playedGames') || '{}');
+    } catch (e) { playedGames = {}; }
+    if (!playedGames[category]) playedGames[category] = [];
+    if (!playedGames[category].includes(prompt)) {
+        playedGames[category].push(prompt);
+        localStorage.setItem('playedGames', JSON.stringify(playedGames));
+    }
+}
+
+function getPlayedGames() {
+    try {
+        return JSON.parse(localStorage.getItem('playedGames') || '{}');
+    } catch (e) { return {}; }
+}
+
+// --- Game History UI ---
+function getGameHistoryStats() {
+    if (!window.gameData) return { played: 0, total: 0, percent: 0 };
+    const played = getPlayedGames();
+    let playedCount = 0;
+    let totalCount = 0;
+    Object.keys(window.gameData).forEach(category => {
+        const prompts = Object.keys(window.gameData[category]);
+        totalCount += prompts.length;
+        if (played[category]) {
+            playedCount += played[category].length;
+        }
+    });
+    const percent = totalCount === 0 ? 0 : Math.round((playedCount / totalCount) * 100);
+    return { played: playedCount, total: totalCount, percent };
+}
+
+function updateGameHistoryPercent() {
+    const stats = getGameHistoryStats();
+    const el = document.getElementById('gameHistoryPercent');
+    if (el) {
+        el.textContent = `Played: ${stats.played} / ${stats.total}`;
+    }
+}
+
+// --- Game History Modal ---
+function showGameHistoryModal() {
+    // Remove existing modal if present
+    const oldModal = document.getElementById('gameHistoryModal');
+    if (oldModal) oldModal.remove();
+
+    // Modal container
+    const modal = document.createElement('div');
+    modal.id = 'gameHistoryModal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.35)';
+    modal.style.zIndex = '4000';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+
+    // Modal content
+    const content = document.createElement('div');
+    content.style.background = '#fff';
+    content.style.borderRadius = '12px';
+    content.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)';
+    content.style.width = '420px';
+    content.style.maxWidth = '95vw';
+    content.style.maxHeight = '90vh';
+    content.style.overflowY = 'auto';
+    content.style.padding = '0';
+    content.style.display = 'flex';
+    content.style.flexDirection = 'column';
+
+    // Header
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.alignItems = 'center';
+    header.style.justifyContent = 'space-between';
+    header.style.padding = '18px 24px 12px 24px';
+    header.style.borderBottom = '1px solid #eee';
+    header.innerHTML = `<span style="font-size:1.3rem;font-weight:bold;color:#222;">Game History</span><span style="font-size:2rem;cursor:pointer;color:#888;" id="gameHistoryModalClose">&times;</span>`;
+    content.appendChild(header);
+
+    // Stats and erase button
+    const stats = getGameHistoryStats();
+    const statsDiv = document.createElement('div');
+    statsDiv.style.display = 'flex';
+    statsDiv.style.alignItems = 'center';
+    statsDiv.style.justifyContent = 'space-between';
+    statsDiv.style.padding = '16px 24px 8px 24px';
+    statsDiv.innerHTML = `<span style="color:#444;">Played: ${stats.played} / ${stats.total} (${stats.percent}%)</span><button id="eraseGameHistoryBtn" class="btn" style="margin-left:16px;">Erase History</button>`;
+    content.appendChild(statsDiv);
+
+    // Category and prompt list
+    const played = getPlayedGames();
+    const listDiv = document.createElement('div');
+    listDiv.style.padding = '0 24px 24px 24px';
+    Object.keys(window.gameData).forEach(category => {
+        const catTitle = document.createElement('div');
+        catTitle.style.fontWeight = 'bold';
+        catTitle.style.margin = '12px 0 4px 0';
+        catTitle.style.fontSize = '1.08rem';
+        catTitle.textContent = category;
+        listDiv.appendChild(catTitle);
+        Object.keys(window.gameData[category]).forEach(prompt => {
+            const playedThis = played[category] && played[category].includes(prompt);
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.gap = '8px';
+            row.style.fontSize = '0.97rem';
+            row.style.marginLeft = '18px';
+            row.innerHTML = playedThis ? '<span style="color:#22bb33;">✅</span>' : '<span style="color:#bbb;">⬜</span>';
+            row.innerHTML += `<span>${prompt}</span>`;
+            listDiv.appendChild(row);
+        });
+    });
+    content.appendChild(listDiv);
+
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    // Close modal
+    document.getElementById('gameHistoryModalClose').onclick = () => modal.remove();
+    // Erase history
+    document.getElementById('eraseGameHistoryBtn').onclick = () => {
+        localStorage.removeItem('playedGames');
+        modal.remove();
+        updateGameHistoryPercent();
+        alert('Game history erased!');
+    };
+}
+
+// --- Update percent on load and after game actions ---
+document.addEventListener('DOMContentLoaded', function() {
+    updateGameHistoryPercent();
+    // ... existing code ...
+    const gameHistoryManageBtn = document.getElementById('gameHistoryManageBtn');
+    if (gameHistoryManageBtn) {
+        gameHistoryManageBtn.addEventListener('click', function() {
+            showGameHistoryModal();
+        });
+    }
+});
+
+// --- Next Game Logic ---
+function nextGame() {
+    if (!currentGame || !gameData) return;
+    // Store the current game as played
+    storePlayedGame(currentGame.category, currentGame.prompt);
+    updateGameHistoryPercent();
+    // Find next unplayed prompt in the same category
+    const played = getPlayedGames();
+    const prompts = Object.keys(gameData[currentGame.category]);
+    const unplayed = prompts.filter(p => !(played[currentGame.category] || []).includes(p));
+    if (unplayed.length === 0) {
+        alert('All prompts in this category have been played! Starting over.');
+        // Optionally, clear played for this category
+        localStorage.setItem('playedGames', JSON.stringify({ ...played, [currentGame.category]: [] }));
+        startGame(currentGame.category);
+    } else {
+        // Pick a random unplayed prompt
+        const nextPrompt = unplayed[Math.floor(Math.random() * unplayed.length)];
+        const answers = gameData[currentGame.category][nextPrompt];
+        currentGame = {
+            category: currentGame.category,
+            prompt: nextPrompt,
+            answers: answers,
+            revealed: new Array(answers.length).fill(false),
+            guessed: new Set()
+        };
+        window.currentGame = currentGame;
+        revealedCount = 0;
+        score = 0;
+        renderGame();
+        document.getElementById('gameArea').style.display = 'block';
+        document.getElementById('searchInput').focus();
+    }
+}
+
+// --- Patch Give Up to store played game ---
+const originalGiveUp = giveUp;
+giveUp = function() {
+    if (currentGame) {
+        storePlayedGame(currentGame.category, currentGame.prompt);
+        updateGameHistoryPercent();
+    }
+    originalGiveUp();
+}
+
+// --- Next Game Button Event ---
+document.addEventListener('DOMContentLoaded', function() {
+    const nextGameBtn = document.getElementById('nextGameBtn');
+    if (nextGameBtn) {
+        nextGameBtn.addEventListener('click', nextGame);
+    }
+    // Stub for Game History Manage button
+    const gameHistoryManageBtn = document.getElementById('gameHistoryManageBtn');
+    if (gameHistoryManageBtn) {
+        gameHistoryManageBtn.addEventListener('click', function() {
+            showGameHistoryModal();
+        });
+    }
+});
