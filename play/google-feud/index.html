@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Feud</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="logo">
+        <span class="g1">G</span><span class="o1">o</span><span class="o2">o</span><span class="g2">g</span><span class="l">l</span><span class="e">e</span>
+        <span class="space"></span>
+        <span class="f">F</span><span class="e2">e</span><span class="u">u</span><span class="d">d</span>
+    </div>
+    
+    <div class="top-bar">
+        <div class="subtitle">How does Google <strong>autocomplete</strong> this search?</div>
+        <div class="category-selector">
+            <select id="categorySelect">
+                <option value="">Select a Category</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="game-container" id="gameArea" style="display: none;">
+        <div class="search-container">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <span class="search-prompt" id="searchPrompt"></span>
+                <input type="text" class="search-input" id="searchInput" placeholder="" />
+            </div>
+        </div>
+
+        <div class="suggestions-container" id="suggestionsList">
+        </div>
+
+        <div class="score-container">
+            <div class="score-display-bottom">
+                Score: <span id="scoreBottom">0</span>
+            </div>
+            <div class="buttons-container">
+                <!-- <button class="btn" onclick="newGame()">Guess</button> -->
+                <button class="btn" onclick="giveUp()">Give Up</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-icon" id="settingsIcon">
+        <span>⚙️</span>
+    </div>
+
+    <div id="sidepanel"></div>
+
+    <script src="script.js"></script>
+    <script src="sidepanel.js"></script>
+</body>
+</html>
