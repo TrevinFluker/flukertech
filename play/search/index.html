@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Autocomplete Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background-color: #f5f5f5;
+        }
+        .search-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #4285f4;
+            box-shadow: 0 0 0 2px rgba(66,133,244,0.2);
+        }
+        #suggestions {
+            margin-top: 10px;
+        }
+        .suggestion {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .suggestion:hover {
+            background-color: #f8f9fa;
+        }
+        .suggestion:last-child {
+            border-bottom: none;
+        }
+        .error {
+            color: #d93025;
+            padding: 12px;
+            background-color: #fce8e6;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .query-info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <h1>Google Autocomplete Tester</h1>
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Start typing to see suggestions...">
+        </div>
+        <div id="suggestions"></div>
+    </div>
+
+    <script src="search.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            const suggestionsDiv = document.getElementById('suggestions');
+            let debounceTimer;
+
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                const query = e.target.value.trim();
+                
+                if (query.length < 2) {
+                    suggestionsDiv.innerHTML = '';
+                    return;
+                }
+
+                debounceTimer = setTimeout(async () => {
+                    try {
+                        const result = await getGoogleSuggestions(query);
+                        
+                        let html = `
+                            <div class="query-info">
+                                Showing suggestions for: "${result.query}"
+                            </div>
+                        `;
+                        
+                        if (result.suggestions.length > 0) {
+                            result.suggestions.forEach(suggestion => {
+                                html += `<div class="suggestion">${suggestion}</div>`;
+                            });
+                        } else {
+                            html += '<div class="suggestion">No suggestions found</div>';
+                        }
+                        
+                        suggestionsDiv.innerHTML = html;
+                    } catch (error) {
+                        suggestionsDiv.innerHTML = `
+                            <div class="error">
+                                Error: ${error.message}
+                            </div>
+                        `;
+                    }
+                }, 300); // 300ms debounce
+            });
+        });
+    </script>
+</body>
+</html>

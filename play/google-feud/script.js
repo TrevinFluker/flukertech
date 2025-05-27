@@ -651,6 +651,7 @@ function showGameHistoryModal() {
     content.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)';
     content.style.width = '420px';
     content.style.maxWidth = '95vw';
+    content.style.height = '320px';
     content.style.maxHeight = '90vh';
     content.style.overflowY = 'auto';
     content.style.padding = '0';
@@ -696,8 +697,46 @@ function showGameHistoryModal() {
             row.style.gap = '8px';
             row.style.fontSize = '0.97rem';
             row.style.marginLeft = '18px';
-            row.innerHTML = playedThis ? '<span style="color:#22bb33;">✅</span>' : '<span style="color:#bbb;">⬜</span>';
-            row.innerHTML += `<span>${prompt}</span>`;
+            row.style.justifyContent = 'space-between';
+            
+            const leftContent = document.createElement('div');
+            leftContent.style.display = 'flex';
+            leftContent.style.alignItems = 'center';
+            leftContent.style.gap = '8px';
+            leftContent.innerHTML = playedThis ? '<span style="color:#22bb33;">✅</span>' : '<span style="color:#bbb;">⬜</span>';
+            leftContent.innerHTML += `<span>${prompt}</span>`;
+            
+            row.appendChild(leftContent);
+            
+            // Only add play button for unplayed games
+            if (!playedThis) {
+                const playButton = document.createElement('button');
+                playButton.className = 'btn';
+                playButton.style.padding = '4px 12px';
+                playButton.style.fontSize = '0.9rem';
+                playButton.textContent = 'Play';
+                playButton.onclick = () => {
+                    modal.remove();
+                    startGame(category);
+                    // Find and select the prompt in the game data
+                    const answers = window.gameData[category][prompt];
+                    currentGame = {
+                        category: category,
+                        prompt: prompt,
+                        answers: answers,
+                        revealed: new Array(answers.length).fill(false),
+                        guessed: new Set()
+                    };
+                    window.currentGame = currentGame;
+                    revealedCount = 0;
+                    score = 0;
+                    renderGame();
+                    document.getElementById('gameArea').style.display = 'block';
+                    document.getElementById('searchInput').focus();
+                };
+                row.appendChild(playButton);
+            }
+            
             listDiv.appendChild(row);
         });
     });
@@ -724,6 +763,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const gameHistoryManageBtn = document.getElementById('gameHistoryManageBtn');
     if (gameHistoryManageBtn) {
         gameHistoryManageBtn.addEventListener('click', function() {
+            showGameHistoryModal();
+        });
+    }
+    const chooseGameBtn = document.getElementById('chooseGameBtn');
+    if (chooseGameBtn) {
+        chooseGameBtn.addEventListener('click', function() {
             showGameHistoryModal();
         });
     }
@@ -785,6 +830,184 @@ document.addEventListener('DOMContentLoaded', function() {
     if (gameHistoryManageBtn) {
         gameHistoryManageBtn.addEventListener('click', function() {
             showGameHistoryModal();
+        });
+    }
+});
+
+// --- Leaderboard Storage ---
+function updateLeaderboard(username, photoUrl, points) {
+    let leaderboard = [];
+    try {
+        leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+    } catch (e) { leaderboard = []; }
+    // Find user
+    let user = leaderboard.find(u => u.username === username);
+    if (user) {
+        user.points += points;
+        user.photoUrl = photoUrl; // Update photo in case it changed
+    } else {
+        leaderboard.push({ username, photoUrl, points });
+    }
+    localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+}
+
+// --- Leaderboard Modal ---
+function showLeaderboardModal(showRemoveButtons = false) {
+    // Remove existing modal if present
+    const oldModal = document.getElementById('leaderboardModal');
+    if (oldModal) oldModal.remove();
+
+    // Modal container
+    const modal = document.createElement('div');
+    modal.id = 'leaderboardModal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.35)';
+    modal.style.zIndex = '4000';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+
+    // Modal content
+    const content = document.createElement('div');
+    content.style.background = '#fff';
+    content.style.borderRadius = '12px';
+    content.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)';
+    content.style.width = '420px';
+    content.style.maxWidth = '95vw';
+    content.style.height = '542px';
+    content.style.maxHeight = '90vh';
+    content.style.overflowY = 'auto';
+    content.style.padding = '0';
+    content.style.display = 'flex';
+    content.style.flexDirection = 'column';
+
+    // Header
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.alignItems = 'center';
+    header.style.justifyContent = 'space-between';
+    header.style.padding = '18px 24px 12px 24px';
+    header.style.borderBottom = '1px solid #eee';
+    header.innerHTML = `<span style="font-size:1.3rem;font-weight:bold;color:#222;">Leaderboard</span><span style="font-size:2rem;cursor:pointer;color:#888;" id="leaderboardModalClose">&times;</span>`;
+    content.appendChild(header);
+
+    // Leaderboard list
+    let leaderboard = [];
+    try {
+        leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+    } catch (e) { leaderboard = []; }
+    // Sort based on context: points descending for viewing, alphabetical for management
+    if (showRemoveButtons) {
+        // Management mode: sort alphabetically by username
+        leaderboard.sort((a, b) => a.username.localeCompare(b.username));
+    } else {
+        // Viewing mode: sort by points descending
+        leaderboard.sort((a, b) => b.points - a.points);
+    }
+
+    const listDiv = document.createElement('div');
+    listDiv.style.padding = '0 24px 24px 24px';
+    leaderboard.forEach((user, idx) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '12px';
+        row.style.fontSize = '1.08rem';
+        row.style.margin = '10px 0';
+        row.innerHTML = `
+            <img src="${user.photoUrl}" alt="Profile" style="width:36px;height:36px;object-fit:cover;">
+            <span style="font-weight:bold;">${user.username}</span>
+            <span style="margin-left:auto;font-size:1.1rem;color:#22bb33;">${user.points.toLocaleString()} pts</span>
+        `;
+        
+        // Only add remove button if showRemoveButtons is true
+        if (showRemoveButtons) {
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn';
+            removeBtn.style.marginLeft = '10px';
+            removeBtn.style.fontSize = '0.9rem';
+            removeBtn.style.padding = '4px 8px';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = () => {
+                if (confirm(`Remove ${user.username} from leaderboard?`)) {
+                    leaderboard.splice(idx, 1);
+                    localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+                    modal.remove();
+                    showLeaderboardModal(true); // Keep showing remove buttons
+                }
+            };
+            row.appendChild(removeBtn);
+        }
+        listDiv.appendChild(row);
+    });
+    if (leaderboard.length === 0) {
+        listDiv.innerHTML = '<div style="color:#888;text-align:center;margin:24px 0;">No scores yet.</div>';
+    }
+    content.appendChild(listDiv);
+
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    // Close modal
+    document.getElementById('leaderboardModalClose').onclick = () => modal.remove();
+}
+
+// Patch checkGuess to update leaderboard after each correct guess
+const originalCheckGuess = checkGuess;
+checkGuess = function(guess, userInfo) {
+    if (!guess || !currentGame) return;
+    guess = guess.trim();
+    if (currentGame.guessed.has(guess.toLowerCase())) return;
+    // Save username and photo from localStorage if not provided
+    if (!userInfo) {
+        userInfo = {
+            username: localStorage.getItem('profileUsername') || 'Anonymous',
+            photoUrl: localStorage.getItem('profileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg'
+        };
+    }
+    // Find matches before calling originalCheckGuess
+    const answersForMatching = currentGame.answers.map((answer, index) => ({
+        answer: answer,
+        found: currentGame.revealed[index],
+        index: index
+    }));
+    const matches = checkGuessLogic(guess, answersForMatching);
+    matches.forEach(match => {
+        if (!currentGame.revealed[match.index]) {
+            const points = (10 - match.index) * 1000;
+            updateLeaderboard(userInfo.username, userInfo.photoUrl, points);
+        }
+    });
+    // Call original
+    originalCheckGuess.apply(this, arguments);
+}
+
+// Add event listener for leaderboard button
+
+document.addEventListener('DOMContentLoaded', function() {
+    const leaderboardBtn = document.getElementById('showLeaderboardBtn');
+    if (leaderboardBtn) {
+        leaderboardBtn.addEventListener('click', function() {
+            showLeaderboardModal(false); // Don't show remove buttons
+        });
+    }
+    const clearLeaderboardBtn = document.getElementById('clearLeaderboardBtn');
+    if (clearLeaderboardBtn) {
+        clearLeaderboardBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear the entire leaderboard?')) {
+                localStorage.removeItem('leaderboard');
+                alert('Leaderboard cleared!');
+            }
+        });
+    }
+    const removePlayerBtn = document.getElementById('removePlayerBtn');
+    if (removePlayerBtn) {
+        removePlayerBtn.addEventListener('click', function() {
+            showLeaderboardModal(true); // Show remove buttons
         });
     }
 });
