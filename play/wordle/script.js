@@ -68,7 +68,6 @@ let ttsGameplayIntervalId = null; // Store interval ID for gameplay announcement
 let availableVoices = []; // Store available voices
 
 // TikTok Integration Settings
-let tiktokConnected = false; // Whether TikTok integration is enabled
 let tiktokPlayMode = 'individual'; // 'individual' or 'group'
 let tiktokGroupStacks = {}; // Store group guesses from TikTok users
 
@@ -1914,28 +1913,17 @@ async function initializeTTSSettings() {
 
 // Initialize TikTok settings
 function initializeTikTokSettings() {
-    const tiktokConnectedCheckbox = document.getElementById('tiktok-connect');
     const tiktokPlayModeSelect = document.getElementById('tiktok-play-mode');
     
     // Load saved settings
-    const savedConnected = localStorage.getItem('wordleTiktokConnected');
     const savedPlayMode = localStorage.getItem('wordleTiktokPlayMode');
     
-    if (savedConnected !== null) {
-        tiktokConnected = savedConnected === 'true';
-        tiktokConnectedCheckbox.checked = tiktokConnected;
-    }
     if (savedPlayMode) {
         tiktokPlayMode = savedPlayMode;
         tiktokPlayModeSelect.value = tiktokPlayMode;
     }
     
     // Event listeners
-    tiktokConnectedCheckbox.addEventListener('change', () => {
-        tiktokConnected = tiktokConnectedCheckbox.checked;
-        localStorage.setItem('wordleTiktokConnected', tiktokConnected);
-    });
-    
     tiktokPlayModeSelect.addEventListener('change', () => {
         tiktokPlayMode = tiktokPlayModeSelect.value;
         localStorage.setItem('wordleTiktokPlayMode', tiktokPlayMode);
@@ -1944,24 +1932,17 @@ function initializeTikTokSettings() {
 
 // TikTok Integration Functions
 function handleRealComment(user) {
-    if (!tiktokConnected || isGameOver) return;
+    if (isGameOver) return;
     
-    // Extract potential word from comment
-    const comment = user.comment.toLowerCase().trim();
-    const words = comment.split(/\s+/);
+    // Extract the first word from comment and clean it
+    const comment = user.comment.trim();
+    const firstWord = comment.split(' ')[0]; // Take first word before any space
+    const cleanWord = firstWord.replace(/[^a-zA-Z]/g, '').toLowerCase(); // Remove non-alphabetic characters
     
-    // Look for a word that matches the current word length
-    let guessWord = null;
-    for (const word of words) {
-        // Remove non-alphabetic characters
-        const cleanWord = word.replace(/[^a-z]/g, '');
-        if (cleanWord.length === wordLength && /^[a-z]+$/.test(cleanWord)) {
-            guessWord = cleanWord;
-            break;
-        }
+    // Check if the cleaned word matches the current word length
+    if (cleanWord.length !== wordLength) {
+        return; // Invalid word length
     }
-    
-    if (!guessWord) return; // No valid word found
     
     // Create user object for tracking
     const tiktokUser = {
@@ -1969,15 +1950,15 @@ function handleRealComment(user) {
         photoUrl: user.photoUrl,
         gift_name: user.gift_name || '',
         comment: user.comment,
-        guessedWord: guessWord
+        guessedWord: cleanWord
     };
     
     if (tiktokPlayMode === 'individual') {
         // Individual mode: immediately process the guess
-        handleTikTokIndividualGuess(guessWord, tiktokUser);
+        handleTikTokIndividualGuess(cleanWord, tiktokUser);
     } else {
         // Group mode: add to stacks and process when threshold is reached
-        handleTikTokGroupGuess(guessWord, tiktokUser);
+        handleTikTokGroupGuess(cleanWord, tiktokUser);
     }
 }
 
