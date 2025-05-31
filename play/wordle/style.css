@@ -434,6 +434,48 @@ h1 {
     margin: 0;
 }
 
+.setting-input-wide {
+    background-color: #2a2a2c;
+    color: #ffffff;
+    border: 1px solid #3a3a3c;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+}
+
+.setting-input-wide:hover {
+    border-color: #4a4a4c;
+}
+
+.setting-input-wide:focus {
+    outline: none;
+    border-color: #538d4e;
+}
+
+.test-btn {
+    background-color: #b59f3b;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+    width: 100%;
+}
+
+.test-btn:hover {
+    background-color: #a08f35;
+}
+
+.test-btn:active {
+    transform: translateY(1px);
+}
+
 /* Profile Settings Styles */
 .profile-upload {
     flex-direction: column;
@@ -597,4 +639,286 @@ h1 {
 
 .bar-stack .bar-user-img + .bar-user-img {
     margin-top: 2px;
+}
+
+/* Winning Modal Styles */
+.winning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.winning-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.winning-modal {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.winning-overlay.show .winning-modal {
+    transform: scale(1);
+}
+
+.winning-title {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.winning-word {
+    font-size: 1.5em;
+    color: #fff;
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+/* Single Winner Styles */
+.single-winner {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+.winner-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    margin-bottom: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    object-fit: cover;
+}
+
+.winner-name {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Group Winners Styles */
+.group-winners {
+    display: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.group-winner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 80px;
+}
+
+.group-winner-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    object-fit: cover;
+}
+
+.group-winner-name {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    word-break: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .winning-modal {
+        padding: 30px 20px;
+    }
+    
+    .winning-title {
+        font-size: 2em;
+    }
+    
+    .winner-photo {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .group-winner-photo {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .group-winners {
+        gap: 12px;
+    }
+    
+    .group-winner {
+        padding: 10px;
+        min-width: 70px;
+    }
+    
+    .group-winner-name {
+        font-size: 0.8em;
+    }
+}
+
+.setting-textarea {
+    background-color: #2a2a2c;
+    color: #ffffff;
+    border: 1px solid #3a3a3c;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.setting-textarea:hover {
+    border-color: #4a4a4c;
+}
+
+.setting-textarea:focus {
+    outline: none;
+    border-color: #538d4e;
+}
+
+/* Instruction Popup Styles */
+.instruction-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 350px;
+    z-index: 999;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity: 0;
+}
+
+.instruction-popup.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+.instruction-popup.slide-out {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+}
+
+.instruction-popup-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.instruction-popup-text {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.instruction-popup-gif {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Info Button Styles */
+.info-toggle {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #1c1c1c;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    z-index: 998;
+}
+
+.info-toggle:hover {
+    background-color: #2a2a2c;
+    transform: scale(1.1);
+}
+
+.info-toggle svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Responsive adjustments for instruction popup */
+@media (max-width: 600px) {
+    .instruction-popup {
+        width: calc(100vw - 40px);
+        max-width: 350px;
+    }
+    
+    .instruction-popup.show {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    
+    .instruction-popup.slide-out {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+    }
+    
+    .instruction-popup-content {
+        padding: 15px;
+    }
+    
+    .instruction-popup-text {
+        font-size: 14px;
+    }
+    
+    .info-toggle {
+        top: 70px;
+        right: 15px;
+    }
 }

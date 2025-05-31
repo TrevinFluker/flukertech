@@ -12,6 +12,9 @@ const wordLists = {
 
 // Map for auto board widths
 const autoBoardWidths = {
+    4: 350,
+    5: 350,
+    6: 350,
     7: 410,
     8: 460,
     9: 500,
@@ -37,6 +40,16 @@ let lastBarOrder = [];
 let lastBarRects = {};
 let requiredGuesses = 5; // Default value for required agreed guesses
 let stackHeight = 220; // Default stack height in pixels
+let playingUsers = [];
+let currentGuessingUser = null; // Track the current user making a guess
+let singlePlayerGuessCount = 0; // Track guesses in single player simulation
+let groupModeGuessCount = 0; // Track guesses in group mode
+let winningSoundUrl = 'https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-epic-stock-media/esm_chill_victory_sound_fx_arcade_synth_musical_chord_bling_electronic_casino_kids_mobile_positive_achievement_score.mp3'; // URL for winning sound
+let winningModalDuration = 5; // Duration in seconds for winning modal
+let instructionPopupActive = true; // Whether to show instruction popup at round start
+let instructionPopupDuration = 3; // Duration in seconds for instruction popup
+let instructionPopupText = 'Guess the word to win!\nThis is wordle with endless guesses.\nThere are single player and group modes.'; // Instruction text
+let instructionPopupGif = 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHBlcWdrYjFvYW1hZWt3ZGg2eGw1YWlmZm80NHZ4ZWZ4OHpub3RxdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/62HRHz7zZZYThhTwEI/giphy.gif'; // URL for instruction GIF
 
 // DOM elements
 const board = document.getElementById('board');
@@ -47,6 +60,16 @@ const newGameBtn = document.getElementById('new-game-btn');
 function initializeGame() {
     // Clear the board
     board.innerHTML = '';
+    
+    // Clear the playing users array for the new game
+    playingUsers = [];
+    
+    // Clear the current guessing user
+    currentGuessingUser = null;
+    
+    // Reset guess counters
+    singlePlayerGuessCount = 0;
+    groupModeGuessCount = 0;
     
     // Update CSS variables
     document.documentElement.style.setProperty('--word-length', wordLength);
@@ -79,6 +102,13 @@ function initializeGame() {
     targetWord = wordLists[wordLength][Math.floor(Math.random() * wordLists[wordLength].length)];
     console.log('Target word:', targetWord); // For debugging
     
+    // Show instruction popup if enabled
+    if (instructionPopupActive) {
+        setTimeout(() => {
+            showInstructionPopup();
+        }, 500); // Small delay to let the game board render
+    }
+    
     // Reset keyboard colors
     document.querySelectorAll('.key').forEach(key => {
         key.className = 'key';
@@ -110,6 +140,10 @@ function addLetter(letter) {
             // Show profile image when first letter is added
             if (currentTile === 0) {
                 const row = document.querySelector(`.row[data-row="${currentRow}"]`);
+                // Get the correct user image
+                const userImage = getUserProfileImage(currentGuessingUser ? currentGuessingUser.username : null);
+                // Ensure the profile image tile exists with the correct image
+                ensureProfileImageTile(row, userImage);
                 const imgTile = row.querySelector('.profile-img-tile');
                 const img = imgTile ? imgTile.querySelector('.profile-img-in-tile') : null;
                 if (img) {
@@ -166,7 +200,11 @@ function submitGuess() {
     if (!currentRowElement) return;
 
     for (let i = 0; i < wordLength; i++) {
-        const tile = currentRowElement.children[i];
+        // Account for profile image tile - if present, skip it
+        const hasProfileTile = currentRowElement.firstChild && currentRowElement.firstChild.classList.contains('profile-img-tile');
+        const tileIndex = hasProfileTile ? i + 1 : i;
+        const tile = currentRowElement.children[tileIndex];
+        
         if (!tile || !tile.textContent) {
             showMessage("Invalid guess");
             shakeRow(currentRow);
@@ -191,6 +229,7 @@ function submitGuess() {
         }
         showMessage("Wonderful!");
         isGameOver = true;
+        showWinningModal(targetWord);
     } else {
         // Move to the next row
         if (guessFlow === 'down') {
@@ -231,9 +270,16 @@ function moveToAnswerRow() {
     const answerRowIndex = guessFlow === 'up' ? 0 : maxRows;
     const answerRow = document.querySelector(`.row[data-row="${answerRowIndex}"]`);
     const currentRowElement = document.querySelector(`.row[data-row="${currentRow}"]`);
+    
     for (let i = 0; i < wordLength; i++) {
-        const currentTile = currentRowElement.children[i];
+        // Account for profile image tile in current row - if present, skip it
+        const hasProfileTile = currentRowElement.firstChild && currentRowElement.firstChild.classList.contains('profile-img-tile');
+        const currentTileIndex = hasProfileTile ? i + 1 : i;
+        const currentTile = currentRowElement.children[currentTileIndex];
+        
+        // Answer row doesn't have profile tiles, so use direct index
         const answerTile = answerRow.children[i];
+        
         answerTile.textContent = currentTile.textContent;
         answerTile.className = currentTile.className;
         answerTile.classList.add('fade-in');
@@ -309,7 +355,11 @@ function animateResults(result) {
     if (!currentRowElement) return;
 
     for (let i = 0; i < wordLength; i++) {
-        const tile = currentRowElement.children[i];
+        // Account for profile image tile - if present, skip it
+        const hasProfileTile = currentRowElement.firstChild && currentRowElement.firstChild.classList.contains('profile-img-tile');
+        const tileIndex = hasProfileTile ? i + 1 : i;
+        const tile = currentRowElement.children[tileIndex];
+        
         if (!tile) continue;
 
         const letter = tile.textContent.toLowerCase();
@@ -353,6 +403,23 @@ function shakeRow(row) {
 
 // Event listeners
 document.addEventListener('keydown', (e) => {
+    // Check if settings panel is open
+    const settingsPanel = document.getElementById('settings-panel');
+    if (settingsPanel && settingsPanel.classList.contains('open')) {
+        return; // Don't process game keys when settings panel is open
+    }
+    
+    // Check if any input field is focused
+    const activeElement = document.activeElement;
+    if (activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' || 
+        activeElement.tagName === 'SELECT' ||
+        activeElement.isContentEditable
+    )) {
+        return; // Don't process game keys when input fields are focused
+    }
+    
     const key = e.key.toLowerCase();
     if (key === 'enter' || key === 'backspace' || /^[a-z]$/.test(key)) {
         handleKeyPress(key);
@@ -367,6 +434,30 @@ document.querySelectorAll('.key').forEach(key => {
 });
 
 newGameBtn.addEventListener('click', initializeGame);
+
+// Add event listener for winning modal
+document.addEventListener('click', (e) => {
+    const overlay = document.getElementById('winning-overlay');
+    if (overlay && e.target === overlay) {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+            initializeGame();
+        }, 300);
+    }
+});
+
+// Add escape key listener for winning modal
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const overlay = document.getElementById('winning-overlay');
+        if (overlay && overlay.classList.contains('show')) {
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                initializeGame();
+            }, 300);
+        }
+    }
+});
 
 // Initialize the game when the page loads
 initializeGame();
@@ -556,6 +647,12 @@ function initializeSettingsPanel() {
     // Initialize profile settings
     initializeProfileSettings();
 
+    // Initialize winning popup settings
+    initializeWinningPopupSettings();
+
+    // Initialize instruction popup settings
+    initializeInstructionPopupSettings();
+
     // After other settings panel logic:
     const simulateGuessesCheckbox = document.getElementById('simulate-guesses');
     if (simulateGuessesCheckbox) {
@@ -647,10 +744,17 @@ function initializeProfileSettings() {
     });
 }
 
+//How profile image tile is added to the row
 function ensureProfileImageTile(row, imgSrc) {
     if (!row) return;
-    // If the first child is already a profile image tile, do nothing
-    if (row.firstChild && row.firstChild.classList.contains('profile-img-tile')) return;
+    // If the first child is already a profile image tile, update the image source
+    if (row.firstChild && row.firstChild.classList.contains('profile-img-tile')) {
+        const existingImg = row.firstChild.querySelector('.profile-img-in-tile');
+        if (existingImg) {
+            existingImg.src = imgSrc;
+        }
+        return;
+    }
     // Otherwise, insert a new profile image tile at the start
     const imgTile = document.createElement('div');
     imgTile.className = 'tile profile-img-tile';
@@ -662,6 +766,7 @@ function ensureProfileImageTile(row, imgSrc) {
     row.insertBefore(imgTile, row.firstChild);
 }
 
+//How profile image tile is removed from the row
 function removeProfileImageTile(row) {
     if (!row) return;
     if (row.firstChild && row.firstChild.classList.contains('profile-img-tile')) {
@@ -669,13 +774,15 @@ function removeProfileImageTile(row) {
     }
 }
 
+//How profile image tile is added to the row
 function addProfileImageToRow(rowIndex) {
     const row = document.querySelector(`.row[data-row="${rowIndex}"]`);
-    // Use the current profile image at the time of guess
-    const savedProfile = localStorage.getItem('wordleProfileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
-    ensureProfileImageTile(row, savedProfile);
+    // Use the current guessing user's image, or fallback to logged-in user's image
+    const userImage = getUserProfileImage(currentGuessingUser ? currentGuessingUser.username : null);
+    ensureProfileImageTile(row, userImage);
 }
 
+//How rows are moved during gameplay if flow is up
 function shiftRowsDownUpFlowV2() {
     for (let i = maxRows; i > 1; i--) {
         const aboveRow = document.querySelector(`.row[data-row="${i - 1}"]`);
@@ -717,6 +824,7 @@ function shiftRowsDownUpFlowV2() {
     }
 }
 
+//How rows are moved during gameplay if flow is down
 function shiftRowsDown() {
     const topRow = document.querySelector(`.row[data-row="0"]`);
     if (!topRow) return;
@@ -764,15 +872,19 @@ function shiftRowsDown() {
     }, 150);
 }
 
+//How cog is set to active when simulate guesses is active
 function setCogSimulateActive() {
     const cog = document.getElementById('settings-toggle');
     if (cog) cog.classList.add('simulate-active');
 }
+
+//How cog is set to inactive when simulate guesses is inactive
 function unsetCogSimulateActive() {
     const cog = document.getElementById('settings-toggle');
     if (cog) cog.classList.remove('simulate-active');
 }
 
+//How simulate guesses is started
 function simulateGuessesStart() {
     if (simulateGuessesInterval) return;
     simulateGuessesActive = true;
@@ -781,10 +893,21 @@ function simulateGuessesStart() {
     setCogSimulateActive();
     simulateGuessesInterval = setInterval(() => {
         if (!simulateGuessesActive || isGameOver || simulateTyping) return;
-        // Pick a random word that is NOT the target word
-        const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
-        if (possibleWords.length === 0) return;
-        const guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+        
+        // Increment guess count
+        singlePlayerGuessCount++;
+        
+        let guessWord;
+        if (singlePlayerGuessCount >= 10) {
+            // After 10 guesses, always guess the winning word
+            guessWord = targetWord;
+        } else {
+            // Pick a random word that is NOT the target word
+            const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
+            if (possibleWords.length === 0) return;
+            guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+        }
+        
         // Simulate a random user
         const randomNumber = Math.floor(Math.random() * 1000);
         const user = {
@@ -810,10 +933,14 @@ function simulateGuessesStop() {
 
 function simulateAudienceTyping(word, user) {
     simulateTyping = true;
+    
+    // Store the user in the playingUsers array
+    playingUsers.push(user);
+    
+    // Set the current guessing user
+    currentGuessingUser = user;
+    
     let idx = 0;
-    // Save the current profile image for this guess
-    const originalProfile = localStorage.getItem('wordleProfileImage');
-    localStorage.setItem('wordleProfileImage', user.photoUrl);
 
     function typeNextLetter() {
         if (idx < word.length) {
@@ -826,13 +953,9 @@ function simulateAudienceTyping(word, user) {
             // Press enter
             const enterBtn = document.querySelector('.key[data-key="enter"]');
             if (enterBtn) enterBtn.click();
-            // Restore the original profile image for the next guess
+            // Clear the current guessing user after the guess is complete
             setTimeout(() => {
-                if (originalProfile) {
-                    localStorage.setItem('wordleProfileImage', originalProfile);
-                } else {
-                    localStorage.removeItem('wordleProfileImage');
-                }
+                currentGuessingUser = null;
                 simulateTyping = false;
             }, 100);
         }
@@ -870,6 +993,7 @@ function renderGroupGuessBarChart() {
         stackDiv.appendChild(label);
         // User images (stacked)
         users.forEach(user => {
+            //May need to change this for displaying winner's images #change
             const img = document.createElement('img');
             img.className = 'bar-user-img';
             img.src = user.photoUrl;
@@ -900,6 +1024,7 @@ function renderGroupGuessBarChart() {
     lastBarOrder = stacksArr.map(([word]) => word);
 }
 
+//How group guess bar is started
 function startGroupGuessBar() {
     groupGuessBarActive = true;
     groupGuessStacks = {};
@@ -916,10 +1041,21 @@ function startGroupGuessBar() {
     if (groupGuessInterval) clearInterval(groupGuessInterval);
     groupGuessInterval = setInterval(() => {
         if (!groupGuessBarActive || isGameOver) return;
-        // Pick a random word that is NOT the target word
-        const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
-        if (possibleWords.length === 0) return;
-        const guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+        
+        // Increment guess count
+        groupModeGuessCount++;
+        
+        let guessWord;
+        if (groupModeGuessCount >= 10) {
+            // After 10 guesses, only add guesses for the winning word
+            guessWord = targetWord;
+        } else {
+            // Pick a random word that is NOT the target word
+            const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
+            if (possibleWords.length === 0) return;
+            guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+        }
+        
         // Simulate a random user
         const randomNumber = Math.floor(Math.random() * 1000);
         const user = {
@@ -930,11 +1066,16 @@ function startGroupGuessBar() {
         };
         // Add to stack
         if (!groupGuessStacks[guessWord]) groupGuessStacks[guessWord] = [];
+        // Users are stored here, but need to be saved and referenced for entire game. #change
         groupGuessStacks[guessWord].push(user);
+        
+        // Store the user in the playingUsers array for the entire game
+        playingUsers.push(user);
+        
         // If stack reaches required number, enter the word and remove the stack
         if (groupGuessStacks[guessWord].length >= requiredGuesses) {
             // Use the top photo (last user added)
-            enterGroupGuessWord(guessWord, groupGuessStacks[guessWord][groupGuessStacks[guessWord].length - 1]);
+            simulateGroupAudienceTyping(guessWord, groupGuessStacks[guessWord][groupGuessStacks[guessWord].length - 1]);
             delete groupGuessStacks[guessWord];
         }
         // Only keep 7 stacks
@@ -964,12 +1105,16 @@ function stopGroupGuessBar() {
     groupGuessStacks = {};
 }
 
-function enterGroupGuessWord(word, user) {
+//How group guess word is entered
+function simulateGroupAudienceTyping(word, user) {
     // Use the same logic as simulateAudienceTyping, but with the top user's image
     simulateTyping = true;
+    
+    // Set the current guessing user
+    currentGuessingUser = user;
+    
     let idx = 0;
-    const originalProfile = localStorage.getItem('wordleProfileImage');
-    localStorage.setItem('wordleProfileImage', user.photoUrl);
+    
     function typeNextLetter() {
         if (idx < word.length) {
             const letter = word[idx];
@@ -981,14 +1126,378 @@ function enterGroupGuessWord(word, user) {
             const enterBtn = document.querySelector('.key[data-key="enter"]');
             if (enterBtn) enterBtn.click();
             setTimeout(() => {
-                if (originalProfile) {
-                    localStorage.setItem('wordleProfileImage', originalProfile);
-                } else {
-                    localStorage.removeItem('wordleProfileImage');
-                }
+                currentGuessingUser = null;
                 simulateTyping = false;
             }, 100);
         }
     }
     typeNextLetter();
 }
+
+// Helper function to get user profile image by username
+function getUserProfileImage(username) {
+    if (!username) {
+        // No username provided, use logged-in user's image from localStorage
+        return localStorage.getItem('wordleProfileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
+    }
+    
+    // Find user in playingUsers array
+    const user = playingUsers.find(u => u.username === username);
+    if (user && user.photoUrl) {
+        return user.photoUrl;
+    }
+    
+    // Fallback to logged-in user's image from localStorage
+    return localStorage.getItem('wordleProfileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
+}
+
+// Show winning modal when game ends
+function showWinningModal(winningWord) {
+    const overlay = document.getElementById('winning-overlay');
+    const title = document.getElementById('winning-title');
+    const wordDisplay = document.getElementById('winning-word');
+    const singleWinner = document.getElementById('single-winner');
+    const groupWinners = document.getElementById('group-winners');
+    
+    if (!overlay) return;
+    
+    // Play winning sound if configured
+    if (winningSoundUrl) {
+        try {
+            const audio = new Audio(winningSoundUrl);
+            audio.volume = 0.5; // Set volume to 50%
+            audio.play().catch(error => {
+                console.log("Could not play winning sound:", error);
+            });
+            
+            // Stop the sound when modal duration ends
+            setTimeout(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }, winningModalDuration * 1000);
+        } catch (error) {
+            console.log("Invalid winning sound URL:", error);
+        }
+    }
+    
+    // Check if we're in group mode
+    const isGroupMode = document.getElementById('group-guess-bar-chart').style.display !== 'none';
+    
+    if (isGroupMode) {
+        // Group mode: Show all users who guessed the winning word
+        showGroupWinners(winningWord, title, wordDisplay, singleWinner, groupWinners);
+    } else {
+        // Single player mode: Show the winner
+        showSingleWinner(winningWord, title, wordDisplay, singleWinner, groupWinners);
+    }
+    
+    // Show the overlay
+    overlay.classList.add('show');
+    
+    // Auto-hide after configured duration and start new game
+    setTimeout(() => {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+            initializeGame();
+        }, 300); // Wait for fade out
+    }, winningModalDuration * 1000);
+}
+
+function showSingleWinner(winningWord, title, wordDisplay, singleWinner, groupWinners) {
+    // Find the winner from playingUsers or use logged-in user
+    let winner = null;
+    
+    if (currentGuessingUser) {
+        // If there's a current guessing user (simulated), use them
+        winner = currentGuessingUser;
+    } else if (playingUsers.length > 0) {
+        // Use the last user who made a guess
+        winner = playingUsers[playingUsers.length - 1];
+    } else {
+        // Manual guess by logged-in user
+        winner = {
+            username: 'Player',
+            photoUrl: localStorage.getItem('wordleProfileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg'
+        };
+    }
+    
+    // Configure for single winner
+    title.textContent = `${winner.username} Wins!`;
+    wordDisplay.textContent = `The winning word was "${winningWord.toUpperCase()}"`;
+    
+    // Show single winner, hide group winners
+    singleWinner.style.display = 'flex';
+    groupWinners.style.display = 'none';
+    
+    // Set winner details
+    const winnerPhoto = document.getElementById('winner-photo');
+    const winnerName = document.getElementById('winner-name');
+    
+    if (winnerPhoto && winnerName) {
+        winnerPhoto.src = winner.photoUrl;
+        winnerPhoto.alt = winner.username;
+        winnerName.textContent = winner.username;
+    }
+}
+
+function showGroupWinners(winningWord, title, wordDisplay, singleWinner, groupWinners) {
+    // Find all users who actually guessed the winning word from playingUsers array
+    const usersWhoGuessedWinningWord = playingUsers.filter(user => {
+        // Check if this user guessed the winning word
+        // This could be tracked through user activity or we can check if they were part of the winning word stack
+        return user.guessedWord === winningWord || 
+               (groupGuessStacks[winningWord] && groupGuessStacks[winningWord].some(u => u.username === user.username));
+    });
+    
+    // If no specific users found who guessed the winning word, fall back to recent users
+    const candidateUsers = usersWhoGuessedWinningWord.length > 0 ? usersWhoGuessedWinningWord : playingUsers;
+    
+    // Get distinct usernames in reverse order (most recent first)
+    const seenUsernames = new Set();
+    const distinctRecentUsers = [];
+    
+    // Iterate backwards through the array to get most recent distinct users
+    for (let i = candidateUsers.length - 1; i >= 0 && distinctRecentUsers.length < requiredGuesses; i--) {
+        const user = candidateUsers[i];
+        if (!seenUsernames.has(user.username)) {
+            seenUsernames.add(user.username);
+            distinctRecentUsers.unshift(user); // Add to beginning to maintain chronological order
+        }
+    }
+    
+    const winners = distinctRecentUsers;
+    
+    // Configure for group winners
+    title.textContent = 'Group Victory!';
+    wordDisplay.textContent = `The winning word was "${winningWord.toUpperCase()}"`;
+    
+    // Hide single winner, show group winners
+    singleWinner.style.display = 'none';
+    groupWinners.style.display = 'flex';
+    
+    // Clear and populate group winners
+    groupWinners.innerHTML = '';
+    
+    // Always show winners since we're guaranteed to have them
+    winners.forEach(user => {
+        const winnerDiv = document.createElement('div');
+        winnerDiv.className = 'group-winner';
+        
+        const photoDiv = document.createElement('img');
+        photoDiv.className = 'group-winner-photo';
+        photoDiv.src = user.photoUrl || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
+        photoDiv.alt = user.username;
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'group-winner-name';
+        nameDiv.textContent = user.username;
+        
+        winnerDiv.appendChild(photoDiv);
+        winnerDiv.appendChild(nameDiv);
+        groupWinners.appendChild(winnerDiv);
+    });
+}
+
+// Initialize winning popup settings
+function initializeWinningPopupSettings() {
+    const soundUrlInput = document.getElementById('winning-sound-url');
+    const durationInput = document.getElementById('winning-modal-duration');
+    const decreaseDurationBtn = document.getElementById('decrease-duration');
+    const increaseDurationBtn = document.getElementById('increase-duration');
+    const testButton = document.getElementById('test-winning-sound');
+
+    // Load saved winning sound URL and duration if they exist
+    const savedSoundUrl = localStorage.getItem('wordleWinningSoundUrl');
+    const savedDuration = localStorage.getItem('wordleWinningDuration');
+    if (savedSoundUrl) {
+        winningSoundUrl = savedSoundUrl;
+        soundUrlInput.value = savedSoundUrl;
+    }
+    if (savedDuration) {
+        winningModalDuration = parseInt(savedDuration);
+        durationInput.value = savedDuration;
+    }
+
+    // Handle sound URL change
+    soundUrlInput.addEventListener('change', () => {
+        winningSoundUrl = soundUrlInput.value;
+        localStorage.setItem('wordleWinningSoundUrl', winningSoundUrl);
+    });
+
+    // Handle duration changes
+    function updateDuration(newDuration) {
+        if (newDuration >= 1 && newDuration <= 10) {
+            winningModalDuration = newDuration;
+            durationInput.value = newDuration;
+            localStorage.setItem('wordleWinningDuration', newDuration);
+        }
+    }
+
+    durationInput.addEventListener('change', () => {
+        const newDuration = parseInt(durationInput.value);
+        updateDuration(newDuration);
+    });
+
+    decreaseDurationBtn.addEventListener('click', () => {
+        const newDuration = parseInt(durationInput.value) - 1;
+        updateDuration(newDuration);
+    });
+
+    increaseDurationBtn.addEventListener('click', () => {
+        const newDuration = parseInt(durationInput.value) + 1;
+        updateDuration(newDuration);
+    });
+
+    // Handle test button click
+    testButton.addEventListener('click', () => {
+        testWinningSound(winningSoundUrl, winningModalDuration);
+    });
+}
+
+// Test winning sound
+function testWinningSound(soundUrl, duration) {
+    if (!soundUrl) {
+        showMessage("Please enter a sound URL first");
+        return;
+    }
+    
+    try {
+        const audio = new Audio(soundUrl);
+        audio.volume = 0.5; // Set volume to 50%
+        audio.play().catch(error => {
+            showMessage("Error playing sound: " + error.message);
+        });
+        
+        // Stop the sound after the specified duration
+        setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0;
+        }, duration * 1000);
+        
+        showMessage(`Testing sound for ${duration} seconds...`);
+    } catch (error) {
+        showMessage("Invalid sound URL");
+    }
+}
+
+// Initialize instruction popup settings
+function initializeInstructionPopupSettings() {
+    const activeCheckbox = document.getElementById('instruction-popup-active');
+    const textArea = document.getElementById('instruction-popup-text');
+    const gifInput = document.getElementById('instruction-popup-gif');
+    const durationInput = document.getElementById('instruction-popup-duration');
+    const decreaseDurationBtn = document.getElementById('decrease-instruction-duration');
+    const increaseDurationBtn = document.getElementById('increase-instruction-duration');
+    const testButton = document.getElementById('test-instruction-popup');
+
+    // Load saved settings
+    const savedActive = localStorage.getItem('wordleInstructionPopupActive');
+    const savedText = localStorage.getItem('wordleInstructionPopupText');
+    const savedGif = localStorage.getItem('wordleInstructionPopupGif');
+    const savedDuration = localStorage.getItem('wordleInstructionPopupDuration');
+    
+    if (savedActive !== null) {
+        instructionPopupActive = savedActive === 'true';
+    } else {
+        // Default to true if no saved setting exists and save it
+        instructionPopupActive = true;
+        localStorage.setItem('wordleInstructionPopupActive', 'true');
+    }
+    activeCheckbox.checked = instructionPopupActive;
+    
+    if (savedText) {
+        instructionPopupText = savedText;
+        textArea.value = savedText;
+    }
+    if (savedGif) {
+        instructionPopupGif = savedGif;
+        gifInput.value = savedGif;
+    }
+    if (savedDuration) {
+        instructionPopupDuration = parseInt(savedDuration);
+        durationInput.value = savedDuration;
+    }
+
+    // Handle active checkbox change
+    activeCheckbox.addEventListener('change', () => {
+        instructionPopupActive = activeCheckbox.checked;
+        localStorage.setItem('wordleInstructionPopupActive', instructionPopupActive);
+    });
+
+    // Handle text change
+    textArea.addEventListener('change', () => {
+        instructionPopupText = textArea.value;
+        localStorage.setItem('wordleInstructionPopupText', instructionPopupText);
+    });
+
+    // Handle GIF change
+    gifInput.addEventListener('change', () => {
+        instructionPopupGif = gifInput.value;
+        localStorage.setItem('wordleInstructionPopupGif', instructionPopupGif);
+    });
+
+    // Handle duration changes
+    function updateDuration(newDuration) {
+        if (newDuration >= 1 && newDuration <= 10) {
+            instructionPopupDuration = newDuration;
+            durationInput.value = instructionPopupDuration;
+            localStorage.setItem('wordleInstructionPopupDuration', instructionPopupDuration);
+        }
+    }
+
+    durationInput.addEventListener('change', () => {
+        const newDuration = parseInt(durationInput.value);
+        updateDuration(newDuration);
+    });
+
+    decreaseDurationBtn.addEventListener('click', () => {
+        const newDuration = parseInt(durationInput.value) - 1;
+        updateDuration(newDuration);
+    });
+
+    increaseDurationBtn.addEventListener('click', () => {
+        const newDuration = parseInt(durationInput.value) + 1;
+        updateDuration(newDuration);
+    });
+
+    // Handle test button click
+    testButton.addEventListener('click', () => {
+        showInstructionPopup();
+    });
+}
+
+// Show instruction popup
+function showInstructionPopup() {
+    const popup = document.getElementById('instruction-popup');
+    const textDisplay = document.getElementById('instruction-popup-text-display');
+    const gifDisplay = document.getElementById('instruction-popup-gif-display');
+    
+    // Set the text content with new line support
+    textDisplay.innerHTML = instructionPopupText.replace(/\n/g, '<br>');
+    
+    // Handle GIF display
+    if (instructionPopupGif && instructionPopupGif.trim() !== '') {
+        gifDisplay.src = instructionPopupGif;
+        gifDisplay.style.display = 'block';
+    } else {
+        gifDisplay.style.display = 'none';
+    }
+    
+    // Show the popup with slide-in animation
+    popup.classList.add('show');
+    
+    // Auto-hide after the specified duration
+    setTimeout(() => {
+        popup.classList.remove('show');
+    }, instructionPopupDuration * 1000);
+}
+
+// Initialize info button
+document.addEventListener('DOMContentLoaded', () => {
+    const infoButton = document.getElementById('info-toggle');
+    if (infoButton) {
+        infoButton.addEventListener('click', () => {
+            showInstructionPopup();
+        });
+    }
+});

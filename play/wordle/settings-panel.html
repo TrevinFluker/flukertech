@@ -111,17 +111,55 @@
             <span class="arrow">▼</span>
         </div>
         <div class="settings-section-content">
-            <!-- Settings will be added here -->
+            <div class="setting-item">
+                <label for="winning-sound-url">Winning Sound URL:</label>
+                <input type="url" id="winning-sound-url" class="setting-input-wide" placeholder="https://example.com/sound.mp3" value="https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-epic-stock-media/esm_chill_victory_sound_fx_arcade_synth_musical_chord_bling_electronic_casino_kids_mobile_positive_achievement_score.mp3">
+            </div>
+            <div class="setting-item">
+                <label for="winning-modal-duration">Modal Duration (seconds):</label>
+                <div class="number-input-container">
+                    <button class="number-input-btn" id="decrease-duration">-</button>
+                    <input type="number" id="winning-modal-duration" class="setting-input" value="5" min="1" max="10">
+                    <button class="number-input-btn" id="increase-duration">+</button>
+                </div>
+            </div>
+            <div class="setting-item">
+                <button id="test-winning-sound" class="test-btn">Test Sound</button>
+            </div>
         </div>
     </div>
 
     <div class="settings-section">
         <div class="settings-section-header">
-            <h3>Ending Popup Settings</h3>
+            <h3>Instruction Popup Settings</h3>
             <span class="arrow">▼</span>
         </div>
         <div class="settings-section-content">
-            <!-- Settings will be added here -->
+            <div class="setting-item">
+                <label for="instruction-popup-active">Show at Round Start:</label>
+                <input type="checkbox" id="instruction-popup-active" class="setting-checkbox" checked>
+            </div>
+            <div class="setting-item">
+                <label for="instruction-popup-duration">Display Duration (seconds):</label>
+                <div class="number-input-container">
+                    <button class="number-input-btn" id="decrease-instruction-duration">-</button>
+                    <input type="number" id="instruction-popup-duration" class="setting-input" value="3" min="1" max="10">
+                    <button class="number-input-btn" id="increase-instruction-duration">+</button>
+                </div>
+            </div>
+            <div class="setting-item">
+                <label for="instruction-popup-text">Instruction Text:</label>
+                <textarea id="instruction-popup-text" class="setting-textarea" placeholder="Enter your instruction text here..." rows="3">Guess the word to win!
+This is wordle with endless guesses.
+There are single player and group modes.</textarea>
+            </div>
+            <div class="setting-item">
+                <label for="instruction-popup-gif">GIF URL (optional):</label>
+                <input type="url" id="instruction-popup-gif" class="setting-input-wide" placeholder="https://example.com/instruction.gif" value="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHBlcWdrYjFvYW1hZWt3ZGg2eGw1YWlmZm80NHZ4ZWZ4OHpub3RxdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/62HRHz7zZZYThhTwEI/giphy.gif">
+            </div>
+            <div class="setting-item">
+                <button id="test-instruction-popup" class="test-btn">Test Popup</button>
+            </div>
         </div>
     </div>
 </div>
