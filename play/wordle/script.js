@@ -51,6 +51,22 @@ let instructionPopupDuration = 3; // Duration in seconds for instruction popup
 let instructionPopupText = 'Guess the word to win!\nThis is wordle with endless guesses.\nThere are single player and group modes.'; // Instruction text
 let instructionPopupGif = 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHBlcWdrYjFvYW1hZWt3ZGg2eGw1YWlmZm80NHZ4ZWZ4OHpub3RxdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/62HRHz7zZZYThhTwEI/giphy.gif'; // URL for instruction GIF
 
+// TTS Settings
+let ttsEnabled = false; // Whether TTS is enabled
+let ttsVoice = ''; // Selected voice name
+let ttsVolume = 50; // Volume (0-100)
+let ttsRate = 10; // Speech rate (5-12, where 10 = 1.0 rate)
+let ttsRoundStartEnabled = false; // Whether to announce round start
+let ttsRoundStartTexts = ['Welcome to Wordle! Let\'s begin.', 'New round starting! Good luck!', 'Time to guess the word!']; // Round start messages
+let ttsReadWords = false; // Whether to read every word entered
+let ttsGameWonEnabled = false; // Whether to announce game won
+let ttsGameWonTexts = ['Congratulations! You won!', 'Excellent work! Victory achieved!', 'Well done! You guessed it!']; // Game won messages
+let ttsGameplayEnabled = false; // Whether to announce during gameplay
+let ttsGameplayInterval = 30; // Interval in seconds for gameplay announcements
+let ttsGameplayTexts = ['Keep going! You can do it!', 'Think carefully about your next guess.', 'You\'re doing great!']; // Gameplay messages
+let ttsGameplayIntervalId = null; // Store interval ID for gameplay announcements
+let availableVoices = []; // Store available voices
+
 // DOM elements
 const board = document.getElementById('board');
 const messageDisplay = document.getElementById('message');
@@ -58,6 +74,9 @@ const newGameBtn = document.getElementById('new-game-btn');
 
 // Initialize the game
 function initializeGame() {
+    // Stop any ongoing TTS announcements
+    stopGameplayAnnouncements();
+    
     // Clear the board
     board.innerHTML = '';
     
@@ -108,6 +127,14 @@ function initializeGame() {
             showInstructionPopup();
         }, 500); // Small delay to let the game board render
     }
+    
+    // Start TTS round announcement and gameplay announcements
+    setTimeout(() => {
+        speakRoundStart();
+        if (ttsEnabled && ttsGameplayEnabled) {
+            startGameplayAnnouncements();
+        }
+    }, 1000); // Delay to let instruction popup show first
     
     // Reset keyboard colors
     document.querySelectorAll('.key').forEach(key => {
@@ -214,6 +241,9 @@ function submitGuess() {
         guess += tile.textContent.toLowerCase();
     }
     
+    // Speak the word if TTS is enabled for reading words
+    speakWord(guess);
+    
     // Check the guess against the target word
     const result = checkGuess(guess);
     
@@ -229,6 +259,13 @@ function submitGuess() {
         }
         showMessage("Wonderful!");
         isGameOver = true;
+        
+        // Stop gameplay announcements and speak victory message
+        stopGameplayAnnouncements();
+        setTimeout(() => {
+            speakGameWon();
+        }, 500); // Small delay after "Wonderful!" message
+        
         showWinningModal(targetWord);
     } else {
         // Move to the next row
@@ -652,6 +689,9 @@ function initializeSettingsPanel() {
 
     // Initialize instruction popup settings
     initializeInstructionPopupSettings();
+
+    // Initialize TTS settings
+    initializeTTSSettings();
 
     // After other settings panel logic:
     const simulateGuessesCheckbox = document.getElementById('simulate-guesses');
@@ -1415,7 +1455,7 @@ function initializeInstructionPopupSettings() {
     }
     if (savedDuration) {
         instructionPopupDuration = parseInt(savedDuration);
-        durationInput.value = savedDuration;
+        durationInput.value = instructionPopupDuration;
     }
 
     // Handle active checkbox change
@@ -1492,6 +1532,121 @@ function showInstructionPopup() {
     }, instructionPopupDuration * 1000);
 }
 
+// TTS Functions
+function loadAvailableVoices() {
+    return new Promise((resolve) => {
+        const voices = speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            availableVoices = voices;
+            resolve(voices);
+        } else {
+            // Some browsers load voices asynchronously
+            speechSynthesis.addEventListener('voiceschanged', () => {
+                availableVoices = speechSynthesis.getVoices();
+                resolve(availableVoices);
+            }, { once: true });
+        }
+    });
+}
+
+function populateVoiceDropdown() {
+    const voiceSelect = document.getElementById('tts-voice');
+    if (!voiceSelect) return;
+    
+    // Clear existing options except default
+    voiceSelect.innerHTML = '<option value="">Default Voice</option>';
+    
+    availableVoices.forEach((voice, index) => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        if (voice.default) {
+            option.textContent += ' - Default';
+        }
+        voiceSelect.appendChild(option);
+    });
+}
+
+function getRandomMessage(messages) {
+    if (!messages || messages.length === 0) return '';
+    return messages[Math.floor(Math.random() * messages.length)];
+}
+
+function speakText(text) {
+    if (!ttsEnabled || !text || text.trim() === '') return;
+    
+    // Cancel any ongoing speech
+    speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set voice if specified
+    if (ttsVoice) {
+        const selectedVoice = availableVoices.find(voice => voice.name === ttsVoice);
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+    }
+    
+    // Set volume (0-1)
+    utterance.volume = ttsVolume / 100;
+    
+    // Set rate (0.1-10, where 1 is normal)
+    utterance.rate = ttsRate / 10;
+    
+    // Speak the text
+    speechSynthesis.speak(utterance);
+}
+
+function speakRoundStart() {
+    if (!ttsRoundStartEnabled) return;
+    const message = getRandomMessage(ttsRoundStartTexts);
+    speakText(message);
+}
+
+function speakGameWon() {
+    if (!ttsGameWonEnabled) return;
+    const message = getRandomMessage(ttsGameWonTexts);
+    speakText(message);
+}
+
+function speakGameplay() {
+    if (!ttsGameplayEnabled) return;
+    const message = getRandomMessage(ttsGameplayTexts);
+    speakText(message);
+}
+
+function speakWord(word) {
+    if (!ttsReadWords || !word) return;
+    
+    // Check if speech synthesis is currently speaking
+    // If it is, don't interrupt with word reading
+    if (speechSynthesis.speaking) {
+        return;
+    }
+    
+    speakText(word);
+}
+
+function startGameplayAnnouncements() {
+    stopGameplayAnnouncements(); // Clear any existing interval
+    
+    if (!ttsGameplayEnabled || ttsGameplayInterval <= 0) return;
+    
+    ttsGameplayIntervalId = setInterval(() => {
+        if (!isGameOver && ttsGameplayEnabled) {
+            speakGameplay();
+        }
+    }, ttsGameplayInterval * 1000);
+}
+
+function stopGameplayAnnouncements() {
+    if (ttsGameplayIntervalId) {
+        clearInterval(ttsGameplayIntervalId);
+        ttsGameplayIntervalId = null;
+    }
+}
+
 // Initialize info button
 document.addEventListener('DOMContentLoaded', () => {
     const infoButton = document.getElementById('info-toggle');
@@ -1501,3 +1656,250 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Initialize TTS settings
+async function initializeTTSSettings() {
+    // Load available voices
+    await loadAvailableVoices();
+    populateVoiceDropdown();
+    
+    // Get all TTS elements
+    const ttsEnabledCheckbox = document.getElementById('tts-enabled');
+    const ttsVoiceSelect = document.getElementById('tts-voice');
+    const ttsVolumeInput = document.getElementById('tts-volume');
+    const decreaseVolumeBtn = document.getElementById('decrease-tts-volume');
+    const increaseVolumeBtn = document.getElementById('increase-tts-volume');
+    const ttsRateInput = document.getElementById('tts-rate');
+    const decreaseRateBtn = document.getElementById('decrease-tts-rate');
+    const increaseRateBtn = document.getElementById('increase-tts-rate');
+    
+    const ttsRoundStartEnabledCheckbox = document.getElementById('tts-round-start-enabled');
+    const ttsRoundStartTextsTextarea = document.getElementById('tts-round-start-texts');
+    
+    const ttsReadWordsCheckbox = document.getElementById('tts-read-words');
+    
+    const ttsGameWonEnabledCheckbox = document.getElementById('tts-game-won-enabled');
+    const ttsGameWonTextsTextarea = document.getElementById('tts-game-won-texts');
+    
+    const ttsGameplayEnabledCheckbox = document.getElementById('tts-gameplay-enabled');
+    const ttsGameplayIntervalInput = document.getElementById('tts-gameplay-interval');
+    const decreaseIntervalBtn = document.getElementById('decrease-tts-interval');
+    const increaseIntervalBtn = document.getElementById('increase-tts-interval');
+    const ttsGameplayTextsTextarea = document.getElementById('tts-gameplay-texts');
+    
+    const testTTSBtn = document.getElementById('test-tts');
+
+    // Load saved settings
+    const savedEnabled = localStorage.getItem('wordleTTSEnabled');
+    const savedVoice = localStorage.getItem('wordleTTSVoice');
+    const savedVolume = localStorage.getItem('wordleTTSVolume');
+    const savedRate = localStorage.getItem('wordleTTSRate');
+    const savedRoundStartEnabled = localStorage.getItem('wordleTTSRoundStartEnabled');
+    const savedRoundStartTexts = localStorage.getItem('wordleTTSRoundStartTexts');
+    const savedReadWords = localStorage.getItem('wordleTTSReadWords');
+    const savedGameWonEnabled = localStorage.getItem('wordleTTSGameWonEnabled');
+    const savedGameWonTexts = localStorage.getItem('wordleTTSGameWonTexts');
+    const savedGameplayEnabled = localStorage.getItem('wordleTTSGameplayEnabled');
+    const savedGameplayInterval = localStorage.getItem('wordleTTSGameplayInterval');
+    const savedGameplayTexts = localStorage.getItem('wordleTTSGameplayTexts');
+
+    // Apply saved settings
+    if (savedEnabled !== null) {
+        ttsEnabled = savedEnabled === 'true';
+        ttsEnabledCheckbox.checked = ttsEnabled;
+    }
+    if (savedVoice) {
+        ttsVoice = savedVoice;
+        ttsVoiceSelect.value = savedVoice;
+    }
+    if (savedVolume) {
+        ttsVolume = parseInt(savedVolume);
+        ttsVolumeInput.value = ttsVolume;
+    }
+    if (savedRate) {
+        ttsRate = parseInt(savedRate);
+        ttsRateInput.value = ttsRate;
+    }
+    if (savedRoundStartEnabled !== null) {
+        ttsRoundStartEnabled = savedRoundStartEnabled === 'true';
+        ttsRoundStartEnabledCheckbox.checked = ttsRoundStartEnabled;
+    }
+    if (savedRoundStartTexts) {
+        ttsRoundStartTexts = savedRoundStartTexts.split(';').filter(text => text.trim() !== '').map(text => text.trim());
+        ttsRoundStartTextsTextarea.value = savedRoundStartTexts;
+    }
+    if (savedReadWords !== null) {
+        ttsReadWords = savedReadWords === 'true';
+        ttsReadWordsCheckbox.checked = ttsReadWords;
+    }
+    if (savedGameWonEnabled !== null) {
+        ttsGameWonEnabled = savedGameWonEnabled === 'true';
+        ttsGameWonEnabledCheckbox.checked = ttsGameWonEnabled;
+    }
+    if (savedGameWonTexts) {
+        ttsGameWonTexts = savedGameWonTexts.split(';').filter(text => text.trim() !== '').map(text => text.trim());
+        ttsGameWonTextsTextarea.value = savedGameWonTexts;
+    }
+    if (savedGameplayEnabled !== null) {
+        ttsGameplayEnabled = savedGameplayEnabled === 'true';
+        ttsGameplayEnabledCheckbox.checked = ttsGameplayEnabled;
+    }
+    if (savedGameplayInterval) {
+        ttsGameplayInterval = parseInt(savedGameplayInterval);
+        ttsGameplayIntervalInput.value = ttsGameplayInterval;
+    }
+    if (savedGameplayTexts) {
+        ttsGameplayTexts = savedGameplayTexts.split(';').filter(text => text.trim() !== '').map(text => text.trim());
+        ttsGameplayTextsTextarea.value = savedGameplayTexts;
+    }
+
+    // Event listeners
+    ttsEnabledCheckbox.addEventListener('change', () => {
+        ttsEnabled = ttsEnabledCheckbox.checked;
+        localStorage.setItem('wordleTTSEnabled', ttsEnabled);
+        
+        // Stop gameplay announcements if TTS is disabled
+        if (!ttsEnabled) {
+            stopGameplayAnnouncements();
+        } else if (ttsGameplayEnabled && !isGameOver) {
+            startGameplayAnnouncements();
+        }
+    });
+
+    ttsVoiceSelect.addEventListener('change', () => {
+        ttsVoice = ttsVoiceSelect.value;
+        localStorage.setItem('wordleTTSVoice', ttsVoice);
+    });
+
+    // Volume controls
+    function updateVolume(newVolume) {
+        if (newVolume >= 0 && newVolume <= 100) {
+            ttsVolume = newVolume;
+            ttsVolumeInput.value = newVolume;
+            localStorage.setItem('wordleTTSVolume', newVolume);
+        }
+    }
+
+    ttsVolumeInput.addEventListener('change', () => {
+        const newVolume = parseInt(ttsVolumeInput.value);
+        updateVolume(newVolume);
+    });
+
+    decreaseVolumeBtn.addEventListener('click', () => {
+        const newVolume = parseInt(ttsVolumeInput.value) - 10;
+        updateVolume(newVolume);
+    });
+
+    increaseVolumeBtn.addEventListener('click', () => {
+        const newVolume = parseInt(ttsVolumeInput.value) + 10;
+        updateVolume(newVolume);
+    });
+
+    // Rate controls
+    function updateRate(newRate) {
+        if (newRate >= 5 && newRate <= 12) {
+            ttsRate = newRate;
+            ttsRateInput.value = newRate;
+            localStorage.setItem('wordleTTSRate', newRate);
+        }
+    }
+
+    ttsRateInput.addEventListener('change', () => {
+        const newRate = parseInt(ttsRateInput.value);
+        updateRate(newRate);
+    });
+
+    decreaseRateBtn.addEventListener('click', () => {
+        const newRate = parseInt(ttsRateInput.value) - 1;
+        updateRate(newRate);
+    });
+
+    increaseRateBtn.addEventListener('click', () => {
+        const newRate = parseInt(ttsRateInput.value) + 1;
+        updateRate(newRate);
+    });
+
+    // Round start settings
+    ttsRoundStartEnabledCheckbox.addEventListener('change', () => {
+        ttsRoundStartEnabled = ttsRoundStartEnabledCheckbox.checked;
+        localStorage.setItem('wordleTTSRoundStartEnabled', ttsRoundStartEnabled);
+    });
+
+    ttsRoundStartTextsTextarea.addEventListener('change', () => {
+        const texts = ttsRoundStartTextsTextarea.value.split(';').filter(text => text.trim() !== '').map(text => text.trim());
+        ttsRoundStartTexts = texts;
+        localStorage.setItem('wordleTTSRoundStartTexts', ttsRoundStartTextsTextarea.value);
+    });
+
+    // Read words settings
+    ttsReadWordsCheckbox.addEventListener('change', () => {
+        ttsReadWords = ttsReadWordsCheckbox.checked;
+        localStorage.setItem('wordleTTSReadWords', ttsReadWords);
+    });
+
+    // Game won settings
+    ttsGameWonEnabledCheckbox.addEventListener('change', () => {
+        ttsGameWonEnabled = ttsGameWonEnabledCheckbox.checked;
+        localStorage.setItem('wordleTTSGameWonEnabled', ttsGameWonEnabled);
+    });
+
+    ttsGameWonTextsTextarea.addEventListener('change', () => {
+        const texts = ttsGameWonTextsTextarea.value.split(';').filter(text => text.trim() !== '').map(text => text.trim());
+        ttsGameWonTexts = texts;
+        localStorage.setItem('wordleTTSGameWonTexts', ttsGameWonTextsTextarea.value);
+    });
+
+    // Gameplay settings
+    ttsGameplayEnabledCheckbox.addEventListener('change', () => {
+        ttsGameplayEnabled = ttsGameplayEnabledCheckbox.checked;
+        localStorage.setItem('wordleTTSGameplayEnabled', ttsGameplayEnabled);
+        
+        // Start or stop gameplay announcements
+        if (ttsEnabled && ttsGameplayEnabled && !isGameOver) {
+            startGameplayAnnouncements();
+        } else {
+            stopGameplayAnnouncements();
+        }
+    });
+
+    // Interval controls
+    function updateInterval(newInterval) {
+        if (newInterval >= 10 && newInterval <= 300) {
+            ttsGameplayInterval = newInterval;
+            ttsGameplayIntervalInput.value = newInterval;
+            localStorage.setItem('wordleTTSGameplayInterval', newInterval);
+            
+            // Restart gameplay announcements with new interval
+            if (ttsEnabled && ttsGameplayEnabled && !isGameOver) {
+                startGameplayAnnouncements();
+            }
+        }
+    }
+
+    ttsGameplayIntervalInput.addEventListener('change', () => {
+        const newInterval = parseInt(ttsGameplayIntervalInput.value);
+        updateInterval(newInterval);
+    });
+
+    decreaseIntervalBtn.addEventListener('click', () => {
+        const newInterval = parseInt(ttsGameplayIntervalInput.value) - 10;
+        updateInterval(newInterval);
+    });
+
+    increaseIntervalBtn.addEventListener('click', () => {
+        const newInterval = parseInt(ttsGameplayIntervalInput.value) + 10;
+        updateInterval(newInterval);
+    });
+
+    ttsGameplayTextsTextarea.addEventListener('change', () => {
+        const texts = ttsGameplayTextsTextarea.value.split(';').filter(text => text.trim() !== '').map(text => text.trim());
+        ttsGameplayTexts = texts;
+        localStorage.setItem('wordleTTSGameplayTexts', ttsGameplayTextsTextarea.value);
+    });
+
+    // Test button
+    testTTSBtn.addEventListener('click', () => {
+        const testMessage = "This is a test of the text to speech system. Hello from Wordle!";
+        speakText(testMessage);
+    });
+}

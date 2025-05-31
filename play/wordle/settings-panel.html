@@ -162,6 +162,89 @@ There are single player and group modes.</textarea>
             </div>
         </div>
     </div>
+
+    <div class="settings-section">
+        <div class="settings-section-header">
+            <h3>Text-to-Speech Settings</h3>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="settings-section-content">
+            <div class="setting-item">
+                <label for="tts-enabled">Enable Text-to-Speech:</label>
+                <input type="checkbox" id="tts-enabled" class="setting-checkbox">
+            </div>
+            <div class="setting-item">
+                <label for="tts-voice">Voice:</label>
+                <select id="tts-voice" class="setting-select">
+                    <option value="">Default Voice</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label for="tts-volume">Volume:</label>
+                <div class="number-input-container">
+                    <button class="number-input-btn" id="decrease-tts-volume">-</button>
+                    <input type="number" id="tts-volume" class="setting-input" value="50" min="0" max="100" step="10">
+                    <button class="number-input-btn" id="increase-tts-volume">+</button>
+                </div>
+            </div>
+            <div class="setting-item">
+                <label for="tts-rate">Speech Rate:</label>
+                <div class="number-input-container">
+                    <button class="number-input-btn" id="decrease-tts-rate">-</button>
+                    <input type="number" id="tts-rate" class="setting-input" value="10" min="5" max="12" step="1">
+                    <button class="number-input-btn" id="increase-tts-rate">+</button>
+                </div>
+            </div>
+            
+            <!-- Read Every Word -->
+            <div class="setting-item">
+                <label for="tts-read-words">Read Every Word Entered:</label>
+                <input type="checkbox" id="tts-read-words" class="setting-checkbox">
+            </div>
+            
+            <!-- Round Start TTS -->
+            <div class="setting-item">
+                <label for="tts-round-start-enabled">Round Start Announcements:</label>
+                <input type="checkbox" id="tts-round-start-enabled" class="setting-checkbox">
+            </div>
+            <div class="setting-item">
+                <label for="tts-round-start-texts">Round Start Messages (separate with ;):</label>
+                <textarea id="tts-round-start-texts" class="setting-textarea" placeholder="Enter messages separated by semicolons..." rows="3">Welcome to Wordle! Let's begin.; New round starting! Good luck!; Time to guess the word!</textarea>
+            </div>
+            
+            <!-- Game Won TTS -->
+            <div class="setting-item">
+                <label for="tts-game-won-enabled">Victory Announcements:</label>
+                <input type="checkbox" id="tts-game-won-enabled" class="setting-checkbox">
+            </div>
+            <div class="setting-item">
+                <label for="tts-game-won-texts">Victory Messages (separate with ;):</label>
+                <textarea id="tts-game-won-texts" class="setting-textarea" placeholder="Enter messages separated by semicolons..." rows="3">Congratulations! You won!; Excellent work! Victory achieved!; Well done! You guessed it!</textarea>
+            </div>
+            
+            <!-- Gameplay Interval TTS -->
+            <div class="setting-item">
+                <label for="tts-gameplay-enabled">Gameplay Announcements:</label>
+                <input type="checkbox" id="tts-gameplay-enabled" class="setting-checkbox">
+            </div>
+            <div class="setting-item">
+                <label for="tts-gameplay-interval">Announcement Interval (seconds):</label>
+                <div class="number-input-container">
+                    <button class="number-input-btn" id="decrease-tts-interval">-</button>
+                    <input type="number" id="tts-gameplay-interval" class="setting-input" value="30" min="10" max="300" step="10">
+                    <button class="number-input-btn" id="increase-tts-interval">+</button>
+                </div>
+            </div>
+            <div class="setting-item">
+                <label for="tts-gameplay-texts">Gameplay Messages (separate with ;):</label>
+                <textarea id="tts-gameplay-texts" class="setting-textarea" placeholder="Enter messages separated by semicolons..." rows="3">Keep going! You can do it!; Think carefully about your next guess.; You're doing great!</textarea>
+            </div>
+            
+            <div class="setting-item">
+                <button id="test-tts" class="test-btn">Test TTS</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Settings Toggle Button -->

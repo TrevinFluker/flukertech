@@ -320,7 +320,7 @@ h1 {
 
 .settings-section-header:not(.collapsed) + .settings-section-content {
     padding: 15px 20px;
-    max-height: 500px;
+    max-height: 800px;
 }
 
 .settings-toggle {
@@ -474,6 +474,17 @@ h1 {
 
 .test-btn:active {
     transform: translateY(1px);
+}
+
+.setting-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #538d4e;
+    cursor: pointer;
+}
+
+.setting-checkbox:hover {
+    transform: scale(1.1);
 }
 
 /* Profile Settings Styles */
