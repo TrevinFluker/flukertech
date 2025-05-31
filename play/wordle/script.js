@@ -67,6 +67,11 @@ let ttsGameplayTexts = ['Keep going! You can do it!', 'Think carefully about you
 let ttsGameplayIntervalId = null; // Store interval ID for gameplay announcements
 let availableVoices = []; // Store available voices
 
+// TikTok Integration Settings
+let tiktokConnected = false; // Whether TikTok integration is enabled
+let tiktokPlayMode = 'individual'; // 'individual' or 'group'
+let tiktokGroupStacks = {}; // Store group guesses from TikTok users
+
 // DOM elements
 const board = document.getElementById('board');
 const messageDisplay = document.getElementById('message');
@@ -692,6 +697,9 @@ function initializeSettingsPanel() {
 
     // Initialize TTS settings
     initializeTTSSettings();
+
+    // Initialize TikTok settings
+    initializeTikTokSettings();
 
     // After other settings panel logic:
     const simulateGuessesCheckbox = document.getElementById('simulate-guesses');
@@ -1903,3 +1911,159 @@ async function initializeTTSSettings() {
         speakText(testMessage);
     });
 }
+
+// Initialize TikTok settings
+function initializeTikTokSettings() {
+    const tiktokConnectedCheckbox = document.getElementById('tiktok-connect');
+    const tiktokPlayModeSelect = document.getElementById('tiktok-play-mode');
+    
+    // Load saved settings
+    const savedConnected = localStorage.getItem('wordleTiktokConnected');
+    const savedPlayMode = localStorage.getItem('wordleTiktokPlayMode');
+    
+    if (savedConnected !== null) {
+        tiktokConnected = savedConnected === 'true';
+        tiktokConnectedCheckbox.checked = tiktokConnected;
+    }
+    if (savedPlayMode) {
+        tiktokPlayMode = savedPlayMode;
+        tiktokPlayModeSelect.value = tiktokPlayMode;
+    }
+    
+    // Event listeners
+    tiktokConnectedCheckbox.addEventListener('change', () => {
+        tiktokConnected = tiktokConnectedCheckbox.checked;
+        localStorage.setItem('wordleTiktokConnected', tiktokConnected);
+    });
+    
+    tiktokPlayModeSelect.addEventListener('change', () => {
+        tiktokPlayMode = tiktokPlayModeSelect.value;
+        localStorage.setItem('wordleTiktokPlayMode', tiktokPlayMode);
+    });
+}
+
+// TikTok Integration Functions
+function handleRealComment(user) {
+    if (!tiktokConnected || isGameOver) return;
+    
+    // Extract potential word from comment
+    const comment = user.comment.toLowerCase().trim();
+    const words = comment.split(/\s+/);
+    
+    // Look for a word that matches the current word length
+    let guessWord = null;
+    for (const word of words) {
+        // Remove non-alphabetic characters
+        const cleanWord = word.replace(/[^a-z]/g, '');
+        if (cleanWord.length === wordLength && /^[a-z]+$/.test(cleanWord)) {
+            guessWord = cleanWord;
+            break;
+        }
+    }
+    
+    if (!guessWord) return; // No valid word found
+    
+    // Create user object for tracking
+    const tiktokUser = {
+        username: user.username,
+        photoUrl: user.photoUrl,
+        gift_name: user.gift_name || '',
+        comment: user.comment,
+        guessedWord: guessWord
+    };
+    
+    if (tiktokPlayMode === 'individual') {
+        // Individual mode: immediately process the guess
+        handleTikTokIndividualGuess(guessWord, tiktokUser);
+    } else {
+        // Group mode: add to stacks and process when threshold is reached
+        handleTikTokGroupGuess(guessWord, tiktokUser);
+    }
+}
+
+function handleTikTokIndividualGuess(guessWord, user) {
+    // Store the user in the playingUsers array
+    playingUsers.push(user);
+    
+    // Set the current guessing user
+    currentGuessingUser = user;
+    
+    // Simulate typing the word
+    simulateTypingWord(guessWord, () => {
+        // Clear the current guessing user after the guess is complete
+        currentGuessingUser = null;
+    });
+}
+
+function handleTikTokGroupGuess(guessWord, user) {
+    // Add to TikTok group stacks
+    if (!tiktokGroupStacks[guessWord]) {
+        tiktokGroupStacks[guessWord] = [];
+    }
+    tiktokGroupStacks[guessWord].push(user);
+    
+    // Store the user in the playingUsers array for the entire game
+    playingUsers.push(user);
+    
+    // If stack reaches required number, enter the word
+    if (tiktokGroupStacks[guessWord].length >= requiredGuesses) {
+        // Use the most recent user's profile for the guess
+        const topUser = tiktokGroupStacks[guessWord][tiktokGroupStacks[guessWord].length - 1];
+        
+        // Set the current guessing user
+        currentGuessingUser = topUser;
+        
+        // Simulate typing the word
+        simulateTypingWord(guessWord, () => {
+            // Clear the current guessing user after the guess is complete
+            currentGuessingUser = null;
+        });
+        
+        // Remove the stack after processing
+        delete tiktokGroupStacks[guessWord];
+    }
+    
+    // Update group guess bar if it's active
+    if (groupGuessBarActive) {
+        // Merge TikTok stacks with regular group stacks for display
+        const combinedStacks = { ...groupGuessStacks, ...tiktokGroupStacks };
+        const originalStacks = groupGuessStacks;
+        groupGuessStacks = combinedStacks;
+        renderGroupGuessBarChart();
+        groupGuessStacks = originalStacks; // Restore original stacks
+    }
+}
+
+function simulateTypingWord(word, callback) {
+    let idx = 0;
+    
+    function typeNextLetter() {
+        if (idx < word.length) {
+            const letter = word[idx];
+            const keyBtn = document.querySelector(`.key[data-key="${letter}"]`);
+            if (keyBtn) keyBtn.click();
+            idx++;
+            setTimeout(typeNextLetter, 80); // Fast typing
+        } else {
+            // Press enter
+            const enterBtn = document.querySelector('.key[data-key="enter"]');
+            if (enterBtn) enterBtn.click();
+            // Execute callback after the guess is complete
+            setTimeout(() => {
+                if (callback) callback();
+            }, 100);
+        }
+    }
+    typeNextLetter();
+}
+
+// Initialize TikTok event listener
+window.addEventListener('handleRealCommmentEvent', function(event) {
+    const user = {
+        username: event.detail.username,
+        photoUrl: event.detail.photoUrl,
+        gift_name: event.detail.gift_name || '',
+        comment: event.detail.comment
+    };
+    handleRealComment(user);
+});

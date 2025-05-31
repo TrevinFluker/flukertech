@@ -8,15 +8,6 @@ function simulateGift() {
     handleSimulatedGift(user);
 }
 
-window.addEventListener('handleRealGiftEvent', function(event) {
-    const user = {
-        username: event.detail.username,
-        photoUrl: event.detail.photoUrl,
-        gift_name: event.detail.gift_name
-    };
-    handleRealGift(user);
-});
-
 function simulateComment() {
     const randomNumber = Math.floor(Math.random() * 1000);
     const randomComment = Math.floor(Math.random() * 10);
@@ -40,10 +31,21 @@ function simulateComment() {
     handleSimulatedComment(user);
 }
 
+window.addEventListener('handleRealGiftEvent', function(event) {
+    const user = {
+        username: event.detail.username,
+        photoUrl: event.detail.photoUrl,
+        gift_name: event.detail.gift_name,
+        comment: ''
+    };
+    handleRealGift(user);
+});
+
 window.addEventListener('handleRealCommmentEvent', function(event) {
     const user = {
         username: event.detail.username,
         photoUrl: event.detail.photoUrl,
+        gift_name: '',
         comment: event.detail.comment
     };
     handleRealComment(user);
