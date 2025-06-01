@@ -1967,12 +1967,33 @@ function handleRealComment(user) {
     }
 }
 
+// Helper function to find the first empty row
+function findFirstEmptyRow() {
+    for (let row = 0; row < maxRows; row++) {
+        let isEmpty = true;
+        for (let col = 0; col < wordLength; col++) {
+            const tile = document.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
+            if (tile && tile.textContent.trim() !== '') {
+                isEmpty = false;
+                break;
+            }
+        }
+        if (isEmpty) return row;
+    }
+    return null; // All rows are filled
+}
+
 function handleTikTokIndividualGuess(guessWord, user) {
     // Store the user in the playingUsers array
     playingUsers.push(user);
     
     // Set the current guessing user
     currentGuessingUser = user;
+    
+    // Always use the first empty row
+    const emptyRow = findFirstEmptyRow();
+    if (emptyRow === null) return; // No available row
+    currentRow = emptyRow;
     
     // Submit the word directly
     fastSubmitWord(guessWord, () => {
@@ -1998,6 +2019,11 @@ function handleTikTokGroupGuess(guessWord, user) {
         
         // Set the current guessing user
         currentGuessingUser = topUser;
+        
+        // Always use the first empty row
+        const emptyRow = findFirstEmptyRow();
+        if (emptyRow === null) return; // No available row
+        currentRow = emptyRow;
         
         // Submit the word directly
         fastSubmitWord(guessWord, () => {
