@@ -1969,16 +1969,29 @@ function handleRealComment(user) {
 
 // Helper function to find the first empty row
 function findFirstEmptyRow() {
-    for (let row = 0; row < maxRows; row++) {
+    if (guessFlow === 'down') {
+        for (let row = 0; row < maxRows; row++) {
+            let isEmpty = true;
+            for (let col = 0; col < wordLength; col++) {
+                const tile = document.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
+                if (tile && tile.textContent.trim() !== '') {
+                    isEmpty = false;
+                    break;
+                }
+            }
+            if (isEmpty) return row;
+        }
+    } else if (guessFlow === 'up') {
+        // For up flow, always use row 1 (the current guess row)
         let isEmpty = true;
         for (let col = 0; col < wordLength; col++) {
-            const tile = document.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
+            const tile = document.querySelector(`.tile[data-row="1"][data-col="${col}"]`);
             if (tile && tile.textContent.trim() !== '') {
                 isEmpty = false;
                 break;
             }
         }
-        if (isEmpty) return row;
+        if (isEmpty) return 1;
     }
     return null; // All rows are filled
 }
