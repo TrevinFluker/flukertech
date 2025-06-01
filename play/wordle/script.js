@@ -2048,3 +2048,27 @@ window.addEventListener('handleRealCommmentEvent', function(event) {
     };
     handleRealComment(user);
 });
+
+window.addEventListener('handleRealGiftEvent', function(event) {
+    const user = {
+        username: event.detail.username,
+        photoUrl: event.detail.photoUrl,
+        gift_name: event.detail.gift_name,
+        comment: event.detail.comment || ''
+    };
+    handleRealGift(user);
+});
+
+function handleRealGift(user) {
+    console.log('TikTok Gift Received:', {
+        username: user.username,
+        photoUrl: user.photoUrl,
+        gift_name: user.gift_name,
+        comment: user.comment || ''
+    });
+}
+
+// Expose function to get current target word
+window.getCurrentTargetWord = function() {
+    return targetWord;
+};
