@@ -76,6 +76,9 @@ const board = document.getElementById('board');
 const messageDisplay = document.getElementById('message');
 const newGameBtn = document.getElementById('new-game-btn');
 
+// Track the last submitted word to prevent duplicates
+let lastSubmittedWord = '';
+
 // Initialize the game
 function initializeGame() {
     // Stop any ongoing TTS announcements
@@ -979,35 +982,57 @@ function simulateGuessesStop() {
 }
 
 function simulateAudienceTyping(word, user) {
-    simulateTyping = true;
-    
     // Store the user in the playingUsers array
     playingUsers.push(user);
     
     // Set the current guessing user
     currentGuessingUser = user;
     
-    let idx = 0;
+    // Submit the word directly
+    fastSubmitWord(word, () => {
+        // Clear the current guessing user after the guess is complete
+        currentGuessingUser = null;
+    });
+}
 
-    function typeNextLetter() {
-        if (idx < word.length) {
-            const letter = word[idx];
-            const keyBtn = document.querySelector(`.key[data-key="${letter}"]`);
-            if (keyBtn) keyBtn.click();
-            idx++;
-            setTimeout(typeNextLetter, 80); // Fast typing
-        } else {
-            // Press enter
-            const enterBtn = document.querySelector('.key[data-key="enter"]');
-            if (enterBtn) enterBtn.click();
-            // Clear the current guessing user after the guess is complete
-            setTimeout(() => {
-                currentGuessingUser = null;
-                simulateTyping = false;
-            }, 100);
+function fastSubmitWord(word, callback) {
+    if (!word || word.length !== wordLength) return;
+    
+    // Prevent duplicate word submissions
+    if (word.toLowerCase() === lastSubmittedWord) {
+        console.log('Duplicate word detected, skipping:', word);
+        return;
+    }
+    lastSubmittedWord = word.toLowerCase();
+    
+    // Clear the current row first
+    clearCurrentRow();
+    
+    // Add all letters at once
+    for (let i = 0; i < word.length; i++) {
+        const letter = word[i];
+        const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${i}"]`);
+        if (tile) {
+            tile.textContent = letter.toUpperCase();
+            // Show profile image when first letter is added
+            if (i === 0) {
+                const row = document.querySelector(`.row[data-row="${currentRow}"]`);
+                const userImage = getUserProfileImage(currentGuessingUser ? currentGuessingUser.username : null);
+                ensureProfileImageTile(row, userImage);
+            }
         }
     }
-    typeNextLetter();
+    
+    // Set currentTile to wordLength before submitting
+    currentTile = wordLength;
+    
+    // Submit the guess immediately
+    submitGuess();
+    
+    // Execute callback after a short delay
+    setTimeout(() => {
+        if (callback) callback();
+    }, 100);
 }
 
 function renderGroupGuessBarChart() {
@@ -1154,31 +1179,14 @@ function stopGroupGuessBar() {
 
 //How group guess word is entered
 function simulateGroupAudienceTyping(word, user) {
-    // Use the same logic as simulateAudienceTyping, but with the top user's image
-    simulateTyping = true;
-    
     // Set the current guessing user
     currentGuessingUser = user;
     
-    let idx = 0;
-    
-    function typeNextLetter() {
-        if (idx < word.length) {
-            const letter = word[idx];
-            const keyBtn = document.querySelector(`.key[data-key="${letter}"]`);
-            if (keyBtn) keyBtn.click();
-            idx++;
-            setTimeout(typeNextLetter, 80);
-        } else {
-            const enterBtn = document.querySelector('.key[data-key="enter"]');
-            if (enterBtn) enterBtn.click();
-            setTimeout(() => {
-                currentGuessingUser = null;
-                simulateTyping = false;
-            }, 100);
-        }
-    }
-    typeNextLetter();
+    // Submit the word directly
+    fastSubmitWord(word, () => {
+        // Clear the current guessing user after the guess is complete
+        currentGuessingUser = null;
+    });
 }
 
 // Helper function to get user profile image by username
@@ -1936,7 +1944,10 @@ function handleRealComment(user) {
     console.log('TikTok Comment Received:', user);
     // Extract the first word from comment and clean it
     const comment = user.comment.trim();
-    const firstWord = comment.split(' ')[0]; // Take first word before any space
+    const firstWord = comment.split(' ')[0].replace(/^[^a-zA-Z]+/, ''); // Remove leading non-letters
+
+    if (firstWord.length < wordLength) return;
+    if (firstWord.length > wordLength) firstWord = firstWord.slice(0, wordLength);
     
     // Create user object for tracking
     const tiktokUser = {
@@ -1963,8 +1974,8 @@ function handleTikTokIndividualGuess(guessWord, user) {
     // Set the current guessing user
     currentGuessingUser = user;
     
-    // Simulate typing the word
-    simulateTypingWord(guessWord, () => {
+    // Submit the word directly
+    fastSubmitWord(guessWord, () => {
         // Clear the current guessing user after the guess is complete
         currentGuessingUser = null;
     });
@@ -1988,8 +1999,8 @@ function handleTikTokGroupGuess(guessWord, user) {
         // Set the current guessing user
         currentGuessingUser = topUser;
         
-        // Simulate typing the word
-        simulateTypingWord(guessWord, () => {
+        // Submit the word directly
+        fastSubmitWord(guessWord, () => {
             // Clear the current guessing user after the guess is complete
             currentGuessingUser = null;
         });
@@ -2009,27 +2020,29 @@ function handleTikTokGroupGuess(guessWord, user) {
     }
 }
 
-function simulateTypingWord(word, callback) {
-    let idx = 0;
+function simulateAudienceTyping(word, user) {
+    // Store the user in the playingUsers array
+    playingUsers.push(user);
     
-    function typeNextLetter() {
-        if (idx < word.length) {
-            const letter = word[idx];
-            const keyBtn = document.querySelector(`.key[data-key="${letter}"]`);
-            if (keyBtn) keyBtn.click();
-            idx++;
-            setTimeout(typeNextLetter, 80); // Fast typing
-        } else {
-            // Press enter
-            const enterBtn = document.querySelector('.key[data-key="enter"]');
-            if (enterBtn) enterBtn.click();
-            // Execute callback after the guess is complete
-            setTimeout(() => {
-                if (callback) callback();
-            }, 100);
-        }
-    }
-    typeNextLetter();
+    // Set the current guessing user
+    currentGuessingUser = user;
+    
+    // Submit the word directly
+    fastSubmitWord(word, () => {
+        // Clear the current guessing user after the guess is complete
+        currentGuessingUser = null;
+    });
+}
+
+function simulateGroupAudienceTyping(word, user) {
+    // Set the current guessing user
+    currentGuessingUser = user;
+    
+    // Submit the word directly
+    fastSubmitWord(word, () => {
+        // Clear the current guessing user after the guess is complete
+        currentGuessingUser = null;
+    });
 }
 
 // Initialize TikTok event listener
