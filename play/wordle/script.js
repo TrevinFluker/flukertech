@@ -1933,7 +1933,7 @@ function initializeTikTokSettings() {
 // TikTok Integration Functions
 function handleRealComment(user) {
     if (isGameOver) return;
-    
+    console.log('TikTok Comment Received:', user);
     // Extract the first word from comment and clean it
     const comment = user.comment.trim();
     const firstWord = comment.split(' ')[0]; // Take first word before any space
@@ -1946,13 +1946,13 @@ function handleRealComment(user) {
         comment: user.comment,
         guessedWord: firstWord.toLowerCase()
     };
-    
+    console.log('firstWord', firstWord);
     if (tiktokPlayMode === 'individual') {
         // Individual mode: immediately process the guess
-        handleTikTokIndividualGuess(cleanWord, tiktokUser);
+        handleTikTokIndividualGuess(firstWord, tiktokUser);
     } else {
         // Group mode: add to stacks and process when threshold is reached
-        handleTikTokGroupGuess(cleanWord, tiktokUser);
+        handleTikTokGroupGuess(firstWord, tiktokUser);
     }
 }
 
@@ -2054,12 +2054,12 @@ window.addEventListener('handleRealGiftEvent', function(event) {
 });
 
 function handleRealGift(user) {
-    console.log('TikTok Gift Received:', {
-        username: user.username,
-        photoUrl: user.photoUrl,
-        gift_name: user.gift_name,
-        comment: user.comment || ''
-    });
+    // console.log('TikTok Gift Received:', {
+    //     username: user.username,
+    //     photoUrl: user.photoUrl,
+    //     gift_name: user.gift_name,
+    //     comment: user.comment || ''
+    // });
 }
 
 // Expose function to get current target word
