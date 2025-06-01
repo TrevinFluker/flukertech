@@ -1937,12 +1937,6 @@ function handleRealComment(user) {
     // Extract the first word from comment and clean it
     const comment = user.comment.trim();
     const firstWord = comment.split(' ')[0]; // Take first word before any space
-    const cleanWord = firstWord.replace(/[^a-zA-Z]/g, '').toLowerCase(); // Remove non-alphabetic characters
-    
-    // Check if the cleaned word matches the current word length
-    if (cleanWord.length !== wordLength) {
-        return; // Invalid word length
-    }
     
     // Create user object for tracking
     const tiktokUser = {
@@ -1950,7 +1944,7 @@ function handleRealComment(user) {
         photoUrl: user.photoUrl,
         gift_name: user.gift_name || '',
         comment: user.comment,
-        guessedWord: cleanWord
+        guessedWord: firstWord.toLowerCase()
     };
     
     if (tiktokPlayMode === 'individual') {
