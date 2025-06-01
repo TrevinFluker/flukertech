@@ -69,7 +69,6 @@ let availableVoices = []; // Store available voices
 
 // TikTok Integration Settings
 let tiktokPlayMode = 'individual'; // 'individual' or 'group'
-let tiktokGroupStacks = {}; // Store group guesses from TikTok users
 
 // DOM elements
 const board = document.getElementById('board');
@@ -78,6 +77,7 @@ const newGameBtn = document.getElementById('new-game-btn');
 
 // Track the last submitted word to prevent duplicates
 let lastSubmittedWord = '';
+let lastSubmittedUser = null;
 
 // Initialize the game
 function initializeGame() {
@@ -636,11 +636,11 @@ function initializeSettingsPanel() {
         updateBoardWidth(newWidth);
     });
 
-    // Handle guess flow change
-    guessFlowSelect.addEventListener('change', () => {
-        guessFlow = guessFlowSelect.value;
-        initializeGame();
-    });
+    // // Handle guess flow change
+    // guessFlowSelect.addEventListener('change', () => {
+    //     guessFlow = guessFlowSelect.value;
+    //     initializeGame();
+    // });
 
     // Handle required guesses changes
     function updateRequiredGuesses(newCount) {
@@ -989,21 +989,24 @@ function simulateAudienceTyping(word, user) {
     currentGuessingUser = user;
     
     // Submit the word directly
-    fastSubmitWord(word, () => {
+    fastSubmitWord(word, user, () => {
         // Clear the current guessing user after the guess is complete
         currentGuessingUser = null;
     });
 }
 
-function fastSubmitWord(word, callback) {
+function fastSubmitWord(word, user, callback) {
     if (!word || word.length !== wordLength) return;
     
-    // Prevent duplicate word submissions
-    if (word.toLowerCase() === lastSubmittedWord) {
-        console.log('Duplicate word detected, skipping:', word);
+    // Prevent duplicate word submissions from the same user
+    if (word.toLowerCase() === lastSubmittedWord && 
+        user && lastSubmittedUser && 
+        user.username === lastSubmittedUser.username) {
+        console.log('Duplicate word from same user detected, skipping:', word, user.username);
         return;
     }
     lastSubmittedWord = word.toLowerCase();
+    lastSubmittedUser = user;
     
     // Clear the current row first
     clearCurrentRow();
@@ -1183,7 +1186,7 @@ function simulateGroupAudienceTyping(word, user) {
     currentGuessingUser = user;
     
     // Submit the word directly
-    fastSubmitWord(word, () => {
+    fastSubmitWord(word, user, () => {
         // Clear the current guessing user after the guess is complete
         currentGuessingUser = null;
     });
@@ -1928,14 +1931,32 @@ function initializeTikTokSettings() {
     
     if (savedPlayMode) {
         tiktokPlayMode = savedPlayMode;
-        tiktokPlayModeSelect.value = tiktokPlayMode;
+        if (tiktokPlayModeSelect) {
+            tiktokPlayModeSelect.value = tiktokPlayMode;
+        }
+    }
+    
+    // Set initial state based on loaded play mode
+    if (tiktokPlayMode === 'group') {
+        startTikTokGroupMode();
     }
     
     // Event listeners
-    tiktokPlayModeSelect.addEventListener('change', () => {
-        tiktokPlayMode = tiktokPlayModeSelect.value;
-        localStorage.setItem('wordleTiktokPlayMode', tiktokPlayMode);
-    });
+    if (tiktokPlayModeSelect) {
+        tiktokPlayModeSelect.addEventListener('change', () => {
+            tiktokPlayMode = tiktokPlayModeSelect.value;
+            localStorage.setItem('wordleTiktokPlayMode', tiktokPlayMode);
+            
+            // Handle UI changes based on play mode
+            if (tiktokPlayMode === 'group') {
+                // Start TikTok group mode (group guess bar without simulation)
+                startTikTokGroupMode();
+            } else {
+                // Stop TikTok group mode (restore keyboard visibility and hide bar)
+                stopTikTokGroupMode();
+            }
+        });
+    }
 }
 
 // TikTok Integration Functions
@@ -1944,10 +1965,11 @@ function handleRealComment(user) {
     console.log('TikTok Comment Received:', user);
     // Extract the first word from comment and clean it
     const comment = user.comment.trim();
-    const firstWord = comment.split(' ')[0].replace(/^[^a-zA-Z]+/, ''); // Remove leading non-letters
+    let firstWord = comment.split(' ')[0].replace(/^[^a-zA-Z]+/, ''); // Remove leading non-letters
 
     if (firstWord.length < wordLength) return;
     if (firstWord.length > wordLength) firstWord = firstWord.slice(0, wordLength);
+    firstWord = firstWord.toLowerCase();
     
     // Create user object for tracking
     const tiktokUser = {
@@ -1955,7 +1977,7 @@ function handleRealComment(user) {
         photoUrl: user.photoUrl,
         gift_name: user.gift_name || '',
         comment: user.comment,
-        guessedWord: firstWord.toLowerCase()
+        guessedWord: firstWord
     };
     console.log('firstWord', firstWord);
     if (tiktokPlayMode === 'individual') {
@@ -2009,54 +2031,75 @@ function handleTikTokIndividualGuess(guessWord, user) {
     currentRow = emptyRow;
     
     // Submit the word directly
-    fastSubmitWord(guessWord, () => {
+    fastSubmitWord(guessWord, user, () => {
         // Clear the current guessing user after the guess is complete
         currentGuessingUser = null;
     });
 }
 
 function handleTikTokGroupGuess(guessWord, user) {
-    // Add to TikTok group stacks
-    if (!tiktokGroupStacks[guessWord]) {
-        tiktokGroupStacks[guessWord] = [];
+    // Add to the existing group guess stacks (same as the simulate group guesses feature)
+    if (!groupGuessStacks[guessWord]) {
+        groupGuessStacks[guessWord] = [];
     }
-    tiktokGroupStacks[guessWord].push(user);
+    
+    // Check if this user is already in this stack
+    const userAlreadyInStack = groupGuessStacks[guessWord].some(existingUser => 
+        existingUser.username === user.username
+    );
+    
+    if (userAlreadyInStack) {
+        console.log('User already in stack for word:', user.username, guessWord);
+        return; // Don't add the same user to the same stack twice
+    }
+    
+    groupGuessStacks[guessWord].push(user);
     
     // Store the user in the playingUsers array for the entire game
     playingUsers.push(user);
     
     // If stack reaches required number, enter the word
-    if (tiktokGroupStacks[guessWord].length >= requiredGuesses) {
+    if (groupGuessStacks[guessWord].length >= requiredGuesses) {
         // Use the most recent user's profile for the guess
-        const topUser = tiktokGroupStacks[guessWord][tiktokGroupStacks[guessWord].length - 1];
+        const topUser = groupGuessStacks[guessWord][groupGuessStacks[guessWord].length - 1];
         
         // Set the current guessing user
         currentGuessingUser = topUser;
         
-        // Always use the first empty row
-        const emptyRow = findFirstEmptyRow();
+        // Find the first empty row
+        let emptyRow;
+        if (guessFlow === 'up') {
+            emptyRow = 1; // Always use row 1 for up flow
+        } else {
+            emptyRow = findFirstEmptyRow();
+        }
+        
         if (emptyRow === null) return; // No available row
         currentRow = emptyRow;
         
         // Submit the word directly
-        fastSubmitWord(guessWord, () => {
+        fastSubmitWord(guessWord, topUser, () => {
             // Clear the current guessing user after the guess is complete
             currentGuessingUser = null;
         });
         
         // Remove the stack after processing
-        delete tiktokGroupStacks[guessWord];
+        delete groupGuessStacks[guessWord];
     }
     
-    // Update group guess bar if it's active
-    if (groupGuessBarActive) {
-        // Merge TikTok stacks with regular group stacks for display
-        const combinedStacks = { ...groupGuessStacks, ...tiktokGroupStacks };
-        const originalStacks = groupGuessStacks;
-        groupGuessStacks = combinedStacks;
-        renderGroupGuessBarChart();
-        groupGuessStacks = originalStacks; // Restore original stacks
+    // Only keep 7 stacks (same logic as existing group guess bar)
+    const stackWords = Object.keys(groupGuessStacks);
+    if (stackWords.length > 7) {
+        // Remove the smallest stack (rightmost)
+        let minWord = stackWords[0];
+        for (const w of stackWords) {
+            if (groupGuessStacks[w].length < groupGuessStacks[minWord].length) minWord = w;
+        }
+        delete groupGuessStacks[minWord];
     }
+    
+    // Render the group guess bar chart (this will show TikTok users in the existing bar)
+    renderGroupGuessBarChart();
 }
 
 function simulateAudienceTyping(word, user) {
@@ -2067,7 +2110,7 @@ function simulateAudienceTyping(word, user) {
     currentGuessingUser = user;
     
     // Submit the word directly
-    fastSubmitWord(word, () => {
+    fastSubmitWord(word, user, () => {
         // Clear the current guessing user after the guess is complete
         currentGuessingUser = null;
     });
@@ -2078,7 +2121,7 @@ function simulateGroupAudienceTyping(word, user) {
     currentGuessingUser = user;
     
     // Submit the word directly
-    fastSubmitWord(word, () => {
+    fastSubmitWord(word, user, () => {
         // Clear the current guessing user after the guess is complete
         currentGuessingUser = null;
     });
@@ -2118,3 +2161,33 @@ function handleRealGift(user) {
 window.getCurrentTargetWord = function() {
     return targetWord;
 };
+
+// Start TikTok group mode (group guess bar without simulation)
+function startTikTokGroupMode() {
+    groupGuessBarActive = true;
+    groupGuessStacks = {};
+    lastBarOrder = [];
+    const barChart = document.getElementById('group-guess-bar-chart');
+    if (barChart) {
+        barChart.style.display = 'flex';
+        barChart.style.height = `${stackHeight}px`;
+        barChart.style.minHeight = `${stackHeight}px`;
+    }
+    const keyboard = document.querySelector('.keyboard');
+    if (keyboard) keyboard.style.visibility = 'hidden';
+    setCogSimulateActive();
+    
+    // No simulation interval - only real TikTok comments will populate the stacks
+    renderGroupGuessBarChart();
+}
+
+// Stop TikTok group mode
+function stopTikTokGroupMode() {
+    groupGuessBarActive = false;
+    if (!simulateGuessesActive) unsetCogSimulateActive();
+    const barChart = document.getElementById('group-guess-bar-chart');
+    if (barChart) barChart.style.display = 'none';
+    const keyboard = document.querySelector('.keyboard');
+    if (keyboard) keyboard.style.visibility = 'visible';
+    groupGuessStacks = {};
+}
