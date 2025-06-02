@@ -1,14 +1,39 @@
 // script.js
-// Word lists for different lengths
-const wordLists = {
-    4: ["book", "tree", "fish", "bird", "star", "moon", "fire", "wind", "rain", "snow"],
-    5: ["apple", "beach", "cloud", "dream", "flame", "globe", "heart", "juice", "knife", "lemon"],
-    6: ["bottle", "candle", "dragon", "flower", "garden", "hammer", "island", "jungle", "knight", "laptop"],
-    7: ["bicycle", "chicken", "diamond", "elephant", "freedom", "giraffe", "holiday", "journey", "kitchen", "library"],
-    8: ["backpack", "computer", "dolphin", "elephant", "football", "guitar", "hospital", "jewelry", "keyboard", "language"],
-    9: ["beautiful", "chocolate", "dangerous", "education", "fantastic", "garden", "happiness", "important", "knowledge", "lifestyle"],
-    10: ["adventures", "breakfast", "challenger", "determined", "experience", "friendship", "generation", "happiness", "imagination", "journey"]
-};
+// Word lists for different lengths - will be loaded from API
+let wordLists = {};
+
+// Function to load word lists from API
+async function loadWordLists() {
+    try {
+        const response = await fetch('https://www.runchatcapture.com/wordle.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        // Convert string keys to numbers and assign to wordLists
+        wordLists = {};
+        for (const [key, value] of Object.entries(data)) {
+            wordLists[parseInt(key)] = value;
+        }
+        
+        console.log('Word lists loaded successfully:', Object.keys(wordLists).map(k => `${k}: ${wordLists[k].length} words`));
+        return true;
+    } catch (error) {
+        console.error('Failed to load word lists:', error);
+        // Fallback to minimal word lists if API fails
+        wordLists = {
+            4: ["that","this","with","from","your","have","more","will","home","page","free","time","they","site","what","news","only","when","here","also","help","view","been","were","some","like","than","find","date","back","list","name","just","over","year","into","next","used","work","last","most","data","make","them","post","city","such","best","then","good","well","high","each","very","book","read","need","many","user","said","does","mail","full","life","know","days","part","real","item","must","made","line","send","type","take","area","want","long","code","show","even","much","sign","file","link","open","case","same","both","game","care","down","size","shop","text","rate","form","love","main","call","save","card","jobs","food","sale","room","join","west","look","left","team","week","note","live","plan","cost"],
+            5: ["about","other","which","their","there","first","would","these","state","world","after","where","books","years","order","items","group","under","games","could","great","store","right","local","those","using","check","being","women","today","south","found","house","photo","power","while","three","total","place","think","since","guide","board","white","small","times","sites","level","hours","image","class","still","money","every","visit","tools","reply","value","press","learn","print","stock","point","sales","large","table","start","model","human","movie","going","study","staff","again","never","users","topic","below","party","legal","quote","story","young","field","paper","girls","night","issue","range","court","audio","light","write","offer","given","files","event","needs","might","month","major","areas","space","cards","child","enter","share","radio","until","color","track","least","trade","green","close","drive","short","means","daily","beach","costs","style","front","parts","early","miles","sound","works","rules","final","adult","thing","cheap","third","gifts","cover","often","watch","deals","words","heart","error","clear","makes","taken","known","cases","quick","whole","later","basic","shows","along","among","death","speed","brand","stuff","doing","loans","shoes","entry","notes","force","river","views","plans","build","types","lines","apply","asked","cross","weeks","lower","union","names","leave","teens","woman","cable","score","shown"],
+            6: ["search", "online", "people", "health", "should", "system", "policy", "number", "please", "rights", "public", "school", "review", "united", "center", "travel", "report", "member", "before", "hotels", "office", "design", "posted", "within", "states", "family", "prices", "sports", "county", "access", "change", "rating", "during", "return", "events", "little", "movies", "source", "author", "around", "course", "canada", "credit", "estate", "select", "photos", "thread", "market", "really", "action", "series", "second", "forums", "better", "friend", "server", "issues", "street", "things", "person", "mobile", "offers", "recent", "stores", "memory", "social", "august", "create", "single", "latest", "status", "browse", "seller", "always", "result", "groups", "making", "future", "london", "become", "garden", "listed", "energy", "images", "notice", "others", "format", "months", "safety", "having", "common", "living", "called", "period", "window", "france", "region", "island", "record", "direct", "update", "either", "centre", "europe", "topics", "videos", "global", "player", "lyrics", "submit", "amount", "though", "thanks", "weight", "choose", "points", "camera", "domain", "beauty", "models", "simple", "friday", "annual", "google", "church"],
+            7: ["contact", "service", "product", "support", "message", "through", "privacy", "company", "general", "january", "reviews", "program", "details", "because", "results", "address", "subject", "between", "special", "website", "project", "version", "section", "related", "members", "network", "systems", "without", "current", "control", "history", "account", "digital", "profile", "another", "quality", "listing", "content", "country", "private", "compare", "include", "college", "article", "provide", "process", "science", "english", "windows", "gallery", "however", "october", "library", "medical", "looking", "comment", "working", "against", "payment", "student", "problem", "options", "america", "example", "changes", "release", "request", "picture", "meeting", "similar", "schools", "million", "popular", "stories", "journal", "reports", "welcome", "central", "council", "archive", "society", "friends", "edition", "further", "updated", "already", "studies", "several", "display", "limited", "powered", "natural", "whether", "weather", "average", "records", "present", "written", "federal", "hosting", "tickets", "finance", "minutes", "reading", "usually", "percent", "getting", "germany", "various", "receive", "methods", "chapter", "manager", "michael", "florida"],
+            8: ["business", "services", "products", "software", "research", "comments", "national", "internet", "shipping", "reserved", "security", "american", "computer", "download", "pictures", "personal", "location", "children", "students", "shopping", "previous", "property", "customer", "december", "training", "advanced", "category", "register", "november", "features", "industry", "provided", "required", "articles", "feedback", "complete", "standard", "programs", "language", "password", "question", "building", "february", "analysis", "possible", "problems", "interest", "learning", "delivery", "original", "includes", "messages", "provides", "specific", "director", "planning", "database", "official", "district", "calendar", "resource", "document", "material", "together", "function", "economic", "projects", "included", "received", "archives", "magazine", "policies", "position", "listings", "wireless", "purchase", "response", "practice", "hardware", "designed", "discount", "remember", "increase", "european", "activity", "although", "contents", "regional", "supplies", "exchange", "continue", "benefits", "anything", "mortgage", "solution", "addition", "clothing", "homepage", "military", "decision", "division", "actually", "saturday", "starting", "thursday", "consumer", "contract", "releases"],
+            9: ["available", "copyright", "education", "community", "following", "resources", "including", "directory", "insurance", "different", "september", "questions", "financial", "equipment", "important", "something", "committee", "reference", "companies", "computers", "president", "australia", "agreement", "marketing", "solutions", "technical", "microsoft", "statement", "downloads", "subscribe", "treatment", "knowledge", "currently", "published", "corporate", "customers", "materials", "countries", "standards", "political", "advertise", "institute", "sponsored", "condition", "effective", "selection", "executive", "necessary", "according", "christmas", "furniture", "wednesday", "structure", "potential", "documents", "operating", "developed", "telephone", "therefore", "christian", "worldwide", "publisher", "excellent", "interface", "operation", "beautiful", "locations", "providing", "authority", "programme", "employees", "relations", "completed", "otherwise", "character", "functions", "submitted", "regarding", "increased", "beginning"],
+            10: ["university", "management", "technology", "government", "department", "categories", "conditions", "experience", "activities", "additional", "washington", "california", "discussion", "collection", "conference", "individual", "everything", "production", "commercial", "newsletter", "registered", "protection", "employment", "commission", "electronic", "particular", "facilities", "statistics", "investment", "industrial", "associated", "foundation", "population", "navigation", "operations", "understand", "connection", "properties", "assessment", "especially", "considered", "enterprise", "processing", "resolution", "components", "assistance", "disclaimer", "membership", "background", "trademarks", "television", "interested", "throughout", "associates", "businesses", "restaurant", "procedures", "themselves", "evaluation", "references", "literature", "respective", "definition", "networking", "australian", "guidelines", "difference", "directions", "automotive", "successful", "publishing", "developing", "historical", "scientific", "functional", "monitoring", "dictionary", "accounting", "techniques", "permission", "generation", "characters", "apartments", "designated", "integrated", "compliance", "acceptance", "strategies", "affiliates", "multimedia", "leadership", "comparison", "determined", "statements", "completely", "electrical"]
+        };
+        return false;
+    }
+}
 
 // Map for auto board widths
 const autoBoardWidths = {
@@ -79,8 +104,16 @@ const newGameBtn = document.getElementById('new-game-btn');
 let lastSubmittedWord = '';
 let lastSubmittedUser = null;
 
+// Function to update the current answer display in settings
+function updateCurrentAnswerDisplay() {
+    const answerDisplay = document.getElementById('current-answer-display');
+    if (answerDisplay && targetWord) {
+        answerDisplay.textContent = targetWord.toUpperCase();
+    }
+}
+
 // Initialize the game
-function initializeGame() {
+async function initializeGame() {
     // Stop any ongoing TTS announcements
     stopGameplayAnnouncements();
     
@@ -124,9 +157,25 @@ function initializeGame() {
     isGameOver = false;
     messageDisplay.textContent = '';
     
+    // Ensure word lists are loaded before choosing a target word
+    if (!wordLists[wordLength] || wordLists[wordLength].length === 0) {
+        messageDisplay.textContent = 'Loading word lists...';
+        await loadWordLists();
+        messageDisplay.textContent = '';
+    }
+    
     // Choose a random word from the current word length list
-    targetWord = wordLists[wordLength][Math.floor(Math.random() * wordLists[wordLength].length)];
-    console.log('Target word:', targetWord); // For debugging
+    if (wordLists[wordLength] && wordLists[wordLength].length > 0) {
+        targetWord = wordLists[wordLength][Math.floor(Math.random() * wordLists[wordLength].length)];
+        console.log('Target word:', targetWord); // For debugging
+        
+        // Update the current answer display in settings
+        updateCurrentAnswerDisplay();
+    } else {
+        console.error('No words available for length:', wordLength);
+        messageDisplay.textContent = `No words available for length ${wordLength}`;
+        return;
+    }
     
     // Show instruction popup if enabled
     if (instructionPopupActive) {
@@ -559,6 +608,11 @@ function initializeSettingsPanel() {
         }
         if (turnedOff) unsetCogSimulateActive();
         settingsPanel.classList.toggle('open');
+        
+        // Update current answer display when opening settings
+        if (settingsPanel.classList.contains('open')) {
+            updateCurrentAnswerDisplay();
+        }
     });
 
     // Close settings panel
@@ -1274,7 +1328,7 @@ function showSingleWinner(winningWord, title, wordDisplay, singleWinner, groupWi
     } else {
         // Manual guess by logged-in user
         winner = {
-            username: 'Player',
+            username: 'Host',
             photoUrl: localStorage.getItem('wordleProfileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg'
         };
     }
@@ -2155,6 +2209,7 @@ function handleRealGift(user) {
     //     gift_name: user.gift_name,
     //     comment: user.comment || ''
     // });
+    console.log('TikTok Gift Received:', user);
 }
 
 // Expose function to get current target word
