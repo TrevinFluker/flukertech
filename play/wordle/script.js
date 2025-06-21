@@ -95,6 +95,9 @@ let availableVoices = []; // Store available voices
 // TikTok Integration Settings
 let tiktokPlayMode = 'individual'; // 'individual' or 'group'
 
+// Individual mode best guess tracking
+let individualBestGuess = null; // Store the best guess data for individual mode
+
 // DOM elements
 const board = document.getElementById('board');
 const messageDisplay = document.getElementById('message');
@@ -129,6 +132,9 @@ async function initializeGame() {
     // Reset guess counters
     singlePlayerGuessCount = 0;
     groupModeGuessCount = 0;
+    
+    // Reset individual best guess
+    individualBestGuess = null;
     
     // Update CSS variables
     document.documentElement.style.setProperty('--word-length', wordLength);
@@ -303,6 +309,9 @@ function submitGuess() {
     // Check the guess against the target word
     const result = checkGuess(guess);
     
+    // Update individual best guess tracking (only in individual mode)
+    updateIndividualBestGuess(guess, currentGuessingUser, result);
+    
     // Update the tiles with the results
     animateResults(result);
     
@@ -329,6 +338,9 @@ function submitGuess() {
         lastBarOrder = [];
         lastBarRects = {};
         renderGroupGuessBarChart();
+        
+        // Clear the individual best guess on win
+        individualBestGuess = null;
     } else {
         // Move to the next row
         if (guessFlow === 'down') {
@@ -932,6 +944,9 @@ function shiftRowsDownUpFlowV2() {
             }
         }
     }
+    
+    // Restore the individual best guess in the bottom row after shifting (only during individual mode)
+    displayIndividualBestGuessInBottomRow();
 }
 
 //How rows are moved during gameplay if flow is down
@@ -978,6 +993,10 @@ function shiftRowsDown() {
                 }
             }
         }
+        
+        // Restore the individual best guess in the bottom row after shifting (only during individual mode)
+        displayIndividualBestGuessInBottomRow();
+        
         topRow.classList.remove('fade-out');
     }, 150);
 }
@@ -2249,4 +2268,79 @@ function stopTikTokGroupMode() {
     const keyboard = document.querySelector('.keyboard');
     if (keyboard) keyboard.style.visibility = 'visible';
     groupGuessStacks = {};
+}
+
+function countCorrectLetters(result) {
+    return result.filter(r => r === 'correct').length;
+}
+
+function updateIndividualBestGuess(guess, user, result) {
+    // Only track best guess in individual mode (not group mode)
+    if (tiktokPlayMode === 'group' || groupGuessBarActive) return;
+    
+    const correctCount = countCorrectLetters(result);
+    
+    if (!individualBestGuess || correctCount > individualBestGuess.correctCount) {
+        individualBestGuess = {
+            word: guess,
+            user: user,
+            result: result,
+            correctCount: correctCount
+        };
+        
+        // Display the best guess in the bottom row
+        displayIndividualBestGuessInBottomRow();
+    }
+}
+
+function displayIndividualBestGuessInBottomRow() {
+    // Only display in individual mode
+    if (tiktokPlayMode === 'group' || groupGuessBarActive || !individualBestGuess) return;
+    
+    const bottomRowIndex = maxRows;
+    const bottomRow = document.querySelector(`.row[data-row="${bottomRowIndex}"]`);
+    if (!bottomRow) return;
+    
+    // Clear the bottom row first
+    removeProfileImageTile(bottomRow);
+    for (let i = 0; i < wordLength; i++) {
+        const tile = bottomRow.children[i];
+        if (tile) {
+            tile.textContent = '';
+            tile.className = 'tile';
+        }
+    }
+    
+    // Add profile image for the best guess user
+    if (individualBestGuess.user) {
+        const userImage = getUserProfileImage(individualBestGuess.user.username);
+        ensureProfileImageTile(bottomRow, userImage);
+    }
+    
+    // Display the best guess word with results
+    for (let i = 0; i < wordLength; i++) {
+        const tileIndex = bottomRow.children.length > wordLength ? i + 1 : i;
+        const tile = bottomRow.children[tileIndex];
+        if (tile) {
+            tile.textContent = individualBestGuess.word[i].toUpperCase();
+            tile.className = 'tile best-guess';
+            
+            // Add result classes
+            if (individualBestGuess.result[i] === 'correct') {
+                tile.classList.add('correct');
+            } else if (individualBestGuess.result[i] === 'present') {
+                tile.classList.add('present');
+            } else {
+                tile.classList.add('absent');
+            }
+            
+            // Add star indicator for best guess
+            if (!tile.querySelector('.best-guess-star')) {
+                const star = document.createElement('span');
+                star.className = 'best-guess-star';
+                star.textContent = '⭐';
+                tile.appendChild(star);
+            }
+        }
+    }
 }

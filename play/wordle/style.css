@@ -933,3 +933,45 @@ h1 {
         right: 15px;
     }
 }
+
+/* Best guess styling for individual mode */
+.tile.best-guess {
+    position: relative;
+    border: 2px solid #ffd700;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+.best-guess-star {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 12px;
+    background: #ffd700;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-weight: bold;
+    z-index: 10;
+}
+
+.tile.best-guess.correct {
+    background-color: #6aaa64;
+    border-color: #5a8f54;
+    color: white;
+}
+
+.tile.best-guess.present {
+    background-color: #c9b458;
+    border-color: #b8a042;
+    color: white;
+}
+
+.tile.best-guess.absent {
+    background-color: #787c7e;
+    border-color: #6a6d70;
+    color: white;
+}
