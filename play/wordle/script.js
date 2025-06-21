@@ -323,6 +323,12 @@ function submitGuess() {
         }, 500); // Small delay after "Wonderful!" message
         
         showWinningModal(targetWord);
+        
+        // Clear the group guess bar on win
+        groupGuessStacks = {};
+        lastBarOrder = [];
+        lastBarRects = {};
+        renderGroupGuessBarChart();
     } else {
         // Move to the next row
         if (guessFlow === 'down') {
@@ -2137,8 +2143,6 @@ function handleTikTokGroupGuess(guessWord, user) {
             currentGuessingUser = null;
         });
         
-        // Remove the stack after processing
-        delete groupGuessStacks[guessWord];
     }
     
     // Only keep 7 stacks (same logic as existing group guess bar)
