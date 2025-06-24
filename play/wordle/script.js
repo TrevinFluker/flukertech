@@ -98,6 +98,9 @@ let tiktokPlayMode = 'individual'; // 'individual' or 'group'
 // Individual mode best guess tracking
 let individualBestGuess = null; // Store the best guess data for individual mode
 
+// Group mode submitted guesses counter
+let groupModeSubmittedGuesses = 0; // Track submitted guesses in group mode for loss condition
+
 // DOM elements
 const board = document.getElementById('board');
 const messageDisplay = document.getElementById('message');
@@ -132,6 +135,7 @@ async function initializeGame() {
     // Reset guess counters
     singlePlayerGuessCount = 0;
     groupModeGuessCount = 0;
+    groupModeSubmittedGuesses = 0;
     
     // Reset individual best guess
     individualBestGuess = null;
@@ -342,20 +346,40 @@ function submitGuess() {
         // Clear the individual best guess on win
         individualBestGuess = null;
     } else {
+        // Increment group mode submitted guesses counter
+        const isGroupMode = document.getElementById('group-guess-bar-chart').style.display !== 'none';
+        if (isGroupMode) {
+            groupModeSubmittedGuesses++;
+        }
+        
         // Move to the next row
         if (guessFlow === 'down') {
             // Add profile image to the current row before moving to next
             addProfileImageToRow(currentRow);
             currentRow++;
             if (currentRow >= maxRows) {
-                shiftRowsDown();
-                currentRow = maxRows - 1;
+                // Check for group mode loss condition
+                if (isGroupMode && (groupModeSubmittedGuesses >= maxRows)) {
+                    showLossModal(targetWord);
+                    return;
+                }
+                if (!isGroupMode) {
+                    shiftRowsDown();
+                    currentRow = maxRows - 1;
+                }
             }
         } else {
             // For up flow, add profile image to the current row before shifting
             addProfileImageToRow(currentRow);
-            shiftRowsDownUpFlowV2();
-            clearCurrentRow();
+            // Check for group mode loss condition in up flow
+            if (isGroupMode && (groupModeSubmittedGuesses >= maxRows)) {
+                showLossModal(targetWord);
+                return;
+            }
+            if (!isGroupMode) {
+                shiftRowsDownUpFlowV2();
+                clearCurrentRow();
+            }
         }
         currentTile = 0;
     }
@@ -622,6 +646,8 @@ function initializeSettingsPanel() {
             stopGroupGuessBar();
             const groupGuessBarCheckbox = document.getElementById('group-guess-bar');
             if (groupGuessBarCheckbox) groupGuessBarCheckbox.checked = false;
+            const groupLossCheckbox = document.getElementById('group-guess-loss');
+            if (groupLossCheckbox) groupLossCheckbox.checked = false;
             turnedOff = true;
         }
         if (turnedOff) unsetCogSimulateActive();
@@ -775,6 +801,9 @@ function initializeSettingsPanel() {
     // Initialize TikTok settings
     initializeTikTokSettings();
 
+    // Initialize statistics manager
+    statisticsManager = new StatisticsManager();
+
     // After other settings panel logic:
     const simulateGuessesCheckbox = document.getElementById('simulate-guesses');
     if (simulateGuessesCheckbox) {
@@ -813,7 +842,30 @@ function initializeSettingsPanel() {
     if (groupGuessBarCheckbox) {
         groupGuessBarCheckbox.addEventListener('change', function() {
             if (this.checked) {
-                startGroupGuessBar();
+                // Uncheck group loss if it's checked
+                const groupLossCheckbox = document.getElementById('group-guess-loss');
+                if (groupLossCheckbox && groupLossCheckbox.checked) {
+                    groupLossCheckbox.checked = false;
+                }
+                startGroupGuessBar(false); // Normal mode - can win
+            } else {
+                stopGroupGuessBar();
+            }
+        });
+    }
+
+    // Group guess loss logic
+    const groupGuessLossCheckbox = document.getElementById('group-guess-loss');
+    if (groupGuessLossCheckbox) {
+        groupGuessLossCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Uncheck group guess bar if it's checked
+                const groupGuessBarCheckbox = document.getElementById('group-guess-bar');
+                if (groupGuessBarCheckbox && groupGuessBarCheckbox.checked) {
+                    groupGuessBarCheckbox.checked = false;
+                    stopGroupGuessBar();
+                }
+                startGroupGuessBar(true); // Loss mode - prevent win
             } else {
                 stopGroupGuessBar();
             }
@@ -1179,10 +1231,11 @@ function renderGroupGuessBarChart() {
 }
 
 //How group guess bar is started
-function startGroupGuessBar() {
+function startGroupGuessBar(preventWin = false) {
     groupGuessBarActive = true;
     groupGuessStacks = {};
     lastBarOrder = [];
+    groupModeSubmittedGuesses = 0; // Reset submitted guesses counter
     const barChart = document.getElementById('group-guess-bar-chart');
     if (barChart) {
         barChart.style.display = 'flex';
@@ -1200,14 +1253,22 @@ function startGroupGuessBar() {
         groupModeGuessCount++;
         
         let guessWord;
-        if (groupModeGuessCount >= 10) {
-            // After 10 guesses, only add guesses for the winning word
-            guessWord = targetWord;
-        } else {
-            // Pick a random word that is NOT the target word
+        if (preventWin) {
+            // Only use words that are NOT the target word (for loss simulation)
             const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
             if (possibleWords.length === 0) return;
             guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+        } else {
+            // Original logic: after 10 guesses, start adding winning word guesses
+            if (groupModeGuessCount >= 10) {
+                // After 10 guesses, only add guesses for the winning word
+                guessWord = targetWord;
+            } else {
+                // Pick a random word that is NOT the target word
+                const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
+                if (possibleWords.length === 0) return;
+                guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+            }
         }
         
         // Simulate a random user
@@ -1244,7 +1305,6 @@ function startGroupGuessBar() {
         }
         renderGroupGuessBarChart();
     }, 1000);
-    renderGroupGuessBarChart();
 }
 
 function stopGroupGuessBar() {
@@ -1297,6 +1357,16 @@ function showWinningModal(winningWord) {
     const groupWinners = document.getElementById('group-winners');
     
     if (!overlay) return;
+    
+    // Record win in statistics
+    if (statisticsManager) {
+        statisticsManager.recordWin();
+    }
+    
+    // Reset title color and hide loss GIF
+    title.style.color = '';
+    const lossGif = document.getElementById('loss-gif');
+    if (lossGif) lossGif.style.display = 'none';
     
     // Play winning sound if configured
     if (winningSoundUrl) {
@@ -2047,7 +2117,8 @@ function handleRealComment(user) {
     let firstWord = comment.split(' ')[0].replace(/^[^a-zA-Z]+/, ''); // Remove leading non-letters
 
     if (firstWord.length < wordLength) return;
-    if (firstWord.length > wordLength) firstWord = firstWord.slice(0, wordLength);
+    //if (firstWord.length > wordLength) firstWord = firstWord.slice(0, wordLength);
+    if (firstWord.length > wordLength) return;
     firstWord = firstWord.toLowerCase();
     
     // Create user object for tracking
@@ -2344,3 +2415,262 @@ function displayIndividualBestGuessInBottomRow() {
         }
     }
 }
+
+function showLossModal(targetWord) {
+    const overlay = document.getElementById('winning-overlay');
+    const modal = document.getElementById('winning-modal');
+    const title = document.getElementById('winning-title');
+    const wordDisplay = document.getElementById('winning-word');
+    const singleWinner = document.getElementById('single-winner');
+    const groupWinners = document.getElementById('group-winners');
+    
+    if (!overlay || !modal) return;
+    
+    // Record loss in statistics
+    if (statisticsManager) {
+        statisticsManager.recordLoss();
+    }
+    
+    // Configure modal for loss
+    title.textContent = 'You Lost, Streak Is Reset';
+    title.style.color = '#ff4444'; // Red color for loss
+    
+    // Show the target word
+    wordDisplay.textContent = `The word was: ${targetWord.toUpperCase()}`;
+    
+    // Hide winner sections
+    if (singleWinner) singleWinner.style.display = 'none';
+    if (groupWinners) groupWinners.style.display = 'none';
+    
+    // Add loss GIF
+    let lossGif = document.getElementById('loss-gif');
+    if (!lossGif) {
+        lossGif = document.createElement('img');
+        lossGif.id = 'loss-gif';
+        lossGif.className = 'loss-gif';
+        modal.appendChild(lossGif);
+    }
+    lossGif.src = 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExajY3eG1jcDJveHYxanl2bHQzd3V6cHBza29xajhhMnUxZmkybjBuMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/NdieEAYwEZJot8ZA92/giphy.gif';
+    lossGif.style.display = 'block';
+    
+    // Show the overlay
+    overlay.classList.add('show');
+    
+    // Auto-hide after configured duration and start new game
+    setTimeout(() => {
+        overlay.classList.remove('show');
+        // Reset title color and hide GIF
+        title.style.color = '';
+        if (lossGif) lossGif.style.display = 'none';
+        setTimeout(() => {
+            initializeGame();
+        }, 300); // Wait for fade out
+    }, winningModalDuration * 1000);
+}
+
+// Statistics Management
+class StatisticsManager {
+    constructor() {
+        this.stats = this.loadStats();
+        this.initializeElements();
+        this.setupEventListeners();
+        this.setupDragAndDrop();
+        this.updateDisplay();
+    }
+
+    loadStats() {
+        const defaultStats = {
+            gamesPlayed: 0,
+            gamesWon: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            position: { x: 50, y: 50 }, // percentage position
+            visible: true // default visibility
+        };
+        
+        const saved = localStorage.getItem('wordleStats');
+        return saved ? { ...defaultStats, ...JSON.parse(saved) } : defaultStats;
+    }
+
+    saveStats() {
+        localStorage.setItem('wordleStats', JSON.stringify(this.stats));
+    }
+
+    initializeElements() {
+        this.card = document.getElementById('statistics-card');
+        this.playedElement = document.getElementById('played-count');
+        this.winPercentElement = document.getElementById('win-percentage');
+        this.currentStreakElement = document.getElementById('current-streak');
+        this.maxStreakElement = document.getElementById('max-streak');
+        this.closeBtn = document.getElementById('close-statistics');
+        this.clearBtn = document.getElementById('clear-statistics');
+        this.streakVisibilityCheckbox = document.getElementById('streak-visibility');
+        
+        // Set initial position
+        this.setPosition(this.stats.position.x, this.stats.position.y);
+        
+        // Set initial visibility based on saved stats
+        this.setVisibility(this.stats.visible);
+        
+        // Sync checkbox with saved visibility state
+        if (this.streakVisibilityCheckbox) {
+            this.streakVisibilityCheckbox.checked = this.stats.visible;
+        }
+    }
+
+    setupEventListeners() {
+        if (this.closeBtn) {
+            this.closeBtn.addEventListener('click', () => {
+                this.stats.visible = false;
+                this.setVisibility(false);
+                this.saveStats();
+                if (this.streakVisibilityCheckbox) {
+                    this.streakVisibilityCheckbox.checked = false;
+                }
+            });
+        }
+
+        if (this.clearBtn) {
+            this.clearBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear all statistics? This action cannot be undone.')) {
+                    this.resetStats();
+                }
+            });
+        }
+
+        if (this.streakVisibilityCheckbox) {
+            this.streakVisibilityCheckbox.addEventListener('change', (e) => {
+                this.stats.visible = e.target.checked;
+                this.setVisibility(e.target.checked);
+                this.saveStats();
+            });
+        }
+    }
+
+    setupDragAndDrop() {
+        const header = this.card?.querySelector('.statistics-header');
+        if (!header || !this.card) return;
+
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+
+        header.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            this.card.classList.add('dragging');
+            
+            const rect = this.card.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+            initialX = rect.left;
+            initialY = rect.top;
+
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const newX = e.clientX - startX;
+            const newY = e.clientY - startY;
+            
+            // Keep card within viewport bounds
+            const maxX = window.innerWidth - this.card.offsetWidth;
+            const maxY = window.innerHeight - this.card.offsetHeight;
+            
+            const clampedX = Math.max(0, Math.min(newX, maxX));
+            const clampedY = Math.max(0, Math.min(newY, maxY));
+            
+            this.card.style.left = clampedX + 'px';
+            this.card.style.top = clampedY + 'px';
+            this.card.style.transform = 'none';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            this.card.classList.remove('dragging');
+            
+            // Save position as percentage
+            const rect = this.card.getBoundingClientRect();
+            const percentX = (rect.left / (window.innerWidth - this.card.offsetWidth)) * 100;
+            const percentY = (rect.top / (window.innerHeight - this.card.offsetHeight)) * 100;
+            
+            this.stats.position = { 
+                x: Math.max(0, Math.min(100, percentX)), 
+                y: Math.max(0, Math.min(100, percentY))
+            };
+            this.saveStats();
+        });
+    }
+
+    setPosition(percentX, percentY) {
+        if (!this.card) return;
+        
+        // Convert percentage to pixels
+        const maxX = window.innerWidth - 300; // card width
+        const maxY = window.innerHeight - 200; // approximate card height
+        
+        const x = (percentX / 100) * Math.max(0, maxX);
+        const y = (percentY / 100) * Math.max(0, maxY);
+        
+        this.card.style.left = x + 'px';
+        this.card.style.top = y + 'px';
+        this.card.style.transform = 'none';
+    }
+
+    setVisibility(visible) {
+        if (!this.card) return;
+        
+        if (visible) {
+            this.card.classList.remove('hidden');
+        } else {
+            this.card.classList.add('hidden');
+        }
+    }
+
+    recordWin() {
+        this.stats.gamesPlayed++;
+        this.stats.gamesWon++;
+        this.stats.currentStreak++;
+        this.stats.maxStreak = Math.max(this.stats.maxStreak, this.stats.currentStreak);
+        this.saveStats();
+        this.updateDisplay();
+    }
+
+    recordLoss() {
+        this.stats.gamesPlayed++;
+        this.stats.currentStreak = 0;
+        this.saveStats();
+        this.updateDisplay();
+    }
+
+    updateDisplay() {
+        if (!this.playedElement) return;
+        
+        const winPercentage = this.stats.gamesPlayed > 0 
+            ? Math.round((this.stats.gamesWon / this.stats.gamesPlayed) * 100)
+            : 0;
+
+        this.playedElement.textContent = this.stats.gamesPlayed;
+        this.winPercentElement.textContent = winPercentage;
+        this.currentStreakElement.textContent = this.stats.currentStreak;
+        this.maxStreakElement.textContent = this.stats.maxStreak;
+    }
+
+    resetStats() {
+        this.stats = {
+            gamesPlayed: 0,
+            gamesWon: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            position: this.stats.position, // Keep position
+            visible: this.stats.visible // Keep visibility setting
+        };
+        this.saveStats();
+        this.updateDisplay();
+    }
+}
+
+// Initialize statistics manager
+let statisticsManager;
