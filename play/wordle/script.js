@@ -236,7 +236,7 @@ function addLetter(letter) {
                 // Get the correct user image
                 const userImage = getUserProfileImage(currentGuessingUser ? currentGuessingUser.username : null);
                 // Ensure the profile image tile exists with the correct image
-                ensureProfileImageTile(row, userImage);
+                ensureProfileImageTile(row, userImage, currentGuessingUser ? currentGuessingUser.username : 'Host');
                 const imgTile = row.querySelector('.profile-img-tile');
                 const img = imgTile ? imgTile.querySelector('.profile-img-in-tile') : null;
                 if (img) {
@@ -881,11 +881,33 @@ function initializeProfileSettings() {
     const profileUpload = document.getElementById('profile-upload');
     const profilePreview = document.getElementById('profile-preview-img');
     const removeProfile = document.getElementById('remove-profile');
+    const usernameInput = document.getElementById('profile-username');
 
     // Load saved profile image if it exists
     const savedProfile = localStorage.getItem('wordleProfileImage');
     if (savedProfile) {
         profilePreview.src = savedProfile;
+    }
+
+    // Load saved username if it exists
+    const savedUsername = localStorage.getItem('wordleProfileUsername');
+    if (savedUsername && usernameInput) {
+        usernameInput.value = savedUsername;
+    }
+
+    // Handle username changes
+    if (usernameInput) {
+        usernameInput.addEventListener('input', (e) => {
+            const username = e.target.value.trim();
+            if (username.length <= 20) {
+                localStorage.setItem('wordleProfileUsername', username);
+            }
+        });
+
+        usernameInput.addEventListener('blur', (e) => {
+            const username = e.target.value.trim();
+            localStorage.setItem('wordleProfileUsername', username);
+        });
     }
 
     // Handle file upload
@@ -921,15 +943,30 @@ function initializeProfileSettings() {
     });
 }
 
+// Helper function to get current username
+function getCurrentUsername() {
+    const savedUsername = localStorage.getItem('wordleProfileUsername');
+    return savedUsername && savedUsername.trim() ? savedUsername.trim() : 'Host';
+}
+
 //How profile image tile is added to the row
-function ensureProfileImageTile(row, imgSrc) {
+function ensureProfileImageTile(row, imgSrc, username = '') {
     if (!row) return;
-    // If the first child is already a profile image tile, update the image source
+    // If the first child is already a profile image tile, update the image source and username
     if (row.firstChild && row.firstChild.classList.contains('profile-img-tile')) {
         const existingImg = row.firstChild.querySelector('.profile-img-in-tile');
         if (existingImg) {
             existingImg.src = imgSrc;
         }
+        
+        // Update or create username overlay
+        let usernameOverlay = row.firstChild.querySelector('.profile-username-overlay');
+        if (!usernameOverlay) {
+            usernameOverlay = document.createElement('div');
+            usernameOverlay.className = 'profile-username-overlay';
+            row.firstChild.appendChild(usernameOverlay);
+        }
+        usernameOverlay.textContent = username || getCurrentUsername();
         return;
     }
     // Otherwise, insert a new profile image tile at the start
@@ -940,6 +977,13 @@ function ensureProfileImageTile(row, imgSrc) {
     img.src = imgSrc;
     img.alt = 'Profile';
     imgTile.appendChild(img);
+    
+    // Add username overlay
+    const usernameOverlay = document.createElement('div');
+    usernameOverlay.className = 'profile-username-overlay';
+    usernameOverlay.textContent = username || getCurrentUsername();
+    imgTile.appendChild(usernameOverlay);
+    
     row.insertBefore(imgTile, row.firstChild);
 }
 
@@ -956,7 +1000,7 @@ function addProfileImageToRow(rowIndex) {
     const row = document.querySelector(`.row[data-row="${rowIndex}"]`);
     // Use the current guessing user's image, or fallback to logged-in user's image
     const userImage = getUserProfileImage(currentGuessingUser ? currentGuessingUser.username : null);
-    ensureProfileImageTile(row, userImage);
+    ensureProfileImageTile(row, userImage, currentGuessingUser ? currentGuessingUser.username : getCurrentUsername());
 }
 
 //How rows are moved during gameplay if flow is up
@@ -968,11 +1012,13 @@ function shiftRowsDownUpFlowV2() {
 
         // Remove any profile image tile from destination row
         removeProfileImageTile(thisRow);
-        // If the source row has a profile image tile, add one to the destination with the same src
+        // If the source row has a profile image tile, add one to the destination with the same src and username
         if (aboveRow.firstChild && aboveRow.firstChild.classList.contains('profile-img-tile')) {
             const aboveImg = aboveRow.firstChild.querySelector('img');
+            const aboveUsername = aboveRow.firstChild.querySelector('.profile-username-overlay');
             const imgSrc = aboveImg ? aboveImg.src : 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
-            ensureProfileImageTile(thisRow, imgSrc);
+            const username = aboveUsername ? aboveUsername.textContent : getCurrentUsername();
+            ensureProfileImageTile(thisRow, imgSrc, username);
         }
 
         // Copy letter tiles (skip image tile if present)
@@ -1017,11 +1063,13 @@ function shiftRowsDown() {
 
             // Remove any profile image tile from destination row
             removeProfileImageTile(nextRow);
-            // If the source row has a profile image tile, add one to the destination with the same src
+            // If the source row has a profile image tile, add one to the destination with the same src and username
             if (currentRow.firstChild && currentRow.firstChild.classList.contains('profile-img-tile')) {
                 const currentImg = currentRow.firstChild.querySelector('img');
+                const currentUsername = currentRow.firstChild.querySelector('.profile-username-overlay');
                 const imgSrc = currentImg ? currentImg.src : 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
-                ensureProfileImageTile(nextRow, imgSrc);
+                const username = currentUsername ? currentUsername.textContent : getCurrentUsername();
+                ensureProfileImageTile(nextRow, imgSrc, username);
             }
 
             // Copy letter tiles (skip image tile if present)
@@ -1155,7 +1203,7 @@ function fastSubmitWord(word, user, callback) {
             if (i === 0) {
                 const row = document.querySelector(`.row[data-row="${currentRow}"]`);
                 const userImage = getUserProfileImage(currentGuessingUser ? currentGuessingUser.username : null);
-                ensureProfileImageTile(row, userImage);
+                ensureProfileImageTile(row, userImage, currentGuessingUser ? currentGuessingUser.username : 'Host');
             }
         }
     }
@@ -2111,6 +2159,9 @@ function initializeTikTokSettings() {
     // Set initial state based on loaded play mode
     if (tiktokPlayMode === 'group') {
         startTikTokGroupMode();
+    } else {
+        // Ensure header margin is set correctly for individual mode on page load
+        updateHeaderMargin();
     }
     
     // Event listeners
@@ -2349,6 +2400,9 @@ function startTikTokGroupMode() {
     if (keyboard) keyboard.style.visibility = 'hidden';
     setCogSimulateActive();
     
+    // Update header margin for group mode
+    updateHeaderMargin();
+    
     // No simulation interval - only real TikTok comments will populate the stacks
     renderGroupGuessBarChart();
 }
@@ -2362,6 +2416,9 @@ function stopTikTokGroupMode() {
     const keyboard = document.querySelector('.keyboard');
     if (keyboard) keyboard.style.visibility = 'visible';
     groupGuessStacks = {};
+    
+    // Update header margin for individual mode
+    updateHeaderMargin();
 }
 
 function countCorrectLetters(result) {
@@ -2408,7 +2465,7 @@ function displayIndividualBestGuessInBottomRow() {
     // Add profile image for the best guess user
     if (individualBestGuess.user) {
         const userImage = getUserProfileImage(individualBestGuess.user.username);
-        ensureProfileImageTile(bottomRow, userImage);
+        ensureProfileImageTile(bottomRow, userImage, individualBestGuess.user.username);
     }
     
     // Display the best guess word with results
