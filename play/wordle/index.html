@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div style="display: flex; align-items: center; justify-content: flex-start; gap: 16px; margin-bottom: 16px;">
+    <div id="header-container" style="display: flex; align-items: center; justify-content: flex-start; gap: 16px; margin-bottom: 16px;">
         <h1 style="margin: 0;">Wordle on Stream</h1>
         <img src="https://www.runchatcapture.com/assets/imgs/wordle_on_stream.png" alt="Wordle on Stream" style="height: 48px; width: auto; border-radius: 8px;" />
     </div>
@@ -77,6 +77,18 @@
             <!-- Group Winners -->
             <div id="group-winners" class="group-winners">
                 <!-- Multiple winners will be populated here -->
+            </div>
+            
+            <!-- Streak Metrics -->
+            <div id="modal-streak-metrics" class="modal-streak-metrics">
+                <div class="modal-streak-item">
+                    <div class="modal-streak-number" id="modal-current-streak">0</div>
+                    <div class="modal-streak-label">Current Streak</div>
+                </div>
+                <div class="modal-streak-item">
+                    <div class="modal-streak-number" id="modal-max-streak">0</div>
+                    <div class="modal-streak-label">Max Streak</div>
+                </div>
             </div>
         </div>
     </div>

@@ -20,6 +20,10 @@ h1 {
     letter-spacing: 0.5px;
 }
 
+#header-container {
+    transition: margin-top 0.3s ease;
+}
+
 #game-container {
     max-width: 350px;
     margin: 0 auto;
@@ -770,6 +774,39 @@ h1 {
     word-break: break-word;
 }
 
+/* Modal Streak Metrics */
+.modal-streak-metrics {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modal-streak-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.modal-streak-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 5px;
+}
+
+.modal-streak-label {
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
 /* Responsive adjustments */
 @media (max-width: 600px) {
     .winning-modal {
@@ -801,6 +838,18 @@ h1 {
     
     .group-winner-name {
         font-size: 0.8em;
+    }
+    
+    .modal-streak-metrics {
+        gap: 20px;
+    }
+    
+    .modal-streak-number {
+        font-size: 20px;
+    }
+    
+    .modal-streak-label {
+        font-size: 0.7em;
     }
 }
 

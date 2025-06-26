@@ -804,6 +804,9 @@ function initializeSettingsPanel() {
     // Initialize statistics manager
     statisticsManager = new StatisticsManager();
 
+    // Check initial group mode state and update header margin
+    updateHeaderMargin();
+
     // After other settings panel logic:
     const simulateGuessesCheckbox = document.getElementById('simulate-guesses');
     if (simulateGuessesCheckbox) {
@@ -1245,6 +1248,10 @@ function startGroupGuessBar(preventWin = false) {
     const keyboard = document.querySelector('.keyboard');
     if (keyboard) keyboard.style.visibility = 'hidden';
     setCogSimulateActive();
+    
+    // Update header margin for group mode
+    updateHeaderMargin();
+    
     if (groupGuessInterval) clearInterval(groupGuessInterval);
     groupGuessInterval = setInterval(() => {
         if (!groupGuessBarActive || isGameOver) return;
@@ -1317,6 +1324,9 @@ function stopGroupGuessBar() {
     const keyboard = document.querySelector('.keyboard');
     if (keyboard) keyboard.style.visibility = 'visible';
     groupGuessStacks = {};
+    
+    // Update header margin for individual mode
+    updateHeaderMargin();
 }
 
 //How group guess word is entered
@@ -1396,6 +1406,19 @@ function showWinningModal(winningWord) {
     } else {
         // Single player mode: Show the winner
         showSingleWinner(winningWord, title, wordDisplay, singleWinner, groupWinners);
+    }
+    
+    // Update streak metrics in modal
+    if (statisticsManager) {
+        const currentStreakElement = document.getElementById('modal-current-streak');
+        const maxStreakElement = document.getElementById('modal-max-streak');
+        
+        if (currentStreakElement) {
+            currentStreakElement.textContent = statisticsManager.stats.currentStreak;
+        }
+        if (maxStreakElement) {
+            maxStreakElement.textContent = statisticsManager.stats.maxStreak;
+        }
     }
     
     // Show the overlay
@@ -2674,3 +2697,96 @@ class StatisticsManager {
 
 // Initialize statistics manager
 let statisticsManager;
+
+function updateHeaderMargin() {
+    const headerContainer = document.getElementById('header-container');
+    const isGroupMode = document.getElementById('group-guess-bar-chart').style.display !== 'none';
+    
+    if (headerContainer) {
+        if (isGroupMode) {
+            headerContainer.style.marginTop = '126px';
+        } else {
+            headerContainer.style.marginTop = '0px';
+        }
+    }
+}
+
+function startGroupGuessBar(preventWin = false) {
+    groupGuessBarActive = true;
+    groupGuessStacks = {};
+    lastBarOrder = [];
+    groupModeSubmittedGuesses = 0; // Reset submitted guesses counter
+    const barChart = document.getElementById('group-guess-bar-chart');
+    if (barChart) {
+        barChart.style.display = 'flex';
+        barChart.style.height = `${stackHeight}px`;
+        barChart.style.minHeight = `${stackHeight}px`;
+    }
+    const keyboard = document.querySelector('.keyboard');
+    if (keyboard) keyboard.style.visibility = 'hidden';
+    setCogSimulateActive();
+    
+    // Update header margin for group mode
+    updateHeaderMargin();
+    
+    if (groupGuessInterval) clearInterval(groupGuessInterval);
+    groupGuessInterval = setInterval(() => {
+        if (!groupGuessBarActive || isGameOver) return;
+        
+        // Increment guess count
+        groupModeGuessCount++;
+        
+        let guessWord;
+        if (preventWin) {
+            // Only use words that are NOT the target word (for loss simulation)
+            const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
+            if (possibleWords.length === 0) return;
+            guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+        } else {
+            // Original logic: after 10 guesses, start adding winning word guesses
+            if (groupModeGuessCount >= 10) {
+                // After 10 guesses, only add guesses for the winning word
+                guessWord = targetWord;
+            } else {
+                // Pick a random word that is NOT the target word
+                const possibleWords = wordLists[wordLength].filter(w => w !== targetWord);
+                if (possibleWords.length === 0) return;
+                guessWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+            }
+        }
+        
+        // Simulate a random user
+        const randomNumber = Math.floor(Math.random() * 1000);
+        const user = {
+            username: 'user' + randomNumber,
+            photoUrl: 'https://picsum.photos/40?' + Math.random(),
+            gift_name: '',
+            comment: 'candy'
+        };
+        // Add to stack
+        if (!groupGuessStacks[guessWord]) groupGuessStacks[guessWord] = [];
+        // Users are stored here, but need to be saved and referenced for entire game. #change
+        groupGuessStacks[guessWord].push(user);
+        
+        // Store the user in the playingUsers array for the entire game
+        playingUsers.push(user);
+        
+        // If stack reaches required number, enter the word and remove the stack
+        if (groupGuessStacks[guessWord].length >= requiredGuesses) {
+            // Use the top photo (last user added)
+            simulateGroupAudienceTyping(guessWord, groupGuessStacks[guessWord][groupGuessStacks[guessWord].length - 1]);
+            delete groupGuessStacks[guessWord];
+        }
+        // Only keep 7 stacks
+        const stackWords = Object.keys(groupGuessStacks);
+        if (stackWords.length > 7) {
+            // Remove the smallest stack (rightmost)
+            let minWord = stackWords[0];
+            for (const w of stackWords) {
+                if (groupGuessStacks[w].length < groupGuessStacks[minWord].length) minWord = w;
+            }
+            delete groupGuessStacks[minWord];
+        }
+        renderGroupGuessBarChart();
+    }, 1000);
+}
