@@ -2307,6 +2307,8 @@ function handleTikTokGroupGuess(guessWord, user) {
             currentGuessingUser = null;
         });
         
+        // Remove the word from the stacks after submission
+        delete groupGuessStacks[guessWord];
     }
     
     // Only keep 7 stacks (same logic as existing group guess bar)
