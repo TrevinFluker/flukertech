@@ -2417,7 +2417,7 @@ function startTikTokGroupMode() {
     
     const groupGuessBarChart = document.getElementById('group-guess-bar-chart');
     if (groupGuessBarChart) {
-        groupGuessBarChart.style.display = 'block';
+        groupGuessBarChart.style.display = 'flex';
     }
     
     // Hide keyboard in group mode (takes precedence over other keyboard settings)
