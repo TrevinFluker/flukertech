@@ -643,12 +643,19 @@ function initializeSettingsPanel() {
             turnedOff = true;
         }
         if (groupGuessBarActive) {
-            stopGroupGuessBar();
-            const groupGuessBarCheckbox = document.getElementById('group-guess-bar');
-            if (groupGuessBarCheckbox) groupGuessBarCheckbox.checked = false;
-            const groupLossCheckbox = document.getElementById('group-guess-loss');
-            if (groupLossCheckbox) groupLossCheckbox.checked = false;
-            turnedOff = true;
+            // Check if this is TikTok group mode (don't turn it off)
+            const tiktokPlayModeSelect = document.getElementById('tiktok-play-mode');
+            const isTikTokGroupMode = tiktokPlayModeSelect && tiktokPlayModeSelect.value === 'group';
+            
+            if (!isTikTokGroupMode) {
+                // This is simulation group mode, turn it off
+                stopGroupGuessBar();
+                const groupGuessBarCheckbox = document.getElementById('group-guess-bar');
+                if (groupGuessBarCheckbox) groupGuessBarCheckbox.checked = false;
+                const groupLossCheckbox = document.getElementById('group-guess-loss');
+                if (groupLossCheckbox) groupLossCheckbox.checked = false;
+                turnedOff = true;
+            }
         }
         if (turnedOff) unsetCogSimulateActive();
         settingsPanel.classList.toggle('open');
@@ -656,6 +663,12 @@ function initializeSettingsPanel() {
         // Update current answer display when opening settings
         if (settingsPanel.classList.contains('open')) {
             updateCurrentAnswerDisplay();
+            
+            // Ensure keyboard visibility is maintained if TikTok group mode is active
+            const keyboard = document.querySelector('.keyboard');
+            if (keyboard && keyboard.hasAttribute('data-group-mode-hidden')) {
+                keyboard.style.visibility = 'hidden';
+            }
         }
     });
 
@@ -824,20 +837,30 @@ function initializeSettingsPanel() {
     const keyboard = document.querySelector('.keyboard');
     if (hideKeyboardCheckbox && keyboard) {
         hideKeyboardCheckbox.addEventListener('change', function() {
-            keyboard.style.visibility = this.checked ? 'hidden' : 'visible';
+            // Don't change keyboard visibility if group mode is active
+            if (!keyboard.hasAttribute('data-group-mode-hidden')) {
+                keyboard.style.visibility = this.checked ? 'hidden' : 'visible';
+            }
         });
-        // On load, respect the checkbox state
-        keyboard.style.visibility = hideKeyboardCheckbox.checked ? 'hidden' : 'visible';
+        // On load, respect the checkbox state only if group mode isn't controlling it
+        if (!keyboard.hasAttribute('data-group-mode-hidden')) {
+            keyboard.style.visibility = hideKeyboardCheckbox.checked ? 'hidden' : 'visible';
+        }
     }
 
     // Keyboard visibility (visibility: hidden)
     const keyboardVisibilityOffCheckbox = document.getElementById('keyboard-visibility-off');
     if (keyboardVisibilityOffCheckbox && keyboard) {
         keyboardVisibilityOffCheckbox.addEventListener('change', function() {
-            keyboard.style.visibility = this.checked ? 'hidden' : 'visible';
+            // Don't change keyboard visibility if group mode is active
+            if (!keyboard.hasAttribute('data-group-mode-hidden')) {
+                keyboard.style.visibility = this.checked ? 'hidden' : 'visible';
+            }
         });
-        // On load, respect the checkbox state
-        keyboard.style.visibility = keyboardVisibilityOffCheckbox.checked ? 'hidden' : 'visible';
+        // On load, respect the checkbox state only if group mode isn't controlling it
+        if (!keyboard.hasAttribute('data-group-mode-hidden')) {
+            keyboard.style.visibility = keyboardVisibilityOffCheckbox.checked ? 'hidden' : 'visible';
+        }
     }
 
     // Group guess bar chart logic
@@ -2391,36 +2414,60 @@ window.getCurrentTargetWord = function() {
 function startTikTokGroupMode() {
     groupGuessBarActive = true;
     groupGuessStacks = {};
-    lastBarOrder = [];
-    const barChart = document.getElementById('group-guess-bar-chart');
-    if (barChart) {
-        barChart.style.display = 'flex';
-        barChart.style.height = `${stackHeight}px`;
-        barChart.style.minHeight = `${stackHeight}px`;
+    
+    const groupGuessBarChart = document.getElementById('group-guess-bar-chart');
+    if (groupGuessBarChart) {
+        groupGuessBarChart.style.display = 'block';
     }
+    
+    // Hide keyboard in group mode (takes precedence over other keyboard settings)
     const keyboard = document.querySelector('.keyboard');
-    if (keyboard) keyboard.style.visibility = 'hidden';
-    setCogSimulateActive();
+    if (keyboard) {
+        keyboard.style.visibility = 'hidden';
+        // Mark that group mode is controlling keyboard visibility
+        keyboard.setAttribute('data-group-mode-hidden', 'true');
+    }
     
     // Update header margin for group mode
     updateHeaderMargin();
     
-    // No simulation interval - only real TikTok comments will populate the stacks
     renderGroupGuessBarChart();
 }
 
 // Stop TikTok group mode
 function stopTikTokGroupMode() {
     groupGuessBarActive = false;
-    if (!simulateGuessesActive) unsetCogSimulateActive();
-    const barChart = document.getElementById('group-guess-bar-chart');
-    if (barChart) barChart.style.display = 'none';
-    const keyboard = document.querySelector('.keyboard');
-    if (keyboard) keyboard.style.visibility = 'visible';
     groupGuessStacks = {};
+    
+    const groupGuessBarChart = document.getElementById('group-guess-bar-chart');
+    if (groupGuessBarChart) {
+        groupGuessBarChart.style.display = 'none';
+    }
+    
+    // Restore keyboard visibility based on settings when exiting group mode
+    const keyboard = document.querySelector('.keyboard');
+    if (keyboard) {
+        // Remove group mode marker
+        keyboard.removeAttribute('data-group-mode-hidden');
+        
+        // Check current keyboard visibility settings
+        const hideKeyboardCheckbox = document.getElementById('hide-keyboard');
+        const keyboardVisibilityOffCheckbox = document.getElementById('keyboard-visibility-off');
+        
+        // Restore visibility based on current settings
+        if (hideKeyboardCheckbox && hideKeyboardCheckbox.checked) {
+            keyboard.style.visibility = 'hidden';
+        } else if (keyboardVisibilityOffCheckbox && keyboardVisibilityOffCheckbox.checked) {
+            keyboard.style.visibility = 'hidden';
+        } else {
+            keyboard.style.visibility = 'visible';
+        }
+    }
     
     // Update header margin for individual mode
     updateHeaderMargin();
+    
+    renderGroupGuessBarChart();
 }
 
 function countCorrectLetters(result) {
