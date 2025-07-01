@@ -90,29 +90,26 @@ h1 {
 .keyboard {
     margin-top: 20px;
     user-select: none;
-    padding: 8px;
+    padding: 10px;
     background-color: #1a1a1b;
     border-radius: 8px;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
 }
 
 .keyboard-row {
     display: flex;
     justify-content: center;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .key {
     background-color: #818384;
     border: 0;
-    border-radius: 4px;
-    margin: 0 2px;
+    border-radius: 6px;
+    margin: 0 3px;
     padding: 0;
-    min-width: 32px;
-    height: 44px;
-    font-size: 16px;
+    min-width: 42px;
+    height: 58px;
+    font-size: 22px;
     font-weight: 600;
     cursor: pointer;
     text-transform: uppercase;
@@ -122,8 +119,6 @@ h1 {
     color: #ffffff;
     transition: all 0.2s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    flex: 1;
-    max-width: 40px;
 }
 
 .key:hover {
@@ -137,13 +132,11 @@ h1 {
 }
 
 .key-wide {
-    min-width: 48px;
-    max-width: 60px;
-    flex: 1.5;
+    min-width: 65px;
 }
 
 .key.key-wide[data-key="enter"] {
-    font-size: 12px;
+    font-size: 15px;
 }
 
 .correct {
@@ -167,7 +160,6 @@ h1 {
 }
 
 .message {
-    margin-top: 20px;
     font-size: 18px;
     font-weight: 600;
     height: 24px;
