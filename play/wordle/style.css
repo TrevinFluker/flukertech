@@ -88,28 +88,31 @@ h1 {
 }
 
 .keyboard {
-    margin-top: 40px;
+    margin-top: 20px;
     user-select: none;
-    padding: 10px;
+    padding: 8px;
     background-color: #1a1a1b;
     border-radius: 8px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .keyboard-row {
     display: flex;
     justify-content: center;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .key {
     background-color: #818384;
     border: 0;
-    border-radius: 6px;
-    margin: 0 3px;
+    border-radius: 4px;
+    margin: 0 2px;
     padding: 0;
-    min-width: 42px;
-    height: 58px;
-    font-size: 22px;
+    min-width: 32px;
+    height: 44px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     text-transform: uppercase;
@@ -119,6 +122,8 @@ h1 {
     color: #ffffff;
     transition: all 0.2s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    flex: 1;
+    max-width: 40px;
 }
 
 .key:hover {
@@ -132,11 +137,13 @@ h1 {
 }
 
 .key-wide {
-    min-width: 65px;
+    min-width: 48px;
+    max-width: 60px;
+    flex: 1.5;
 }
 
 .key.key-wide[data-key="enter"] {
-    font-size: 15px;
+    font-size: 12px;
 }
 
 .correct {
