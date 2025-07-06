@@ -46,6 +46,14 @@
                 </select>
             </div>
             <div class="setting-item">
+                <label for="required-guesses" style="text-align: left;">(Group) Required Agreed Guesses:</label>
+                <div class="number-input-container">
+                    <button class="number-input-btn" id="decrease-guesses">-</button>
+                    <input type="number" id="required-guesses" class="setting-input" value="5" min="3" max="7">
+                    <button class="number-input-btn" id="increase-guesses">+</button>
+                </div>
+            </div>
+            <div class="setting-item">
                 <label for="word-length">Word Length:</label>
                 <select id="word-length" class="setting-select">
                     <option value="4">4 Letters</option>
@@ -109,15 +117,7 @@
                 <label for="group-guess-loss">Simulate Group Loss:</label>
                 <input type="checkbox" id="group-guess-loss" class="setting-checkbox">
             </div>
-            <div class="setting-item">
-                <label for="required-guesses">Required Agreed Guesses:</label>
-                <div class="number-input-container">
-                    <button class="number-input-btn" id="decrease-guesses">-</button>
-                    <input type="number" id="required-guesses" class="setting-input" value="5" min="3" max="7">
-                    <button class="number-input-btn" id="increase-guesses">+</button>
-                </div>
-            </div>
-            <div class="setting-item">
+            <div class="setting-item" style="display: none;">
                 <label for="stack-height">Stack Height (px):</label>
                 <div class="number-input-container">
                     <button style="display: none;" class="number-input-btn" id="decrease-height">-</button>

@@ -758,6 +758,8 @@ function initializeSettingsPanel() {
         if (newCount >= 3 && newCount <= 7) {
             requiredGuesses = newCount;
             requiredGuessesInput.value = newCount;
+            // Save to localStorage
+            localStorage.setItem('wordleRequiredGuesses', newCount);
             // Automated stack height scale
             const heightScale = {3: 120, 4: 160, 5: 220, 6: 248, 7: 288};
             stackHeight = heightScale[newCount] || 220;
@@ -768,6 +770,12 @@ function initializeSettingsPanel() {
                 barChart.style.minHeight = `${stackHeight}px`;
             }
         }
+    }
+
+    // Load saved required guesses setting
+    const savedRequiredGuesses = localStorage.getItem('wordleRequiredGuesses');
+    if (savedRequiredGuesses) {
+        updateRequiredGuesses(parseInt(savedRequiredGuesses));
     }
 
     requiredGuessesInput.addEventListener('change', () => {
@@ -2200,6 +2208,11 @@ function initializeTikTokSettings() {
             } else {
                 // Stop TikTok group mode (restore keyboard visibility and hide bar)
                 stopTikTokGroupMode();
+            }
+            
+            // Trigger new game when switching modes
+            if (newGameBtn) {
+                newGameBtn.click();
             }
         });
     }
