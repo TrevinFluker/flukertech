@@ -94,7 +94,7 @@ let availableVoices = []; // Store available voices
 
 // TikTok Integration Settings
 let tiktokPlayMode = 'individual'; // 'individual' or 'group'
-
+let winningUser = null; // Track the user who guessed the winning word
 // Individual mode best guess tracking
 let individualBestGuess = null; // Store the best guess data for individual mode
 
@@ -132,6 +132,9 @@ async function initializeGame() {
     // Clear the current guessing user
     currentGuessingUser = null;
     
+    // Clear the winning user
+    winningUser = null;
+
     // Reset guess counters
     singlePlayerGuessCount = 0;
     groupModeGuessCount = 0;
@@ -2221,6 +2224,13 @@ function initializeTikTokSettings() {
 // TikTok Integration Functions
 function handleRealComment(user) {
     if (isGameOver) return;
+
+    // If we have a winning user waiting, replace current comment with winning user's comment
+    if (winningUser && winningUser.username !== user.username) {
+        console.log('Replacing comment from', user.username, 'with winning user', winningUser.username, 'comment');
+        user = winningUser; // Replace the current user with the winning user
+    }
+
     console.log('TikTok Comment Received:', user);
     // Extract the first word from comment and clean it
     const comment = user.comment.trim();
@@ -2231,6 +2241,20 @@ function handleRealComment(user) {
     if (firstWord.length > wordLength) return;
     firstWord = firstWord.toLowerCase();
     
+    // Check if this word matches the target word (winning word)
+    if (firstWord.toLowerCase() === targetWord.toLowerCase()) {
+        console.log('WINNING WORD DETECTED:', firstWord, 'from user:', user.username);
+        // Set this user as the winning user to prevent other comments from being processed
+        winningUser = {
+            username: user.username,
+            photoUrl: user.photoUrl,
+            gift_name: user.gift_name || '',
+            comment: user.comment,
+            guessedWord: firstWord
+        };
+        console.log('Winning user set:', winningUser);
+    }
+
     // Create user object for tracking
     const tiktokUser = {
         username: user.username,
@@ -2246,6 +2270,7 @@ function handleRealComment(user) {
     } else {
         // Group mode: add to stacks and process when threshold is reached
         handleTikTokGroupGuess(firstWord, tiktokUser);
+        winningUser = null;
     }
 }
 
