@@ -363,6 +363,11 @@ function submitGuess() {
             if (currentRow >= maxRows) {
                 // Check for group mode loss condition
                 if (isGroupMode && (groupModeSubmittedGuesses >= maxRows)) {
+                    // Clear all group guess stacks on loss
+                    groupGuessStacks = {};
+                    lastBarOrder = [];
+                    lastBarRects = {};
+                    renderGroupGuessBarChart();
                     showLossModal(targetWord);
                     return;
                 }
@@ -376,6 +381,11 @@ function submitGuess() {
             addProfileImageToRow(currentRow);
             // Check for group mode loss condition in up flow
             if (isGroupMode && (groupModeSubmittedGuesses >= maxRows)) {
+                // Clear all group guess stacks on loss
+                groupGuessStacks = {};
+                lastBarOrder = [];
+                lastBarRects = {};
+                renderGroupGuessBarChart();
                 showLossModal(targetWord);
                 return;
             }
