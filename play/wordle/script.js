@@ -2,10 +2,21 @@
 // Word lists for different lengths - will be loaded from API
 let wordLists = {};
 
+// Language setting
+let currentLanguage = 'en'; // Default to English
+
+// Initialize language setting from localStorage before starting the game
+const savedLanguageOnLoad = localStorage.getItem('wordleLanguage');
+if (savedLanguageOnLoad) {
+    currentLanguage = savedLanguageOnLoad;
+}
+
 // Function to load word lists from API
 async function loadWordLists() {
     try {
-        const response = await fetch('https://www.runchatcapture.com/wordle.json');
+        // Determine which JSON file to load based on language
+        const jsonFile = currentLanguage === 'es' ? 'wordle_es.json' : 'wordle.json';
+        const response = await fetch(`https://www.runchatcapture.com/${jsonFile}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -17,7 +28,7 @@ async function loadWordLists() {
             wordLists[parseInt(key)] = value;
         }
         
-        console.log('Word lists loaded successfully:', Object.keys(wordLists).map(k => `${k}: ${wordLists[k].length} words`));
+        console.log(`Word lists loaded successfully for ${currentLanguage}:`, Object.keys(wordLists).map(k => `${k}: ${wordLists[k].length} words`));
         return true;
     } catch (error) {
         console.error('Failed to load word lists:', error);
@@ -134,7 +145,7 @@ async function initializeGame() {
     
     // Clear the winning user
     winningUser = null;
-
+    
     // Reset guess counters
     singlePlayerGuessCount = 0;
     groupModeGuessCount = 0;
@@ -170,9 +181,9 @@ async function initializeGame() {
     isGameOver = false;
     messageDisplay.textContent = '';
     
-    // Ensure word lists are loaded before choosing a target word
+    // Ensure word lists are loaded for the current language before choosing a target word
     if (!wordLists[wordLength] || wordLists[wordLength].length === 0) {
-        messageDisplay.textContent = 'Loading word lists...';
+        messageDisplay.textContent = `Loading word lists for ${currentLanguage === 'es' ? 'Español' : 'English'}...`;
         await loadWordLists();
         messageDisplay.textContent = '';
     }
@@ -631,6 +642,7 @@ function initializeSettingsPanel() {
     const settingsToggle = document.getElementById('settings-toggle');
     const closeSettings = document.getElementById('close-settings');
     const sectionHeaders = document.querySelectorAll('.settings-section-header');
+    const languageSelect = document.getElementById('language-select');
     const wordLengthSelect = document.getElementById('word-length');
     const rowCountInput = document.getElementById('row-count');
     const decreaseRowsBtn = document.getElementById('decrease-rows');
@@ -645,6 +657,37 @@ function initializeSettingsPanel() {
     const stackHeightInput = document.getElementById('stack-height');
     const decreaseHeightBtn = document.getElementById('decrease-height');
     const increaseHeightBtn = document.getElementById('increase-height');
+
+    // Load saved language setting
+    const savedLanguage = localStorage.getItem('wordleLanguage');
+    if (savedLanguage) {
+        currentLanguage = savedLanguage;
+        if (languageSelect) {
+            languageSelect.value = currentLanguage;
+        }
+    }
+
+    // Handle language change
+    if (languageSelect) {
+        languageSelect.addEventListener('change', async () => {
+            const newLanguage = languageSelect.value;
+            if (newLanguage !== currentLanguage) {
+                currentLanguage = newLanguage;
+                localStorage.setItem('wordleLanguage', currentLanguage);
+                
+                // Show loading message
+                messageDisplay.textContent = 'Loading new language...';
+                
+                // Reload word lists for the new language
+                await loadWordLists();
+                
+                // Start a new game with the new language
+                initializeGame();
+                
+                showMessage(`Language changed to ${currentLanguage === 'es' ? 'Español' : 'English'}`);
+            }
+        });
+    }
 
     // Toggle settings panel
     settingsToggle.addEventListener('click', () => {
