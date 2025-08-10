@@ -1,32 +1,24 @@
 function getGoogleSuggestions(query) {
     return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        const callbackName = 'googleSuggestCallback_' + Date.now();
+        const url = `https://cc-test-server-4e3612916ba4.herokuapp.com/api/suggest?q=${encodeURIComponent(query)}`;
         
-        // Create global callback function
-        window[callbackName] = function(data) {
-            // Cleanup
-            document.head.removeChild(script);
-            delete window[callbackName];
-            
-            // The response format is [query, [suggestions], [], []]
-            const suggestions = data[1] || [];
-            
-            resolve({
-                query: data[0],
-                suggestions: suggestions,
-                timestamp: new Date().toISOString()
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                resolve({
+                    query: query,
+                    suggestions: data.suggestions || data || [],
+                    timestamp: new Date().toISOString()
+                });
+            })
+            .catch(error => {
+                reject(new Error(`Failed to load suggestions: ${error.message}`));
             });
-        };
-        
-        script.src = `https://suggestqueries.google.com/complete/search?client=chrome&callback=${callbackName}&q=${encodeURIComponent(query)}`;
-        script.onerror = () => {
-            reject(new Error('Failed to load suggestions'));
-            document.head.removeChild(script);
-            delete window[callbackName];
-        };
-        
-        document.head.appendChild(script);
     });
 }
 
