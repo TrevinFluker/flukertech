@@ -1,9 +1,34 @@
 let gameData = null;
 
 let currentGame = null;
-let score = 0;
 let revealedCount = 0;
 let simulateCommentCount = 0;
+let roundWinnersModalShown = false; // Track if modal has been shown for current game
+
+// Google Autocomplete API function
+function getGoogleSuggestions(query) {
+    return new Promise((resolve, reject) => {
+        const url = `https://cc-test-server-4e3612916ba4.herokuapp.com/api/suggest?q=${encodeURIComponent(query)}`;
+        
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                resolve({
+                    query: query,
+                    suggestions: data.suggestions || data || [],
+                    timestamp: new Date().toISOString()
+                });
+            })
+            .catch(error => {
+                reject(new Error(`Failed to load suggestions: ${error.message}`));
+            });
+    });
+}
 
 // Initialize category dropdown
 async function initCategories() {
@@ -21,18 +46,345 @@ async function initCategories() {
             "Questions": "🤔",
             "Names": "👤",
             "Animals": "🐾",
-            "People": "👥"
+            "People": "👥",
+            "Improv": "🎭"
         };
         
+        // Add preset categories
         Object.keys(gameData).forEach(category => {
             const option = document.createElement('option');
             option.value = category;
+            option.className = 'preset-category';
             option.textContent = `${categoryEmojis[category] || '📋'} ${category}`;
             select.appendChild(option);
         });
+
+        // Add improv category
+        const improvOption = document.createElement('option');
+        improvOption.value = 'Improv';
+        improvOption.className = 'improv-category';
+        improvOption.textContent = `${categoryEmojis['Improv']} Enter your own search`;
+        improvOption.style.display = 'none'; // Hidden by default (preset mode)
+        select.appendChild(improvOption);
+
+        // Initialize mode handling
+        initializeModeHandling();
+        
+        // Update game history percentage now that data is loaded
+        updateGameHistoryPercent();
+
     } catch (error) {
         console.error('Error loading game data:', error);
         alert('Failed to load game data. Please refresh the page.');
+    }
+}
+
+// Initialize game mode handling
+function initializeModeHandling() {
+    const gameModeToggle = document.getElementById('gameModeToggle');
+    
+    if (gameModeToggle) {
+        // Load game mode from localStorage on page load
+        const savedGameMode = localStorage.getItem('gameMode');
+        if (savedGameMode === 'improv') {
+            gameModeToggle.checked = true;
+            // Switch to improv mode without page refresh since we're loading
+            switchToImprovMode();
+        } else {
+            gameModeToggle.checked = false;
+            // Default to preset mode
+            switchToPresetMode();
+        }
+        
+        gameModeToggle.addEventListener('change', function() {
+            const isImprovMode = gameModeToggle.checked;
+            
+            // Save game mode to localStorage
+            localStorage.setItem('gameMode', isImprovMode ? 'improv' : 'preset');
+            
+            if (isImprovMode) {
+                // Switch to Improv mode with page refresh to clear everything
+                console.log('Switching to Improv mode - refreshing page');
+                window.location.reload();
+            } else {
+                // Switch to Preset mode
+                switchToPresetMode();
+            }
+        });
+    }
+}
+
+// Switch to Improv mode
+function switchToImprovMode() {
+    const categorySelect = document.getElementById('categorySelect');
+    const presetOptions = categorySelect.querySelectorAll('.preset-category');
+    const improvOption = categorySelect.querySelector('.improv-category');
+    
+    // Hide preset categories
+    presetOptions.forEach(option => option.style.display = 'none');
+    
+    // Show and select improv category
+    improvOption.style.display = 'block';
+    categorySelect.value = 'Improv';
+    categorySelect.disabled = true; // Make it unchangeable
+    
+    // Clear any existing game state
+    clearGameState();
+    
+    // Update UI for improv mode
+    updateUIForImprovMode();
+    
+    // Show game area and search container for improv mode
+    document.getElementById('gameArea').style.display = 'block';
+    
+    // Disable game history and management buttons in improv mode
+    disableImprovModeFeatures();
+}
+
+// Switch to Preset mode  
+function switchToPresetMode() {
+    const categorySelect = document.getElementById('categorySelect');
+    const presetOptions = categorySelect.querySelectorAll('.preset-category');
+    const improvOption = categorySelect.querySelector('.improv-category');
+    
+    // Show preset categories
+    presetOptions.forEach(option => option.style.display = 'block');
+    
+    // Hide improv category
+    improvOption.style.display = 'none';
+    categorySelect.disabled = false; // Make it changeable
+    categorySelect.value = ''; // Reset selection
+    
+    // Clear any existing game state
+    clearGameState();
+    
+    // Update UI for preset mode
+    updateUIForPresetMode();
+    
+    // Hide game area if currently showing
+    document.getElementById('gameArea').style.display = 'none';
+    
+    // Re-enable features for preset mode
+    enablePresetModeFeatures();
+}
+
+// Update UI for Improv mode
+function updateUIForImprovMode() {
+    const messageContainer = document.getElementById('messageContainer');
+    const searchPrompt = document.getElementById('searchPrompt');
+    const searchInput = document.getElementById('searchInput');
+    
+    // Show simple instructions in message container
+    if (messageContainer) {
+        messageContainer.textContent = 'Type a search and click enter to start round';
+        messageContainer.style.visibility = 'visible';
+        messageContainer.style.color = '#4285f4';
+        messageContainer.style.height = '20px';
+        messageContainer.style.padding = '';
+    }
+    
+    // Make search prompt editable and clear it
+    if (searchPrompt) {
+        searchPrompt.contentEditable = true;
+        searchPrompt.textContent = '';
+        searchPrompt.style.cursor = 'text';
+        searchPrompt.style.minWidth = '100px';
+        searchPrompt.placeholder = 'Enter search prompt...';
+        
+        // Focus the search prompt
+        searchPrompt.focus();
+        
+        // Add styling for editable state
+        searchPrompt.style.border = '1px dashed #dadce0';
+        searchPrompt.style.padding = '2px 4px';
+        searchPrompt.style.borderRadius = '3px';
+    }
+    
+    // Clear and hide the search input initially
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.style.display = 'none';
+    }
+}
+
+// Update UI for Preset mode
+function updateUIForPresetMode() {
+    const searchInput = document.getElementById('searchInput');
+    const messageContainer = document.getElementById('messageContainer');
+    const searchPrompt = document.getElementById('searchPrompt');
+    
+    // Reset search input placeholder and show it
+    if (searchInput) {
+        searchInput.placeholder = '';
+        searchInput.style.display = 'block';
+    }
+    
+    // Reset message container
+    if (messageContainer) {
+        messageContainer.style.visibility = 'hidden';
+        messageContainer.style.height = '20px';
+        messageContainer.style.padding = '';
+        messageContainer.innerHTML = '';
+    }
+    
+    // Reset search prompt to non-editable state
+    if (searchPrompt) {
+        searchPrompt.contentEditable = false;
+        searchPrompt.textContent = '';
+        searchPrompt.style.cursor = 'default';
+        searchPrompt.style.minWidth = 'auto';
+        searchPrompt.removeAttribute('placeholder');
+        
+        // Remove editable styling
+        searchPrompt.style.border = 'none';
+        searchPrompt.style.padding = '0';
+        searchPrompt.style.borderRadius = '0';
+    }
+}
+
+// Clear game state and UI
+function clearGameState() {
+    // Clear current game
+    currentGame = null;
+    revealedCount = 0;
+    
+    // Clear suggestions container
+    const suggestionsList = document.getElementById('suggestionsList');
+    if (suggestionsList) {
+        suggestionsList.innerHTML = '';
+    }
+    
+    // Clear search input
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    
+    // Clear search prompt
+    const searchPrompt = document.getElementById('searchPrompt');
+    if (searchPrompt) {
+        searchPrompt.textContent = '';
+    }
+    
+    // Clear simulated comments when changing modes
+    clearComments();
+    
+    // Update answers accordion to show "Not currently playing"
+    updateAnswersAccordion();
+}
+
+// Clear comments
+function clearComments() {
+    const comments = document.getElementById('comments');
+    if (comments) {
+        comments.innerHTML = '';
+    }
+}
+
+// Disable features that shouldn't work in improv mode
+function disableImprovModeFeatures() {
+    // Don't hide search bar - we want it to show for improv games
+    
+    // Hide game management buttons and show clear button
+    const gameHistoryBtn = document.getElementById('gameHistoryManageBtn');
+    const chooseGameBtn = document.getElementById('chooseGameBtn');
+    const nextGameBtn = document.getElementById('nextGameBtn');
+    const automationBtn = document.getElementById('automationFlowConfigureBtn');
+    const clearImprovBtn = document.getElementById('clearImprovBtn');
+    
+    if (gameHistoryBtn) {
+        gameHistoryBtn.disabled = true;
+        gameHistoryBtn.style.opacity = '0.5';
+        gameHistoryBtn.title = 'Not available in Improv mode';
+    }
+    
+    // Hide these buttons in improv mode
+    if (chooseGameBtn) {
+        chooseGameBtn.style.display = 'none';
+    }
+    
+    if (nextGameBtn) {
+        nextGameBtn.style.display = 'none';
+    }
+    
+    // Show clear button in improv mode
+    if (clearImprovBtn) {
+        clearImprovBtn.style.display = 'block';
+    }
+    
+    if (automationBtn) {
+        automationBtn.disabled = true;
+        automationBtn.style.opacity = '0.5';
+        automationBtn.title = 'Not available in Improv mode';
+    }
+}
+
+// Re-enable features for preset mode
+function enablePresetModeFeatures() {
+    // Show search bar
+    const searchBox = document.querySelector('.search-box');
+    if (searchBox) {
+        searchBox.style.visibility = 'visible';
+    }
+    
+    // Re-enable game history buttons
+    const gameHistoryBtn = document.getElementById('gameHistoryManageBtn');
+    const chooseGameBtn = document.getElementById('chooseGameBtn');
+    const nextGameBtn = document.getElementById('nextGameBtn');
+    const automationBtn = document.getElementById('automationFlowConfigureBtn');
+    const clearImprovBtn = document.getElementById('clearImprovBtn');
+    
+    if (gameHistoryBtn) {
+        gameHistoryBtn.disabled = false;
+        gameHistoryBtn.style.opacity = '1';
+        gameHistoryBtn.title = '';
+    }
+    
+    // Show these buttons in preset mode
+    if (chooseGameBtn) {
+        chooseGameBtn.style.display = 'block';
+    }
+    
+    if (nextGameBtn) {
+        nextGameBtn.style.display = 'block';
+    }
+    
+    // Hide clear button in preset mode
+    if (clearImprovBtn) {
+        clearImprovBtn.style.display = 'none';
+    }
+    
+    if (automationBtn) {
+        automationBtn.disabled = false;
+        automationBtn.style.opacity = '1';
+        automationBtn.title = '';
+    }
+}
+
+// Clear improv mode and reset to initial state
+function clearImprovMode() {
+    // Clear game state
+    clearGameState();
+    
+    // Show game area so the search box is visible
+    document.getElementById('gameArea').style.display = 'block';
+    
+    // Reset to initial improv mode state
+    updateUIForImprovMode();
+    
+    // Ensure search prompt is properly reset and focused
+    const searchPrompt = document.getElementById('searchPrompt');
+    if (searchPrompt) {
+        searchPrompt.textContent = '';
+        searchPrompt.focus();
+    }
+    
+    // Show instruction message
+    const messageContainer = document.getElementById('messageContainer');
+    if (messageContainer) {
+        messageContainer.textContent = 'Type a search and click enter to start round';
+        messageContainer.style.visibility = 'visible';
+        messageContainer.style.color = '#4285f4';
     }
 }
 
@@ -52,12 +404,18 @@ function startGame(category) {
         prompt: randomPrompt,
         answers: answers,
         revealed: new Array(answers.length).fill(false),
-        guessed: new Set()
+        guessed: new Set(),
+        allParticipants: {}
     };
     window.currentGame = currentGame;
     
+    // Update the category dropdown to reflect the selected category
+    const categorySelect = document.getElementById('categorySelect');
+    if (categorySelect) {
+        categorySelect.value = category;
+    }
+    
     revealedCount = 0;
-    score = 0;
     renderGame();
     document.getElementById('gameArea').style.display = 'block';
     document.getElementById('searchInput').focus();
@@ -66,6 +424,13 @@ function startGame(category) {
 // New game with same category
 function newGame() {
     if (!currentGame) return;
+    
+    // Don't allow new game for improv mode - user needs to enter a new query
+    if (currentGame.isImprov) {
+        showMessage('Enter a new search query to start another improv game', 'info');
+        return;
+    }
+    
     startGame(currentGame.category);
 }
 
@@ -73,8 +438,10 @@ function newGame() {
 function renderGame() {
     if (!currentGame) return;
     
+    // Reset modal shown flag for new game
+    roundWinnersModalShown = false;
+    
     document.getElementById('searchPrompt').textContent = currentGame.prompt;
-    document.getElementById('scoreBottom').textContent = score;
     
     const suggestionsList = document.getElementById('suggestionsList');
     suggestionsList.innerHTML = '';
@@ -82,8 +449,6 @@ function renderGame() {
     currentGame.answers.forEach((answer, index) => {
         const suggestion = document.createElement('div');
         suggestion.className = 'suggestion' + (currentGame.revealed[index] ? ' revealed' : '');
-        
-        const points = (10 - index) * 1000;
         
         let userImg = localStorage.getItem('profileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
         let username = localStorage.getItem('profileUsername') || '';
@@ -93,28 +458,32 @@ function renderGame() {
         }
 
         suggestion.innerHTML = `
-            <span class="suggestion-icon">🔍</span>
-            ${!currentGame.revealed[index] ? `<span class="suggestion-text">
-                ${currentGame.prompt}
+            <span class="suggestion-text">
+                <span class="suggestion-prompt">${currentGame.prompt}</span>
                 <span class="${currentGame.revealed[index] ? 'answer-revealed' : 'answer-covered'}" 
                       data-answer="${answer}">
                     ${currentGame.revealed[index] ? answer : answer}
                 </span>
-            </span>` : `<span class="${currentGame.revealed[index] ? 'answer-revealed' : 'answer-covered'}" data-answer="${answer}">${currentGame.revealed[index] ? answer : answer}</span>`}
-            ${currentGame.revealed[index] ? `<span class="suggestion-userinfo"><img class="suggestion-userimg" src="${userImg}" alt="User" /><span class="suggestion-username">${username}</span></span>` : ''}
-            <span class="suggestion-score ${currentGame.revealed[index] ? 'revealed' : ''}">
-                ${points.toLocaleString()}
             </span>
+            ${currentGame.revealed[index] ? `<span class="suggestion-userinfo"><img class="suggestion-userimg" src="${userImg}" alt="User" /><span class="suggestion-username">${username}</span></span>` : ''}
         `;
         
         suggestionsList.appendChild(suggestion);
     });
+    
+    // Update answers accordion
+    updateAnswersAccordion();
 }
 
 // Check guess against answers using the provided logic
 function checkGuess(guess, userInfo) {
     if (!guess || !currentGame) return;
     guess = guess.trim();
+    
+    // Remove escape character if present
+    guess = removeEscapeCharacter(guess);
+    console.log('guess', guess);
+    
     if (currentGame.guessed.has(guess.toLowerCase())) return;
     currentGame.guessed.add(guess.toLowerCase());
     const answersForMatching = currentGame.answers.map((answer, index) => ({
@@ -124,19 +493,87 @@ function checkGuess(guess, userInfo) {
     }));
     const matches = checkGuessLogic(guess, answersForMatching);
     let found = matches.length > 0;
+    
+    // Track user scores for Round Winners modal
+    if (!currentGame.userScores) currentGame.userScores = {};
+    if (!currentGame.allParticipants) currentGame.allParticipants = {};
+    
+    // Track this user as a participant (regardless of whether they got it right)
+    if (userInfo) {
+        const userId = userInfo.uniqueId;
+        if (!currentGame.allParticipants[userId]) {
+            currentGame.allParticipants[userId] = {
+                correctAnswers: 0,
+                totalGuesses: 0,
+                user: userInfo
+            };
+            
+            // Add new participant to persistent leaderboard with 0 points if not already there
+            const leaderboard = getLeaderboard();
+            if (!leaderboard[userId]) {
+                const newUserScore = {};
+                newUserScore[userId] = {
+                    count: 0,
+                    user: userInfo
+                };
+                updateLeaderboard(newUserScore);
+                
+                // Update floating leaderboard display to show new participant
+                if (typeof window.updateFloatingLeaderboard === 'function') {
+                    window.updateFloatingLeaderboard();
+                }
+            }
+        }
+        currentGame.allParticipants[userId].totalGuesses++;
+        
+        // Log each guess
+        console.log(`🎮 GUESS: ${userInfo.username} (${userId}) guessed: "${guess}"`);
+    }
+    
     matches.forEach(match => {
         if (!currentGame.revealed[match.index]) {
             currentGame.revealed[match.index] = true;
-            const points = (10 - match.index) * 1000;
-            score += points;
-            revealedCount++;
+            revealedCount++; // Increment revealed count
+            
             // Store user info if provided
             if (!currentGame.userInfo) currentGame.userInfo = {};
             if (userInfo) {
                 currentGame.userInfo[match.index] = userInfo;
+                
+                // Track user score (for backward compatibility)
+                const userId = userInfo.uniqueId;
+                if (!currentGame.userScores[userId]) {
+                    currentGame.userScores[userId] = {
+                        count: 0,
+                        user: userInfo
+                    };
+                }
+                currentGame.userScores[userId].count++;
+                
+                // Track correct answer for this participant
+                if (currentGame.allParticipants[userId]) {
+                    currentGame.allParticipants[userId].correctAnswers++;
+                    
+                    // Log correct answer
+                    console.log(`✅ CORRECT: ${userInfo.username} (${userId}) got "${match.answer}" correct!`);
+                    
+                    // Update leaderboard immediately with this point
+                    const singleUserScore = {};
+                    singleUserScore[userId] = {
+                        count: 1,
+                        user: userInfo
+                    };
+                    updateLeaderboard(singleUserScore);
+                    
+                    // Update floating leaderboard display in real-time
+                    if (typeof window.updateFloatingLeaderboard === 'function') {
+                        window.updateFloatingLeaderboard();
+                    }
+                }
             }
         }
     });
+    
     if (!found) {
         const coveredAnswers = document.querySelectorAll('.answer-covered');
         coveredAnswers.forEach(answer => {
@@ -145,9 +582,12 @@ function checkGuess(guess, userInfo) {
         });
     }
     renderGame();
-    if (revealedCount === currentGame.answers.length) {
+    
+    // Check if all answers are found
+    if (revealedCount === currentGame.answers.length && !roundWinnersModalShown) {
+        roundWinnersModalShown = true; // Mark modal as shown
         setTimeout(() => {
-            alert(`Congratulations! You found all answers! Final Score: ${score.toLocaleString()}`);
+            showRoundWinnersModal();
         }, 500);
     }
 }
@@ -257,34 +697,161 @@ document.getElementById('searchInput').addEventListener('keypress', function(e) 
     }
 });
 
+// Handle Enter key in editable search prompt (improv mode)
+document.getElementById('searchPrompt').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && e.target.contentEditable === 'true') {
+        e.preventDefault(); // Prevent default behavior
+        const query = e.target.textContent.trim();
+        
+        if (!query) {
+            showMessage('Please enter a search query', 'error');
+            return;
+        }
+        
+        if (query.length < 2) {
+            showMessage('Search query too short', 'error');
+            return;
+        }
+        
+        // Start the improv game with the entered query
+        startImprovGameWithQuery(query);
+    }
+});
+
+// Show messages in the message container
+function showMessage(message, type = 'info') {
+    const messageContainer = document.getElementById('messageContainer');
+    if (messageContainer) {
+        const color = type === 'error' ? '#ea4335' : '#4285f4';
+        messageContainer.textContent = message;
+        messageContainer.style.color = color;
+        messageContainer.style.visibility = 'visible';
+    }
+}
+
+// Start improv game with the user's query
+async function startImprovGameWithQuery(query) {
+    showMessage('Loading suggestions...', 'info');
+    
+    try {
+        // Call Google Autocomplete API
+        const result = await getGoogleSuggestions(query);
+        
+        if (!result.suggestions || result.suggestions.length === 0) {
+            showMessage('No suggestions found for this query. Try a different search.', 'error');
+            return;
+        }
+        
+        // Filter suggestions to only include those that contain the search prompt
+        const queryLower = query.toLowerCase().trim();
+        const filteredSuggestions = result.suggestions.filter(suggestion => 
+            suggestion.toLowerCase().includes(queryLower)
+        );
+        
+        if (filteredSuggestions.length === 0) {
+            showMessage('No matching suggestions found. Try a more specific search query.', 'error');
+            return;
+        }
+        
+        // Remove the shared prompt text from suggestions, keeping only the unique part
+        const processedSuggestions = filteredSuggestions.map(suggestion => {
+            const suggestionLower = suggestion.toLowerCase();
+            const queryIndex = suggestionLower.indexOf(queryLower);
+            
+            if (queryIndex === 0) {
+                // Prompt is at the beginning, return everything after it
+                return suggestion.substring(query.length).trim();
+            } else if (queryIndex > 0) {
+                // Prompt is in the middle, return everything after it
+                return suggestion.substring(queryIndex + query.length).trim();
+            } else {
+                // Fallback (shouldn't happen due to filtering above)
+                return suggestion;
+            }
+        }).filter(suggestion => suggestion.length > 0); // Remove empty results
+        
+        if (processedSuggestions.length === 0) {
+            showMessage('No valid suggestions after processing. Try a different search query.', 'error');
+            return;
+        }
+        
+        // Create improv game with processed suggestions
+        currentGame = {
+            category: 'Improv',
+            prompt: query,
+            answers: processedSuggestions,
+            revealed: new Array(processedSuggestions.length).fill(false),
+            guessed: new Set(),
+            isImprov: true, // Flag to identify improv games
+            allParticipants: {}
+        };
+        window.currentGame = currentGame;
+        
+        revealedCount = 0;
+        
+        // Set up the UI for gameplay
+        const searchPrompt = document.getElementById('searchPrompt');
+        const searchInput = document.getElementById('searchInput');
+        const messageContainer = document.getElementById('messageContainer');
+        
+        if (searchPrompt) {
+            searchPrompt.contentEditable = false;
+            searchPrompt.textContent = query;
+            searchPrompt.style.cursor = 'default';
+            searchPrompt.style.border = 'none';
+            searchPrompt.style.padding = '0';
+            searchPrompt.style.borderRadius = '0';
+        }
+        
+        // Show the search input for guessing
+        if (searchInput) {
+            searchInput.style.display = 'block';
+            searchInput.focus();
+        }
+        
+        // Hide the message container
+        if (messageContainer) {
+            messageContainer.style.visibility = 'hidden';
+        }
+        
+        // Render the game with processed suggestions
+        renderGame();
+        
+    } catch (error) {
+        console.error('Error fetching suggestions:', error);
+        showMessage(`Error: ${error.message}`, 'error');
+    }
+}
+
 // Handle category selection
 document.getElementById('categorySelect').addEventListener('change', function(e) {
-    if (e.target.value) {
+    if (e.target.value && e.target.value !== 'Improv') {
         startGame(e.target.value);
     }
+    // Improv category selection doesn't start a game - user needs to enter custom query
 });
 
 // Initialize the game
 initCategories();
 
-window.registerSimulatedComment = function(user) {
-    const container = document.getElementById('simulatedComments');
+window.registerComment = function(user) {
+    const container = document.getElementById('comments');
     if (!container) return;
     const row = document.createElement('div');
-    row.className = 'simulated-comment-row';
+    row.className = 'comment-row';
     row.innerHTML = `
-        <span class="simulated-comment-user">
-            <img class="simulated-comment-img" src="${user.photoUrl}" alt="User" />
-            <span class="simulated-comment-username">${user.username}</span>
+        <span class="comment-user">
+            <img class="comment-img" src="${user.photoUrl}" alt="User" />
+            <span class="comment-username">${user.username}</span>
         </span>
-        <span class="simulated-comment-guess">${user.comment}</span>
+        <span class="comment-guess">${user.comment}</span>
     `;
     container.prepend(row);
     while (container.children.length > 10) {
         container.removeChild(container.lastChild);
     }
     if (typeof checkGuess === 'function') {
-        checkGuess(user.comment, { username: user.username, photoUrl: user.photoUrl });
+        checkGuess(user.comment, { username: user.username, photoUrl: user.photoUrl, uniqueId: user.uniqueId });
     }
 };
 
@@ -294,8 +861,16 @@ window.simulateComment = function(forceAnswer) {
         const unrevealed = window.currentGame.answers.filter((a, i) => !window.currentGame.revealed[i]);
         if (unrevealed.length > 0) {
             const answer = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+            // Generate username with length between 7 and 20 characters
+            const baseUsername = 'user' + Math.floor(Math.random() * 1000);
+            const additionalChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            const targetLength = Math.floor(Math.random() * 14) + 7; // 7 to 20 characters
+            let username = baseUsername;
+            while (username.length < targetLength) {
+                username += additionalChars[Math.floor(Math.random() * additionalChars.length)];
+            }
             user = {
-                username: 'user' + Math.floor(Math.random() * 1000),
+                username: username.substring(0, targetLength),
                 photoUrl: 'https://picsum.photos/40?' + Math.random(),
                 comment: answer
             };
@@ -316,8 +891,16 @@ window.simulateComment = function(forceAnswer) {
             'This is a ninth comment',
             'This is a tenth comment'
         ];
+        // Generate username with length between 7 and 20 characters
+        const baseUsername = 'user' + randomNumber;
+        const additionalChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        const targetLength = Math.floor(Math.random() * 14) + 7; // 7 to 20 characters
+        let username = baseUsername;
+        while (username.length < targetLength) {
+            username += additionalChars[Math.floor(Math.random() * additionalChars.length)];
+        }
         user = {
-            username: 'user' + randomNumber,
+            username: username.substring(0, targetLength),
             photoUrl: 'https://picsum.photos/40?' + Math.random(),
             comment: comments[randomComment]
         };
@@ -352,6 +935,44 @@ document.addEventListener('DOMContentLoaded', function() {
             const value = usernameInput.value.trim();
             if (value) {
                 localStorage.setItem('profileUsername', value);
+            }
+        });
+    }
+
+    // Escape character logic
+    const escapeCharInput = document.getElementById('escapeCharacterInput');
+    if (escapeCharInput) {
+        // Load escape character from localStorage, default to "."
+        const savedEscapeChar = localStorage.getItem('escapeCharacter') || '.';
+        escapeCharInput.value = savedEscapeChar;
+        // Save on input
+        escapeCharInput.addEventListener('input', function() {
+            const value = escapeCharInput.value.trim();
+            localStorage.setItem('escapeCharacter', value);
+        });
+    }
+
+    // Modal duration logic
+    const modalDurationInput = document.getElementById('modalDurationInput');
+    if (modalDurationInput) {
+        // Load modal duration from localStorage, default to 2 seconds
+        const savedModalDuration = localStorage.getItem('modalDuration') || '2';
+        modalDurationInput.value = savedModalDuration;
+        // Save on input
+        modalDurationInput.addEventListener('input', function() {
+            const value = parseFloat(modalDurationInput.value);
+            if (!isNaN(value) && value >= 2 && value <= 10) {
+                localStorage.setItem('modalDuration', value.toString());
+            }
+        });
+    }
+
+    // Clear Leaderboard button logic
+    const clearLeaderboardBtn = document.getElementById('clearLeaderboardBtn');
+    if (clearLeaderboardBtn) {
+        clearLeaderboardBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear the entire leaderboard? This cannot be undone.')) {
+                clearLeaderboard();
             }
         });
     }
@@ -392,10 +1013,681 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // Expose handler for simulation
     window.handleSimulatedComment = function(user) {
-        if (typeof window.registerSimulatedComment === 'function') {
-            window.registerSimulatedComment(user);
+        if (typeof window.registerComment === 'function') {
+            window.registerComment(user);
         }
     };
+
+    // Expose handler for real comments
+    window.handleRealComment = function(userData) {
+        // Map the Chrome extension data format to our expected format
+        const user = {
+            username: userData.nickname,
+            uniqueId: userData.uniqueId,
+            photoUrl: userData.photoUrl || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg',
+            comment: userData.comment || '',
+            followStatus: userData.followStatus,
+        };
+        
+        if (typeof window.registerComment === 'function') {
+            window.registerComment(user);
+        }
+    };
+
+    // Listen for custom events from Chrome extension
+    window.addEventListener('handleRealCommmentEvent', function(event) {
+        if (event.detail && event.detail.comment) {
+            window.handleRealComment(event.detail);
+            console.log('Received real comment event:', event.detail);
+        }
+    });
+
+    // Test form functionality
+    const testForm = document.getElementById('testForm');
+    const toggleTestForm = document.getElementById('toggleTestForm');
+    const testFormBody = document.getElementById('testFormBody');
+    const submitTestComment = document.getElementById('submitTestComment');
+    const testComment = document.getElementById('testComment');
+
+    if (toggleTestForm && testFormBody) {
+        toggleTestForm.addEventListener('click', function() {
+            if (testFormBody.classList.contains('collapsed')) {
+                testFormBody.classList.remove('collapsed');
+                toggleTestForm.textContent = '−';
+            } else {
+                testFormBody.classList.add('collapsed');
+                toggleTestForm.textContent = '+';
+            }
+        });
+    }
+
+    if (submitTestComment) {
+        submitTestComment.addEventListener('click', function() {
+            const username = document.getElementById('testUsername').value.trim();
+            const uniqueId = document.getElementById('testUniqueId').value.trim();
+            const photoUrl = document.getElementById('testPhotoUrl').value.trim();
+            const comment = document.getElementById('testComment').value.trim();
+
+            if (!comment) {
+                showToast('Please enter a comment to test', 2000);
+                return;
+            }
+
+            // Create test userData matching the Chrome extension format
+            const testUserData = {
+                username: username || 'TestUser',
+                nickname: username || 'TestUser',
+                uniqueId: uniqueId || 'test_' + Date.now(),
+                photoUrl: photoUrl || 'https://picsum.photos/40',
+                comment: comment,
+                eventType: 'test'
+            };
+
+            // Call handleRealComment directly
+            if (typeof window.handleRealComment === 'function') {
+                window.handleRealComment(testUserData);
+                console.log('Sent test comment:', testUserData);
+                showToast(`Test comment sent: "${comment}"`, 2000);
+                
+                // Clear the comment field for next test
+                document.getElementById('testComment').value = '';
+            } else {
+                showToast('handleRealComment function not found', 2000);
+            }
+        });
+    }
+
+    // Allow Enter key in comment field to submit
+    if (testComment) {
+        testComment.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitTestComment.click();
+            }
+        });
+    }
+
+
+    // Floating Leaderboard functionality
+    const floatingLeaderboard = document.getElementById('floatingLeaderboard');
+    const leaderboardHeader = document.getElementById('leaderboardHeader');
+    const toggleFloatingLeaderboard = document.getElementById('toggleFloatingLeaderboard');
+    const floatingLeaderboardBody = document.getElementById('floatingLeaderboardBody');
+    const prevLeaderboardPage = document.getElementById('prevLeaderboardPage');
+    const nextLeaderboardPage = document.getElementById('nextLeaderboardPage');
+    const leaderboardPageInfo = document.getElementById('leaderboardPageInfo');
+
+    // Pagination variables
+    let currentLeaderboardPage = 1;
+    const leaderboardItemsPerPage = 10;
+
+    // Make leaderboard draggable
+    let isDragging = false;
+    let dragOffset = { x: 0, y: 0 };
+
+    if (leaderboardHeader) {
+        leaderboardHeader.addEventListener('mousedown', function(e) {
+            if (e.target === toggleFloatingLeaderboard || 
+                e.target === prevLeaderboardPage || 
+                e.target === nextLeaderboardPage) return;
+            isDragging = true;
+            const rect = floatingLeaderboard.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+            document.addEventListener('mousemove', dragLeaderboard);
+            document.addEventListener('mouseup', stopDragLeaderboard);
+        });
+    }
+
+    function dragLeaderboard(e) {
+        if (!isDragging) return;
+        const x = e.clientX - dragOffset.x;
+        const y = e.clientY - dragOffset.y;
+        
+        // Keep within viewport bounds
+        const maxX = window.innerWidth - floatingLeaderboard.offsetWidth;
+        const maxY = window.innerHeight - floatingLeaderboard.offsetHeight;
+        
+        floatingLeaderboard.style.left = Math.min(Math.max(0, x), maxX) + 'px';
+        floatingLeaderboard.style.top = Math.min(Math.max(0, y), maxY) + 'px';
+        floatingLeaderboard.style.right = 'auto';
+        floatingLeaderboard.style.bottom = 'auto';
+    }
+
+    function stopDragLeaderboard() {
+        isDragging = false;
+        document.removeEventListener('mousemove', dragLeaderboard);
+        document.removeEventListener('mouseup', stopDragLeaderboard);
+    }
+
+    // Toggle minimize/maximize
+    if (toggleFloatingLeaderboard && floatingLeaderboardBody) {
+        toggleFloatingLeaderboard.addEventListener('click', function() {
+            if (floatingLeaderboardBody.classList.contains('collapsed')) {
+                floatingLeaderboardBody.classList.remove('collapsed');
+                toggleFloatingLeaderboard.textContent = '−';
+            } else {
+                floatingLeaderboardBody.classList.add('collapsed');
+                toggleFloatingLeaderboard.textContent = '+';
+            }
+        });
+    }
+
+    // Pagination event listeners
+    if (prevLeaderboardPage) {
+        prevLeaderboardPage.addEventListener('click', function() {
+            if (currentLeaderboardPage > 1) {
+                currentLeaderboardPage--;
+                updateFloatingLeaderboard();
+            }
+        });
+    }
+
+    if (nextLeaderboardPage) {
+        nextLeaderboardPage.addEventListener('click', function() {
+            const allUsers = getTopLeaderboardUsers(1000); // Get all users
+            const totalPages = Math.ceil(allUsers.length / leaderboardItemsPerPage);
+            if (currentLeaderboardPage < totalPages) {
+                currentLeaderboardPage++;
+                updateFloatingLeaderboard();
+            }
+        });
+    }
+
+    // Update leaderboard content
+    function updateFloatingLeaderboard() {
+        const leaderboardList = document.getElementById('leaderboardList');
+        if (!leaderboardList) return;
+
+        const allUsers = getTopLeaderboardUsers(1000); // Get all users
+        const totalPages = Math.ceil(allUsers.length / leaderboardItemsPerPage);
+        
+        // Ensure current page is valid
+        if (currentLeaderboardPage > totalPages && totalPages > 0) {
+            currentLeaderboardPage = totalPages;
+        }
+        if (currentLeaderboardPage < 1) {
+            currentLeaderboardPage = 1;
+        }
+        
+        // Update pagination info
+        if (leaderboardPageInfo) {
+            leaderboardPageInfo.textContent = `${currentLeaderboardPage}/${Math.max(1, totalPages)}`;
+        }
+        
+        // Update pagination buttons
+        if (prevLeaderboardPage) {
+            prevLeaderboardPage.disabled = currentLeaderboardPage <= 1;
+        }
+        if (nextLeaderboardPage) {
+            nextLeaderboardPage.disabled = currentLeaderboardPage >= totalPages || totalPages === 0;
+        }
+        
+        if (allUsers.length === 0) {
+            leaderboardList.innerHTML = '<div class="leaderboard-empty">No players yet</div>';
+        } else {
+            // Calculate pagination
+            const startIndex = (currentLeaderboardPage - 1) * leaderboardItemsPerPage;
+            const endIndex = startIndex + leaderboardItemsPerPage;
+            const pageUsers = allUsers.slice(startIndex, endIndex);
+            
+            leaderboardList.innerHTML = '';
+            pageUsers.forEach((user, index) => {
+                const globalIndex = startIndex + index + 1; // Global ranking position
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                item.innerHTML = `
+                    <div class="leaderboard-user">
+                        <span class="leaderboard-rank">${globalIndex}.</span>
+                        <img class="leaderboard-img" src="${user.photoUrl || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg'}" alt="User" />
+                        <span class="leaderboard-username">${user.username}</span>
+                    </div>
+                    <span class="leaderboard-points">${user.totalPoints}</span>
+                `;
+                leaderboardList.appendChild(item);
+            });
+        }
+    }
+
+    // Update floating leaderboard initially and after rounds
+    updateFloatingLeaderboard();
+    
+    // Expose function globally so it can be called from other parts of the code
+    window.updateFloatingLeaderboard = updateFloatingLeaderboard;
+
+    // Automation menu functionality
+    const automateCheckbox = document.getElementById('automateCheckbox');
+    const automationMenu = document.getElementById('automationMenu');
+    const startAutomationBtn = document.getElementById('startAutomationBtn');
+
+    if (automateCheckbox && automationMenu) {
+        automateCheckbox.addEventListener('change', function() {
+            if (automateCheckbox.checked) {
+                automationMenu.style.display = 'block';
+            } else {
+                automationMenu.style.display = 'none';
+                // Stop automation if it's running
+                if (automationActive) {
+                    stopAutomation();
+                }
+            }
+        });
+    }
+
+    if (startAutomationBtn) {
+        startAutomationBtn.addEventListener('click', function() {
+            // Get automation settings
+            const timeoutSelect = document.getElementById('automationTimeout');
+            let timeoutSeconds = parseInt(timeoutSelect?.value);
+            
+            // Validate timeoutSeconds and provide default if NaN
+            if (isNaN(timeoutSeconds) || timeoutSeconds <= 0) {
+                console.warn('Invalid timeout value, using default 60 seconds');
+                timeoutSeconds = 60;
+            }
+            
+            startAutomation(timeoutSeconds);
+        });
+    }
+
+    // Automation state variables
+    let automationActive = false;
+    let automationRoundCount = 0;
+    let automationTimeout = null;
+    let automationCurrentCategory = null;
+    let automationTimerInterval = null;
+    let automationRoundStartTime = null;
+    let automationTimerPaused = false;
+    let automationPausedTimeElapsed = 0;
+    let automationTimeoutSeconds = 60; // Store the timeout value globally
+
+    function startAutomation(timeoutSeconds) {
+        if (automationActive) {
+            console.log('Automation already running');
+            return;
+        }
+
+        // Validate and store timeout seconds globally
+        if (isNaN(timeoutSeconds) || timeoutSeconds <= 0) {
+            console.warn('Invalid timeout value in startAutomation, using default 60 seconds');
+            timeoutSeconds = 60;
+        }
+        automationTimeoutSeconds = timeoutSeconds;
+
+        // Comprehensive cleanup to prevent multiple timer instances
+        hideAutomationTimer();
+        if (automationTimeout) {
+            clearTimeout(automationTimeout);
+            automationTimeout = null;
+        }
+        
+        console.log(`Starting automation with ${timeoutSeconds} second timeout`);
+        automationActive = true;
+        automationRoundCount = 0;
+        
+        // Hide the automation menu
+        const automationMenu = document.getElementById('automationMenu');
+        if (automationMenu) {
+            automationMenu.style.display = 'none';
+        }
+        
+        // Start the persistent timer once
+        showAutomationTimer();
+        
+        // Start first round
+        startAutomationRound();
+    }
+
+    function startAutomationRound() {
+        if (!automationActive) {
+            stopAutomation();
+            return;
+        }
+
+        // Clear any existing timeout but keep the timer display running
+        if (automationTimeout) {
+            clearTimeout(automationTimeout);
+            automationTimeout = null;
+        }
+
+        automationRoundCount++;
+        console.log(`Starting automation round ${automationRoundCount}`);
+
+        // Get available categories from automation config
+        const availableCategories = getAvailableAutomationCategories();
+        if (availableCategories.length === 0) {
+            console.log('No categories available, clearing game history to continue');
+            localStorage.removeItem('playedGames');
+            setTimeout(() => startAutomationRound(), 1000);
+            return;
+        }
+
+        // Select category (change every 5 rounds or if current category has no available prompts)
+        if (!automationCurrentCategory || automationRoundCount % 5 === 1) {
+            automationCurrentCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+            document.getElementById('categorySelect').value = automationCurrentCategory;
+        }
+
+        // Get available prompts for current category
+        const availablePrompts = getAvailablePromptsForCategory(automationCurrentCategory);
+        console.log(availablePrompts);
+        if (availablePrompts.length === 0) {
+            // Switch to a different category if current one is exhausted
+            const otherCategories = availableCategories.filter(cat => cat !== automationCurrentCategory);
+            if (otherCategories.length > 0) {
+                automationCurrentCategory = otherCategories[Math.floor(Math.random() * otherCategories.length)];
+                const newPrompts = getAvailablePromptsForCategory(automationCurrentCategory);
+                if (newPrompts.length === 0) {
+                    console.log('All categories exhausted, clearing game history to continue');
+                    localStorage.removeItem('playedGames');
+                    setTimeout(() => startAutomationRound(), 1000);
+                    return;
+                }
+            } else {
+                console.log('All categories exhausted, clearing game history to continue');
+                localStorage.removeItem('playedGames');
+                setTimeout(() => startAutomationRound(), 1000);
+                return;
+            }
+        }
+
+        // Start the game round
+        startAutomationGame(automationCurrentCategory);
+        
+        // Reset timer for this round instead of creating new timer
+        resetAutomationTimer();
+        
+        // Monitor for round completion
+        monitorRoundCompletion();
+    }
+
+    // Start game for automation with respect to automation flow configuration
+    function startAutomationGame(category) {
+        if (!gameData) {
+            console.error('Game data not loaded for automation');
+            return;
+        }
+
+        // Get available prompts for this category (respects automation flow config)
+        const availablePrompts = getAvailablePromptsForCategory(category);
+        if (availablePrompts.length === 0) {
+            console.error(`No available prompts for category: ${category}`);
+            return;
+        }
+
+        // Select a random prompt from available prompts only
+        const randomPrompt = availablePrompts[Math.floor(Math.random() * availablePrompts.length)];
+        const answers = gameData[category][randomPrompt];
+        
+        console.log(`Automation selected: ${category} - "${randomPrompt}"`);
+        
+        currentGame = {
+            category: category,
+            prompt: randomPrompt,
+            answers: answers,
+            revealed: new Array(answers.length).fill(false),
+            guessed: new Set(),
+            allParticipants: {}
+        };
+        window.currentGame = currentGame;
+        
+        revealedCount = 0;
+        renderGame();
+        document.getElementById('gameArea').style.display = 'block';
+        document.getElementById('searchInput').focus();
+    }
+
+    function resetAutomationTimer() {
+        // Clear any existing timeout first
+        if (automationTimeout) {
+            clearTimeout(automationTimeout);
+            automationTimeout = null;
+        }
+        
+        // Reset timer state for new round
+        automationRoundStartTime = Date.now();
+        automationTimerPaused = false;
+        automationPausedTimeElapsed = 0;
+        
+        console.log(`Resetting timer for round ${automationRoundCount}`);
+        
+        // Immediately update the timer display to show full time
+        updateTimerDisplay();
+        
+        // CRITICAL FIX: Restart the timer interval if it's not running
+        if (!automationTimerInterval) {
+            console.log('Restarting timer interval after timeout');
+            automationTimerInterval = setInterval(() => {
+                updateTimerDisplay();
+            }, 1000);
+        }
+        
+        // Set up timeout for this round with a small delay to ensure synchronization
+        automationTimeout = setTimeout(() => {
+            if (automationActive) {
+                // Check if Round Winners modal is showing - if so, extend timeout
+                const roundWinnersModal = document.getElementById('roundWinnersModal');
+                const isModalShowing = roundWinnersModal && roundWinnersModal.style.display === 'flex';
+                
+                if (isModalShowing) {
+                    console.log(`Timer timeout reached but Round Winners modal is showing, extending timeout...`);
+                    // Reschedule timeout for 1 second later to check again
+                    automationTimeout = setTimeout(arguments.callee, 1000);
+                    return;
+                }
+                
+                console.log(`Automation round ${automationRoundCount} timed out after ${automationTimeoutSeconds} seconds`);
+                
+                // Clear timeout and reset timer state (same cleanup as round completion)
+                if (automationTimeout) {
+                    clearTimeout(automationTimeout);
+                    automationTimeout = null;
+                }
+                automationTimerPaused = false;
+                automationPausedTimeElapsed = 0;
+                
+                // Move to next round
+                setTimeout(() => startAutomationRound(), 1000);
+            }
+        }, automationTimeoutSeconds * 1000);
+    }
+
+    function monitorRoundCompletion() {
+        // Override the showRoundWinnersModal to detect when round is complete
+        const originalShowRoundWinnersModal = window.showRoundWinnersModal || showRoundWinnersModal;
+        
+        function automationRoundWinnersModal() {
+            // Pause the timer when leaderboard is showing
+            if (automationActive && !automationTimerPaused) {
+                automationTimerPaused = true;
+                automationPausedTimeElapsed = Math.floor((Date.now() - automationRoundStartTime) / 1000);
+                console.log(`Timer paused at ${automationPausedTimeElapsed} seconds for leaderboard display`);
+            }
+            
+            // Call original function
+            if (originalShowRoundWinnersModal) {
+                originalShowRoundWinnersModal();
+            }
+            
+            // If automation is active, wait for modal duration then continue
+            if (automationActive) {
+                clearTimeout(automationTimeout); // Cancel timeout since round completed
+                
+                // Get modal duration
+                const savedDuration = localStorage.getItem('modalDuration');
+                const modalDurationInput = document.getElementById('modalDurationInput');
+                let duration = 2; // default
+                
+                if (savedDuration) {
+                    duration = parseFloat(savedDuration);
+                } else if (modalDurationInput) {
+                    duration = parseFloat(modalDurationInput.value) || 2;
+                }
+                
+                console.log(`Automation round ${automationRoundCount} completed. Waiting ${duration} seconds for modal.`);
+                
+                // Wait for modal duration + small buffer, then start next round
+                setTimeout(() => {
+                    if (automationActive) {
+                        // Reset timer pause state before starting next round (for consistency)
+                        automationTimerPaused = false;
+                        automationPausedTimeElapsed = 0;
+                        startAutomationRound();
+                    }
+                }, (duration * 1000) + 500); // Add 500ms buffer
+            }
+        }
+        
+        // Temporarily replace the function
+        window.showRoundWinnersModal = automationRoundWinnersModal;
+    }
+
+    function getAvailableAutomationCategories() {
+        if (!window.gameData) return [];
+        
+        const availableCategories = [];
+        Object.keys(window.gameData).forEach(category => {
+            // Skip if category is disabled in automation config
+            const categoryConfig = automationConfig[category];
+            if (categoryConfig && categoryConfig.disabledPrompts && 
+                categoryConfig.disabledPrompts.length === Object.keys(window.gameData[category]).length) {
+                return; // Category completely disabled
+            }
+            availableCategories.push(category);
+        });
+        
+        return availableCategories;
+    }
+
+    function getAvailablePromptsForCategory(category) {
+        if (!window.gameData || !window.gameData[category]) return [];
+        
+        const allPrompts = Object.keys(window.gameData[category]);
+        const categoryConfig = automationConfig[category];
+        
+        // Filter out disabled prompts
+        let availablePrompts = allPrompts;
+        if (categoryConfig && categoryConfig.disabledPrompts) {
+            availablePrompts = allPrompts.filter(prompt => 
+                !categoryConfig.disabledPrompts.includes(prompt)
+            );
+        }
+        
+        return availablePrompts;
+    }
+
+    function showAutomationTimer() {
+        const automationTimer = document.getElementById('automationTimer');
+        const timerText = document.getElementById('timerText');
+        
+        if (!automationTimer || !timerText) return;
+        
+        // Clear any existing timer interval to prevent multiple timers
+        if (automationTimerInterval) {
+            clearInterval(automationTimerInterval);
+            automationTimerInterval = null;
+        }
+        
+        console.log('Starting automation timer');
+        automationTimer.style.display = 'flex';
+        automationRoundStartTime = Date.now();
+        
+        // Update timer immediately
+        updateTimerDisplay();
+        
+        // Update timer every second
+        automationTimerInterval = setInterval(() => {
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const timerText = document.getElementById('timerText');
+        if (!timerText || !automationRoundStartTime) return;
+        
+        // Validate that we have a proper timeout value
+        if (isNaN(automationTimeoutSeconds) || automationTimeoutSeconds <= 0) {
+            timerText.textContent = '1:00'; // Show default 1 minute if invalid
+            return;
+        }
+        
+        let elapsed;
+        if (automationTimerPaused) {
+            // Use the paused elapsed time when timer is paused
+            elapsed = automationPausedTimeElapsed;
+        } else {
+            // Calculate elapsed time normally
+            elapsed = Math.floor((Date.now() - automationRoundStartTime) / 1000);
+        }
+        
+        // Ensure elapsed time is not negative
+        elapsed = Math.max(0, elapsed);
+        
+        const remaining = Math.max(0, automationTimeoutSeconds - elapsed);
+        
+        const minutes = Math.floor(remaining / 60);
+        const seconds = remaining % 60;
+        
+        timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Only stop timer if time is up AND not paused
+        if (remaining <= 0 && automationTimerInterval && !automationTimerPaused) {
+            clearInterval(automationTimerInterval);
+            automationTimerInterval = null;
+        }
+    }
+
+    function hideAutomationTimer() {
+        const automationTimer = document.getElementById('automationTimer');
+        
+        if (automationTimer) {
+            automationTimer.style.display = 'none';
+        }
+        
+        if (automationTimerInterval) {
+            clearInterval(automationTimerInterval);
+            automationTimerInterval = null;
+        }
+        
+        // Reset timer state
+        automationRoundStartTime = null;
+        automationTimerPaused = false;
+        automationPausedTimeElapsed = 0;
+    }
+
+    function stopAutomation() {
+        console.log(`Automation stopped after ${automationRoundCount} rounds`);
+        
+        // Clear all automation state
+        automationActive = false;
+        automationRoundCount = 0;
+        automationCurrentCategory = null;
+        
+        // Clear timer
+        hideAutomationTimer();
+        
+        if (automationTimeout) {
+            clearTimeout(automationTimeout);
+            automationTimeout = null;
+        }
+        
+        // Restore original showRoundWinnersModal function
+        if (window.showRoundWinnersModal !== showRoundWinnersModal) {
+            window.showRoundWinnersModal = showRoundWinnersModal;
+        }
+        
+        // Uncheck the automation checkbox
+        const automateCheckbox = document.getElementById('automateCheckbox');
+        if (automateCheckbox && automateCheckbox.checked) {
+            automateCheckbox.checked = false;
+            // Also hide the menu if it's showing
+            const automationMenu = document.getElementById('automationMenu');
+            if (automationMenu) {
+                automationMenu.style.display = 'none';
+            }
+        }
+        
+        showToast('Automation completed!');
+    }
 
     // Automation Flow modal logic
     const automationBtn = document.getElementById('automationFlowConfigureBtn');
@@ -408,6 +1700,17 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         automationConfig = JSON.parse(localStorage.getItem('automationFlowConfig') || '{}');
     } catch (e) { automationConfig = {}; }
+    
+    // Set default exclusions if config is empty
+    if (Object.keys(automationConfig).length === 0 && window.gameData) {
+        // Exclude "Names" category by default
+        if (window.gameData['Names']) {
+            automationConfig['Names'] = {
+                disabledPrompts: Object.keys(window.gameData['Names'])
+            };
+            localStorage.setItem('automationFlowConfig', JSON.stringify(automationConfig));
+        }
+    }
     function renderAutomationModal() {
         automationModalBody.innerHTML = '';
         if (!window.gameData) return;
@@ -729,7 +2032,6 @@ function showGameHistoryModal() {
                     };
                     window.currentGame = currentGame;
                     revealedCount = 0;
-                    score = 0;
                     renderGame();
                     document.getElementById('gameArea').style.display = 'block';
                     document.getElementById('searchInput').focus();
@@ -745,6 +2047,13 @@ function showGameHistoryModal() {
     modal.appendChild(content);
     document.body.appendChild(modal);
 
+    // Close modal when clicking outside the content
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+
     // Close modal
     document.getElementById('gameHistoryModalClose').onclick = () => modal.remove();
     // Erase history
@@ -752,7 +2061,7 @@ function showGameHistoryModal() {
         localStorage.removeItem('playedGames');
         modal.remove();
         updateGameHistoryPercent();
-        alert('Game history erased!');
+        showToast('Game history erased!');
     };
 }
 
@@ -777,6 +2086,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // --- Next Game Logic ---
 function nextGame() {
     if (!currentGame || !gameData) return;
+    
+    // Next game not supported for improv mode
+    if (currentGame.isImprov) {
+        showMessage('Next game not available in improv mode', 'error');
+        return;
+    }
+    
     // Store the current game as played
     storePlayedGame(currentGame.category, currentGame.prompt);
     updateGameHistoryPercent();
@@ -785,7 +2101,7 @@ function nextGame() {
     const prompts = Object.keys(gameData[currentGame.category]);
     const unplayed = prompts.filter(p => !(played[currentGame.category] || []).includes(p));
     if (unplayed.length === 0) {
-        alert('All prompts in this category have been played! Starting over.');
+        showToast('All prompts in this category have been played! Starting over.');
         // Optionally, clear played for this category
         localStorage.setItem('playedGames', JSON.stringify({ ...played, [currentGame.category]: [] }));
         startGame(currentGame.category);
@@ -802,7 +2118,6 @@ function nextGame() {
         };
         window.currentGame = currentGame;
         revealedCount = 0;
-        score = 0;
         renderGame();
         document.getElementById('gameArea').style.display = 'block';
         document.getElementById('searchInput').focus();
@@ -812,7 +2127,8 @@ function nextGame() {
 // --- Patch Give Up to store played game ---
 const originalGiveUp = giveUp;
 giveUp = function() {
-    if (currentGame) {
+    if (currentGame && !currentGame.isImprov) {
+        // Only store preset games in history, not improv games
         storePlayedGame(currentGame.category, currentGame.prompt);
         updateGameHistoryPercent();
     }
@@ -825,6 +2141,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (nextGameBtn) {
         nextGameBtn.addEventListener('click', nextGame);
     }
+    
+    // Clear Improv Button Event
+    const clearImprovBtn = document.getElementById('clearImprovBtn');
+    if (clearImprovBtn) {
+        clearImprovBtn.addEventListener('click', clearImprovMode);
+    }
+    
     // Stub for Game History Manage button
     const gameHistoryManageBtn = document.getElementById('gameHistoryManageBtn');
     if (gameHistoryManageBtn) {
@@ -834,180 +2157,228 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// --- Leaderboard Storage ---
-function updateLeaderboard(username, photoUrl, points) {
-    let leaderboard = [];
-    try {
-        leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
-    } catch (e) { leaderboard = []; }
-    // Find user
-    let user = leaderboard.find(u => u.username === username);
-    if (user) {
-        user.points += points;
-        user.photoUrl = photoUrl; // Update photo in case it changed
-    } else {
-        leaderboard.push({ username, photoUrl, points });
+// Remove escape character from beginning of guess if it matches the host's setting
+function removeEscapeCharacter(guess) {
+    const escapeCharInput = document.getElementById('escapeCharacterInput');
+    const escapeChar = escapeCharInput ? escapeCharInput.value.trim() : '';
+    
+    // If no escape character is set, return the guess unchanged
+    if (!escapeChar) {
+        return guess;
     }
-    localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+    
+    // If guess starts with the escape character, remove it
+    if (guess.startsWith(escapeChar)) {
+        return guess.substring(escapeChar.length);
+    }
+    
+    return guess;
 }
 
-// --- Leaderboard Modal ---
-function showLeaderboardModal(showRemoveButtons = false) {
-    // Remove existing modal if present
-    const oldModal = document.getElementById('leaderboardModal');
-    if (oldModal) oldModal.remove();
-
-    // Modal container
-    const modal = document.createElement('div');
-    modal.id = 'leaderboardModal';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100vw';
-    modal.style.height = '100vh';
-    modal.style.background = 'rgba(0,0,0,0.35)';
-    modal.style.zIndex = '4000';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-
-    // Modal content
-    const content = document.createElement('div');
-    content.style.background = '#fff';
-    content.style.borderRadius = '12px';
-    content.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)';
-    content.style.width = '420px';
-    content.style.maxWidth = '95vw';
-    content.style.height = '542px';
-    content.style.maxHeight = '90vh';
-    content.style.overflowY = 'auto';
-    content.style.padding = '0';
-    content.style.display = 'flex';
-    content.style.flexDirection = 'column';
-
-    // Header
-    const header = document.createElement('div');
-    header.style.display = 'flex';
-    header.style.alignItems = 'center';
-    header.style.justifyContent = 'space-between';
-    header.style.padding = '18px 24px 12px 24px';
-    header.style.borderBottom = '1px solid #eee';
-    header.innerHTML = `<span style="font-size:1.3rem;font-weight:bold;color:#222;">Leaderboard</span><span style="font-size:2rem;cursor:pointer;color:#888;" id="leaderboardModalClose">&times;</span>`;
-    content.appendChild(header);
-
-    // Leaderboard list
-    let leaderboard = [];
-    try {
-        leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '[]');
-    } catch (e) { leaderboard = []; }
-    // Sort based on context: points descending for viewing, alphabetical for management
-    if (showRemoveButtons) {
-        // Management mode: sort alphabetically by username
-        leaderboard.sort((a, b) => a.username.localeCompare(b.username));
+// Show Round Winners modal
+function showRoundWinnersModal() {
+    const modal = document.getElementById('roundWinnersModal');
+    const modalBody = document.getElementById('roundWinnersModalBody');
+    
+    if (!modal || !modalBody) return;
+    
+    // Clear previous content
+    modalBody.innerHTML = '';
+    
+    // Get all participants (not just those who got answers correct)
+    const allParticipants = currentGame.allParticipants || {};
+    const sortedParticipants = Object.values(allParticipants).sort((a, b) => b.correctAnswers - a.correctAnswers);
+    
+    // Log round summary
+    console.log('🏆 ROUND COMPLETE');
+    console.log('📊 Round Participants:');
+    sortedParticipants.forEach((participant, index) => {
+        const user = participant.user;
+        console.log(`  ${index + 1}. ${user.username} (${user.uniqueId}): ${participant.correctAnswers} correct, ${participant.totalGuesses} total guesses`);
+    });
+    
+    if (sortedParticipants.length === 0) {
+        // No participants found, show default message
+        modalBody.innerHTML = '<div style="text-align: center; color: #666; font-size: 1.1rem;">No participants in this round!</div>';
     } else {
-        // Viewing mode: sort by points descending
-        leaderboard.sort((a, b) => b.points - a.points);
+        // Update leaderboard with points from this round (only for users who got answers correct)
+        const userScores = currentGame.userScores || {};
+        const leaderboard = updateLeaderboard(userScores);
+        
+        // Display all participants with their statistics
+        sortedParticipants.forEach(participant => {
+            const user = participant.user;
+            const correctAnswers = participant.correctAnswers;
+            const totalGuesses = participant.totalGuesses;
+            const userId = user.uniqueId;
+            const totalPoints = leaderboard[userId] ? leaderboard[userId].totalPoints : correctAnswers;
+            const userImg = user.photoUrl || localStorage.getItem('profileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
+            const username = user.username || user.nickname || 'Anonymous';
+            
+            const participantItem = document.createElement('div');
+            participantItem.className = 'round-winner-item';
+            participantItem.innerHTML = `
+                <div class="round-winner-user">
+                    <img class="round-winner-img" src="${userImg}" alt="User" />
+                    <span class="round-winner-username">${username}</span>
+                </div>
+                <div class="round-winner-score">
+                    <span>${correctAnswers}</span>
+                </div>
+            `;
+            modalBody.appendChild(participantItem);
+        });
     }
+    
+    // Log complete leaderboard
+    const completeLeaderboard = getLeaderboard();
+    const topUsers = getTopLeaderboardUsers(20); // Get top 20 for logging
+    console.log('🥇 COMPLETE LEADERBOARD:');
+    if (topUsers.length === 0) {
+        console.log('  No users in leaderboard yet');
+    } else {
+        topUsers.forEach((user, index) => {
+            console.log(`  ${index + 1}. ${user.username} (${user.userId}): ${user.totalPoints} total points, ${user.gamesPlayed} games played`);
+        });
+    }
+    console.log('---');
+    
+    // Update floating leaderboard
+    if (typeof window.updateFloatingLeaderboard === 'function') {
+        window.updateFloatingLeaderboard();
+    }
+    
+    // Show the modal
+    modal.style.display = 'flex';
+    
+    // Get modal duration from settings (localStorage first, then input field, default 2 seconds)
+    const savedDuration = localStorage.getItem('modalDuration');
+    const modalDurationInput = document.getElementById('modalDurationInput');
+    let duration = 2; // default
+    
+    if (savedDuration) {
+        duration = parseFloat(savedDuration);
+    } else if (modalDurationInput) {
+        duration = parseFloat(modalDurationInput.value) || 2;
+    }
+    
+    // Hide modal after specified duration
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, duration * 1000);
+}
 
-    const listDiv = document.createElement('div');
-    listDiv.style.padding = '0 24px 24px 24px';
-    leaderboard.forEach((user, idx) => {
-        const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '12px';
-        row.style.fontSize = '1.08rem';
-        row.style.margin = '10px 0';
-        row.innerHTML = `
-            <img src="${user.photoUrl}" alt="Profile" style="width:36px;height:36px;object-fit:cover;">
-            <span style="font-weight:bold;">${user.username}</span>
-            <span style="margin-left:auto;font-size:1.1rem;color:#22bb33;">${user.points.toLocaleString()} pts</span>
+// Update answers accordion content
+function updateAnswersAccordion() {
+    const answersContent = document.getElementById('answersContent');
+    if (!answersContent) return;
+    
+    if (!currentGame || !currentGame.answers) {
+        answersContent.innerHTML = '<div style="color: #999; font-style: italic; text-align: center; padding: 16px;">Not currently playing</div>';
+        return;
+    }
+    
+    // Clear existing content
+    answersContent.innerHTML = '';
+    
+    // Add each answer with its status
+    currentGame.answers.forEach((answer, index) => {
+        const isRevealed = currentGame.revealed[index];
+        const answerItem = document.createElement('div');
+        answerItem.className = `answer-item ${isRevealed ? 'revealed' : ''}`;
+        
+        answerItem.innerHTML = `
+            <div class="answer-text">${answer}</div>
+            <div class="answer-status ${isRevealed ? 'revealed' : 'hidden'}">
+                ${isRevealed ? 'Found' : 'Hidden'}
+            </div>
         `;
         
-        // Only add remove button if showRemoveButtons is true
-        if (showRemoveButtons) {
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'btn';
-            removeBtn.style.marginLeft = '10px';
-            removeBtn.style.fontSize = '0.9rem';
-            removeBtn.style.padding = '4px 8px';
-            removeBtn.textContent = 'Remove';
-            removeBtn.onclick = () => {
-                if (confirm(`Remove ${user.username} from leaderboard?`)) {
-                    leaderboard.splice(idx, 1);
-                    localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
-                    modal.remove();
-                    showLeaderboardModal(true); // Keep showing remove buttons
-                }
-            };
-            row.appendChild(removeBtn);
-        }
-        listDiv.appendChild(row);
+        answersContent.appendChild(answerItem);
     });
-    if (leaderboard.length === 0) {
-        listDiv.innerHTML = '<div style="color:#888;text-align:center;margin:24px 0;">No scores yet.</div>';
-    }
-    content.appendChild(listDiv);
-
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-
-    // Close modal
-    document.getElementById('leaderboardModalClose').onclick = () => modal.remove();
 }
 
-// Patch checkGuess to update leaderboard after each correct guess
-const originalCheckGuess = checkGuess;
-checkGuess = function(guess, userInfo) {
-    if (!guess || !currentGame) return;
-    guess = guess.trim();
-    if (currentGame.guessed.has(guess.toLowerCase())) return;
-    // Save username and photo from localStorage if not provided
-    if (!userInfo) {
-        userInfo = {
-            username: localStorage.getItem('profileUsername') || 'Anonymous',
-            photoUrl: localStorage.getItem('profileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg'
-        };
-    }
-    // Find matches before calling originalCheckGuess
-    const answersForMatching = currentGame.answers.map((answer, index) => ({
-        answer: answer,
-        found: currentGame.revealed[index],
-        index: index
-    }));
-    const matches = checkGuessLogic(guess, answersForMatching);
-    matches.forEach(match => {
-        if (!currentGame.revealed[match.index]) {
-            const points = (10 - match.index) * 1000;
-            updateLeaderboard(userInfo.username, userInfo.photoUrl, points);
-        }
-    });
-    // Call original
-    originalCheckGuess.apply(this, arguments);
-}
-
-// Add event listener for leaderboard button
-
-document.addEventListener('DOMContentLoaded', function() {
-    const leaderboardBtn = document.getElementById('showLeaderboardBtn');
-    if (leaderboardBtn) {
-        leaderboardBtn.addEventListener('click', function() {
-            showLeaderboardModal(false); // Don't show remove buttons
-        });
-    }
-    const clearLeaderboardBtn = document.getElementById('clearLeaderboardBtn');
-    if (clearLeaderboardBtn) {
-        clearLeaderboardBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to clear the entire leaderboard?')) {
-                localStorage.removeItem('leaderboard');
-                alert('Leaderboard cleared!');
+// Show toast notification
+function showToast(message, duration = 4000) {
+    const toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) return;
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    
+    // Add to container
+    toastContainer.appendChild(toast);
+    
+    // Show toast with animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // Hide and remove toast after duration
+    setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
             }
-        });
+        }, 300); // Wait for hide animation
+    }, duration);
+}
+
+// Leaderboard management functions
+function getLeaderboard() {
+    try {
+        return JSON.parse(localStorage.getItem('gameLeaderboard') || '{}');
+    } catch (e) {
+        return {};
     }
-    const removePlayerBtn = document.getElementById('removePlayerBtn');
-    if (removePlayerBtn) {
-        removePlayerBtn.addEventListener('click', function() {
-            showLeaderboardModal(true); // Show remove buttons
-        });
+}
+
+function updateLeaderboard(userScores) {
+    const leaderboard = getLeaderboard();
+    
+    // Add points from this round to the leaderboard
+    Object.values(userScores).forEach(userScore => {
+        const user = userScore.user;
+        const points = userScore.count;
+        const userId = user.uniqueId;
+        const username = user.username;
+        
+        if (!leaderboard[userId]) {
+            leaderboard[userId] = {
+                totalPoints: 0,
+                username: username,
+                photoUrl: user.photoUrl,
+                gamesPlayed: 0
+            };
+        }
+        
+        leaderboard[userId].totalPoints += points;
+        leaderboard[userId].gamesPlayed++;
+        leaderboard[userId].username = username; // Update username in case it changed
+        leaderboard[userId].photoUrl = user.photoUrl; // Update photo in case it changed
+    });
+    
+    localStorage.setItem('gameLeaderboard', JSON.stringify(leaderboard));
+    return leaderboard;
+}
+
+function getTopLeaderboardUsers(limit = 10) {
+    const leaderboard = getLeaderboard();
+    return Object.entries(leaderboard)
+        .map(([userId, data]) => ({ userId, ...data }))
+        .sort((a, b) => b.totalPoints - a.totalPoints)
+        .slice(0, limit);
+}
+
+function clearLeaderboard() {
+    localStorage.removeItem('gameLeaderboard');
+    showToast('Leaderboard cleared!');
+    
+    // Update floating leaderboard immediately
+    if (typeof window.updateFloatingLeaderboard === 'function') {
+        window.updateFloatingLeaderboard();
     }
-});
+}
