@@ -1769,9 +1769,9 @@ function initializeInstructionPopupSettings() {
     if (savedActive !== null) {
         instructionPopupActive = savedActive === 'true';
     } else {
-        // Default to true if no saved setting exists and save it
-        instructionPopupActive = true;
-        localStorage.setItem('wordleInstructionPopupActive', 'true');
+        // Default to false if no saved setting exists and save it
+        instructionPopupActive = false;
+        localStorage.setItem('wordleInstructionPopupActive', 'false');
     }
     activeCheckbox.checked = instructionPopupActive;
     
