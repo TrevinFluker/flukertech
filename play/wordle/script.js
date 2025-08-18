@@ -62,7 +62,7 @@ let targetWord = '';
 let currentRow = 0;
 let currentTile = 0;
 let isGameOver = false;
-let maxRows = 5; // Default number of rows
+let maxRows = 6; // Changed from 5 to 6 - Default number of rows
 let wordLength = 5; // Default word length
 let boardWidth = 350; // Default board width
 let guessFlow = 'down'; // Default guess flow
@@ -82,7 +82,7 @@ let singlePlayerGuessCount = 0; // Track guesses in single player simulation
 let groupModeGuessCount = 0; // Track guesses in group mode
 let winningSoundUrl = 'https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-epic-stock-media/esm_chill_victory_sound_fx_arcade_synth_musical_chord_bling_electronic_casino_kids_mobile_positive_achievement_score.mp3'; // URL for winning sound
 let winningModalDuration = 5; // Duration in seconds for winning modal
-let instructionPopupActive = true; // Whether to show instruction popup at round start
+let instructionPopupActive = false; // Whether to show instruction popup at round start
 let instructionPopupDuration = 3; // Duration in seconds for instruction popup
 let instructionPopupText = 'Guess the word to win!\nThis is wordle with endless guesses.\nThere are single player and group modes.'; // Instruction text
 let instructionPopupGif = 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHBlcWdrYjFvYW1hZWt3ZGg2eGw1YWlmZm80NHZ4ZWZ4OHpub3RxdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/62HRHz7zZZYThhTwEI/giphy.gif'; // URL for instruction GIF
@@ -158,8 +158,8 @@ async function initializeGame() {
     document.documentElement.style.setProperty('--word-length', wordLength);
     document.getElementById('game-container').style.maxWidth = `${boardWidth}px`;
     
-    // Create the game board with maxRows + 1 (for answer row)
-    for (let i = 0; i < maxRows + 1; i++) {
+    // Create the game board with only maxRows (no separate answer row)
+    for (let i = 0; i < maxRows; i++) { // Changed from maxRows + 1 to maxRows
         const row = document.createElement('div');
         row.classList.add('row');
         row.setAttribute('data-row', i);
@@ -335,11 +335,12 @@ function submitGuess() {
     
     // Check if the game is won
     if (guess === targetWord) {
-        if (guessFlow === 'up') {
-            moveToAnswerRowUp();
-        } else {
-            moveToAnswerRow();
-        }
+        // No need to move to answer row since we removed the separate answer row
+        // if (guessFlow === 'up') {
+        //     moveToAnswerRowUp();
+        // } else {
+        //     moveToAnswerRow();
+        // }
         showMessage("Wonderful!");
         isGameOver = true;
         
@@ -371,7 +372,7 @@ function submitGuess() {
             // Add profile image to the current row before moving to next
             addProfileImageToRow(currentRow);
             currentRow++;
-            if (currentRow >= maxRows) {
+            if (currentRow >= maxRows) { // Changed from maxRows + 1 back to maxRows
                 // Check for group mode loss condition
                 if (isGroupMode && (groupModeSubmittedGuesses >= maxRows)) {
                     // Clear all group guess stacks on loss
@@ -425,6 +426,8 @@ function clearCurrentRow() {
 }
 
 // Move the correct answer to the answer row (bottom for down, top for up)
+// This function is no longer needed since we removed the separate answer row
+/*
 function moveToAnswerRow() {
     const answerRowIndex = guessFlow === 'up' ? 0 : maxRows;
     const answerRow = document.querySelector(`.row[data-row="${answerRowIndex}"]`);
@@ -445,6 +448,7 @@ function moveToAnswerRow() {
     }
     currentRowElement.classList.add('fade-out');
 }
+*/
 
 // For guessFlow 'up', shift all guess rows down and fade out the bottom row (row maxRows)
 function shiftRowsDownUpFlow() {
@@ -1092,7 +1096,7 @@ function addProfileImageToRow(rowIndex) {
 
 //How rows are moved during gameplay if flow is up
 function shiftRowsDownUpFlowV2() {
-    for (let i = maxRows; i > 1; i--) {
+    for (let i = maxRows - 1; i > 1; i--) { // Changed from maxRows to maxRows - 1 to avoid going out of bounds
         const aboveRow = document.querySelector(`.row[data-row="${i - 1}"]`);
         const thisRow = document.querySelector(`.row[data-row="${i}"]`);
         if (!aboveRow || !thisRow) continue;
@@ -1143,7 +1147,8 @@ function shiftRowsDown() {
     if (!topRow) return;
     topRow.classList.add('fade-out');
     setTimeout(() => {
-        for (let i = 0; i < maxRows - 1; i++) {
+        // Move each row up by one position, including the bottom row
+        for (let i = 0; i < maxRows - 1; i++) { // Keep as maxRows - 1 to avoid going out of bounds
             const currentRow = document.querySelector(`.row[data-row="${i + 1}"]`);
             const nextRow = document.querySelector(`.row[data-row="${i}"]`);
             if (!currentRow || !nextRow) continue;
@@ -1185,7 +1190,7 @@ function shiftRowsDown() {
         }
         
         // Restore the individual best guess in the bottom row after shifting (only during individual mode)
-        displayIndividualBestGuessInBottomRow();
+        // displayIndividualBestGuessInBottomRow();
         
         topRow.classList.remove('fade-out');
     }, 150);
@@ -2580,7 +2585,7 @@ function updateIndividualBestGuess(guess, user, result) {
         };
         
         // Display the best guess in the bottom row
-        displayIndividualBestGuessInBottomRow();
+        // displayIndividualBestGuessInBottomRow();
     }
 }
 
@@ -2588,7 +2593,7 @@ function displayIndividualBestGuessInBottomRow() {
     // Only display in individual mode
     if (tiktokPlayMode === 'group' || groupGuessBarActive || !individualBestGuess) return;
     
-    const bottomRowIndex = maxRows;
+    const bottomRowIndex = maxRows - 1; // Changed from maxRows to maxRows - 1 since we removed the separate answer row
     const bottomRow = document.querySelector(`.row[data-row="${bottomRowIndex}"]`);
     if (!bottomRow) return;
     
