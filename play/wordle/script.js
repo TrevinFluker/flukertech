@@ -65,7 +65,7 @@ let isGameOver = false;
 let maxRows = 6; // Changed from 5 to 6 - Default number of rows
 let wordLength = 5; // Default word length
 let boardWidth = 350; // Default board width
-let guessFlow = 'down'; // Default guess flow
+let guessFlow = 'down'; // Default guess flow (simplified - only down flow now)
 let simulateGuessesInterval = null;
 let simulateGuessesActive = false;
 let simulateTyping = false;
@@ -129,6 +129,43 @@ function updateCurrentAnswerDisplay() {
     }
 }
 
+// Create a complete row with embedded HTML for profile image and letters
+function createRowWithGuess(guess, photoUrl, username, result) {
+    const row = document.createElement('div');
+    row.classList.add('row');
+    
+    // Build the complete row HTML with embedded photoUrl and username
+    let rowHTML = `
+        <div class="tile profile-img-tile">
+            <img class="profile-img-in-tile" src="${photoUrl}" alt="Profile">
+            <div class="profile-username-overlay">${username}</div>
+        </div>
+    `;
+    
+    // Add letter tiles with results
+    for (let i = 0; i < wordLength; i++) {
+        const letter = guess[i] ? guess[i].toUpperCase() : '';
+        const tileClass = result && result[i] ? `tile ${result[i]}` : 'tile';
+        rowHTML += `<div class="${tileClass}">${letter}</div>`;
+    }
+    
+    row.innerHTML = rowHTML;
+    return row;
+}
+
+// Add a new guess row to the bottom and remove the top row
+function addGuessRow(guess, photoUrl, username, result) {
+    // Remove the top row
+    const topRow = board.firstChild;
+    if (topRow) {
+        board.removeChild(topRow);
+    }
+    
+    // Create and add new row at the bottom
+    const newRow = createRowWithGuess(guess, photoUrl, username, result);
+    board.appendChild(newRow);
+}
+
 // Initialize the game
 async function initializeGame() {
     // Stop any ongoing TTS announcements
@@ -158,25 +195,12 @@ async function initializeGame() {
     document.documentElement.style.setProperty('--word-length', wordLength);
     document.getElementById('game-container').style.maxWidth = `${boardWidth}px`;
     
-    // Create the game board with only maxRows (no separate answer row)
-    for (let i = 0; i < maxRows; i++) { // Changed from maxRows + 1 to maxRows
-        const row = document.createElement('div');
-        row.classList.add('row');
-        row.setAttribute('data-row', i);
-        
-        // Add letter tiles
-        for (let j = 0; j < wordLength; j++) {
-            const tile = document.createElement('div');
-            tile.classList.add('tile');
-            tile.setAttribute('data-row', i);
-            tile.setAttribute('data-col', j);
-            row.appendChild(tile);
-        }
-        board.appendChild(row);
+    // Create initial empty rows
+    for (let i = 0; i < maxRows; i++) {
+        const emptyRow = createRowWithGuess('', 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg', '', null);
+        board.appendChild(emptyRow);
     }
 
-    // Set currentRow to 1 (up) or 0 (down)
-    currentRow = guessFlow === 'up' ? 1 : 0;
     currentTile = 0;
     isGameOver = false;
     messageDisplay.textContent = '';
@@ -225,101 +249,13 @@ async function initializeGame() {
     });
 }
 
-// Handle keyboard input
-function handleKeyPress(key) {
-    if (isGameOver) return;
-    
-    if (key === 'enter') {
-        submitGuess();
-    } else if (key === 'backspace') {
-        deleteLetter();
-    } else if (/^[a-z]$/.test(key) && currentTile < wordLength) {
-        addLetter(key);
-    }
-}
-
-// Add a letter to the current tile
-function addLetter(letter) {
-    if (currentTile < wordLength) {
-        const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${currentTile}"]`);
-        if (tile) {
-            tile.textContent = letter.toUpperCase();
-            // Show profile image when first letter is added
-            if (currentTile === 0) {
-                const row = document.querySelector(`.row[data-row="${currentRow}"]`);
-                // Get the correct user image
-                const userImage = getUserProfileImage(currentGuessingUser ? currentGuessingUser.username : null);
-                // Ensure the profile image tile exists with the correct image
-                ensureProfileImageTile(row, userImage, currentGuessingUser ? currentGuessingUser.username : 'Host');
-                const imgTile = row.querySelector('.profile-img-tile');
-                const img = imgTile ? imgTile.querySelector('.profile-img-in-tile') : null;
-                if (img) {
-                    img.style.display = 'block';
-                }
-            }
-            // Ensure the letter is visible before adding animation
-            requestAnimationFrame(() => {
-                tile.classList.add('bounce');
-                setTimeout(() => {
-                    tile.classList.remove('bounce');
-                }, 300);
-            });
-            currentTile++;
-        }
-    }
-}
-
-// Delete the last letter
-function deleteLetter() {
-    if (currentTile > 0) {
-        currentTile--;
-        const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${currentTile}"]`);
-        if (tile) {
-            tile.textContent = '';
-            // Remove any state classes when deleting
-            tile.classList.remove('correct', 'present', 'absent');
-            
-            // Hide profile image when all letters are deleted
-            if (currentTile === 0) {
-                const row = document.querySelector(`.row[data-row="${currentRow}"]`);
-                const imgTile = row.querySelector('.profile-img-tile');
-                const img = imgTile ? imgTile.querySelector('.profile-img-in-tile') : null;
-                if (img) {
-                    img.style.display = 'none';
-                }
-            }
-        }
-    }
-}
-
-// Submit the current guess
-function submitGuess() {
-    if (currentTile < wordLength) {
-        showMessage("Not enough letters");
-        shakeRow(currentRow);
-        clearCurrentRow();
+// Unified guess processing function
+function processGuess(guess, photoUrl, username) {
+    if (!guess || guess.length !== wordLength || isGameOver) {
         return;
     }
     
-    // Get the current guess
-    let guess = '';
-    const currentRowElement = document.querySelector(`.row[data-row="${currentRow}"]`);
-    if (!currentRowElement) return;
-
-    for (let i = 0; i < wordLength; i++) {
-        // Account for profile image tile - if present, skip it
-        const hasProfileTile = currentRowElement.firstChild && currentRowElement.firstChild.classList.contains('profile-img-tile');
-        const tileIndex = hasProfileTile ? i + 1 : i;
-        const tile = currentRowElement.children[tileIndex];
-        
-        if (!tile || !tile.textContent) {
-            showMessage("Invalid guess");
-            shakeRow(currentRow);
-            clearCurrentRow();
-            return;
-        }
-        guess += tile.textContent.toLowerCase();
-    }
+    guess = guess.toLowerCase();
     
     // Speak the word if TTS is enabled for reading words
     speakWord(guess);
@@ -327,20 +263,21 @@ function submitGuess() {
     // Check the guess against the target word
     const result = checkGuess(guess);
     
-    // Update individual best guess tracking (only in individual mode)
-    updateIndividualBestGuess(guess, currentGuessingUser, result);
+    // Add the guess row to the board with embedded data
+    addGuessRow(guess, photoUrl, username, result);
     
-    // Update the tiles with the results
-    animateResults(result);
+    // Update keyboard colors
+    updateKeyboard(guess, result);
     
     // Check if the game is won
     if (guess === targetWord) {
-        // No need to move to answer row since we removed the separate answer row
-        // if (guessFlow === 'up') {
-        //     moveToAnswerRowUp();
-        // } else {
-        //     moveToAnswerRow();
-        // }
+        // Set the winning user data for the modal
+        winningUser = {
+            username: username,
+            photoUrl: photoUrl,
+            guessedWord: guess
+        };
+        
         showMessage("Wonderful!");
         isGameOver = true;
         
@@ -367,171 +304,47 @@ function submitGuess() {
             groupModeSubmittedGuesses++;
         }
         
-        // Move to the next row
-        if (guessFlow === 'down') {
-            // Add profile image to the current row before moving to next
-            addProfileImageToRow(currentRow);
-            currentRow++;
-            if (currentRow >= maxRows) { // Changed from maxRows + 1 back to maxRows
-                // Check for group mode loss condition
-                if (isGroupMode && (groupModeSubmittedGuesses >= maxRows)) {
-                    // Clear all group guess stacks on loss
-                    groupGuessStacks = {};
-                    lastBarOrder = [];
-                    lastBarRects = {};
-                    renderGroupGuessBarChart();
-                    showLossModal(targetWord);
-                    return;
-                }
-                if (!isGroupMode) {
-                    shiftRowsDown();
-                    currentRow = maxRows - 1;
-                }
-            }
-        } else {
-            // For up flow, add profile image to the current row before shifting
-            addProfileImageToRow(currentRow);
-            // Check for group mode loss condition in up flow
-            if (isGroupMode && (groupModeSubmittedGuesses >= maxRows)) {
-                // Clear all group guess stacks on loss
-                groupGuessStacks = {};
-                lastBarOrder = [];
-                lastBarRects = {};
-                renderGroupGuessBarChart();
-                showLossModal(targetWord);
-                return;
-            }
-            if (!isGroupMode) {
-                shiftRowsDownUpFlowV2();
-                clearCurrentRow();
-            }
+        // Check for group mode loss condition
+        if (isGroupMode && (groupModeSubmittedGuesses >= maxRows)) {
+            // Clear all group guess stacks on loss
+            groupGuessStacks = {};
+            lastBarOrder = [];
+            lastBarRects = {};
+            renderGroupGuessBarChart();
+            showLossModal(targetWord);
+            return;
         }
-        currentTile = 0;
     }
 }
 
-// Clear the current row
-function clearCurrentRow() {
-    const currentRowElement = document.querySelector(`.row[data-row="${currentRow}"]`);
-    if (!currentRowElement) return;
-    removeProfileImageTile(currentRowElement);
-    for (let i = 0; i < wordLength; i++) {
-        const tile = currentRowElement.children[currentRowElement.children.length > wordLength ? i + 1 : i];
-        if (tile) {
-            tile.textContent = '';
-            tile.className = 'tile';
-        }
-    }
-    currentTile = 0;
-}
-
-// Move the correct answer to the answer row (bottom for down, top for up)
-// This function is no longer needed since we removed the separate answer row
-/*
-function moveToAnswerRow() {
-    const answerRowIndex = guessFlow === 'up' ? 0 : maxRows;
-    const answerRow = document.querySelector(`.row[data-row="${answerRowIndex}"]`);
-    const currentRowElement = document.querySelector(`.row[data-row="${currentRow}"]`);
+// Handle host guess from input field
+function handleHostGuess() {
+    const hostInput = document.getElementById('host-guess-input');
+    if (!hostInput) return;
     
-    for (let i = 0; i < wordLength; i++) {
-        // Account for profile image tile in current row - if present, skip it
-        const hasProfileTile = currentRowElement.firstChild && currentRowElement.firstChild.classList.contains('profile-img-tile');
-        const currentTileIndex = hasProfileTile ? i + 1 : i;
-        const currentTile = currentRowElement.children[currentTileIndex];
-        
-        // Answer row doesn't have profile tiles, so use direct index
-        const answerTile = answerRow.children[i];
-        
-        answerTile.textContent = currentTile.textContent;
-        answerTile.className = currentTile.className;
-        answerTile.classList.add('fade-in');
-    }
-    currentRowElement.classList.add('fade-out');
-}
-*/
-
-// For guessFlow 'up', shift all guess rows down and fade out the bottom row (row maxRows)
-function shiftRowsDownUpFlow() {
-    const bottomRow = document.querySelector(`.row[data-row="${maxRows}"]`);
-    if (!bottomRow) return;
-    bottomRow.classList.add('fade-out');
-    setTimeout(() => {
-        for (let i = maxRows; i > 1; i--) {
-            const aboveRow = document.querySelector(`.row[data-row="${i - 1}"]`);
-            const thisRow = document.querySelector(`.row[data-row="${i}"]`);
-            if (!aboveRow || !thisRow) continue;
-            for (let j = 0; j < wordLength; j++) {
-                const aboveTile = aboveRow.children[j];
-                const thisTile = thisRow.children[j];
-                thisTile.textContent = aboveTile.textContent;
-                thisTile.className = 'tile';
-                if (aboveTile.classList.contains('correct')) thisTile.classList.add('correct');
-                if (aboveTile.classList.contains('present')) thisTile.classList.add('present');
-                if (aboveTile.classList.contains('absent')) thisTile.classList.add('absent');
-            }
-        }
-        // Clear the second row (row 1)
-        const secondRow = document.querySelector(`.row[data-row="1"]`);
-        if (secondRow) {
-            for (let j = 0; j < wordLength; j++) {
-                const tile = secondRow.children[j];
-                if (tile) {
-                    tile.textContent = '';
-                    tile.className = 'tile';
-                }
-            }
-        }
-        bottomRow.classList.remove('fade-out');
-    }, 150);
-}
-
-// Check the guess against the target word
-function checkGuess(guess) {
-    const result = Array(wordLength).fill('absent');
-    const targetLetters = targetWord.split('');
-    
-    // First pass: Mark correct letters
-    for (let i = 0; i < wordLength; i++) {
-        if (guess[i] === targetWord[i]) {
-            result[i] = 'correct';
-            targetLetters[i] = null; // Mark as used
-        }
+    const guess = hostInput.value.trim();
+    if (guess.length !== wordLength) {
+        showMessage(`Guess must be ${wordLength} letters`);
+        return;
     }
     
-    // Second pass: Mark present letters
-    for (let i = 0; i < wordLength; i++) {
-        if (result[i] === 'absent') {
-            const index = targetLetters.indexOf(guess[i]);
-            if (index !== -1) {
-                result[i] = 'present';
-                targetLetters[index] = null; // Mark as used
-            }
-        }
-    }
+    // Clear the input
+    hostInput.value = '';
     
-    return result;
+    // Get host profile data
+    const hostPhotoUrl = localStorage.getItem('wordleProfileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
+    const hostUsername = getCurrentUsername();
+    
+    // Process the guess
+    processGuess(guess, hostPhotoUrl, hostUsername);
 }
 
-// Animate the results
-function animateResults(result) {
-    const currentRowElement = document.querySelector(`.row[data-row="${currentRow}"]`);
-    if (!currentRowElement) return;
-
+// Update keyboard colors based on guess result
+function updateKeyboard(guess, result) {
     for (let i = 0; i < wordLength; i++) {
-        // Account for profile image tile - if present, skip it
-        const hasProfileTile = currentRowElement.firstChild && currentRowElement.firstChild.classList.contains('profile-img-tile');
-        const tileIndex = hasProfileTile ? i + 1 : i;
-        const tile = currentRowElement.children[tileIndex];
-        
-        if (!tile) continue;
-
-        const letter = tile.textContent.toLowerCase();
+        const letter = guess[i].toLowerCase();
         const key = document.querySelector(`.key[data-key="${letter}"]`);
         
-        // Apply result immediately
-        tile.classList.add(result[i]);
-        
-        // Update the keyboard
         if (key) {
             // Only upgrade the key status (absent -> present -> correct)
             if (result[i] === 'correct') {
@@ -545,58 +358,11 @@ function animateResults(result) {
     }
 }
 
-// Show a message
-function showMessage(message) {
-    messageDisplay.textContent = message;
-    setTimeout(() => {
-        messageDisplay.textContent = '';
-    }, 3000);
-}
-
-// Shake the current row
-function shakeRow(row) {
-    const tiles = document.querySelectorAll(`.tile[data-row="${row}"]`);
-    tiles.forEach(tile => {
-        tile.classList.add('shake');
-        setTimeout(() => {
-            tile.classList.remove('shake');
-        }, 500);
-    });
-}
-
-// Event listeners
-document.addEventListener('keydown', (e) => {
-    // Check if settings panel is open
-    const settingsPanel = document.getElementById('settings-panel');
-    if (settingsPanel && settingsPanel.classList.contains('open')) {
-        return; // Don't process game keys when settings panel is open
-    }
-    
-    // Check if any input field is focused
-    const activeElement = document.activeElement;
-    if (activeElement && (
-        activeElement.tagName === 'INPUT' || 
-        activeElement.tagName === 'TEXTAREA' || 
-        activeElement.tagName === 'SELECT' ||
-        activeElement.isContentEditable
-    )) {
-        return; // Don't process game keys when input fields are focused
-    }
-    
-    const key = e.key.toLowerCase();
-    if (key === 'enter' || key === 'backspace' || /^[a-z]$/.test(key)) {
-        handleKeyPress(key);
-    }
-});
-
-document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('click', () => {
-        const keyValue = key.getAttribute('data-key');
-        handleKeyPress(keyValue);
-    });
-});
-
-newGameBtn.addEventListener('click', initializeGame);
+// Window function for external guess processing
+window.submitExternalGuess = function(guess, photoUrl, username) {
+    // Process the guess directly with embedded data
+    processGuess(guess, photoUrl, username);
+};
 
 // Add event listener for winning modal
 document.addEventListener('click', (e) => {
@@ -1095,106 +861,10 @@ function addProfileImageToRow(rowIndex) {
 }
 
 //How rows are moved during gameplay if flow is up
-function shiftRowsDownUpFlowV2() {
-    for (let i = maxRows - 1; i > 1; i--) { // Changed from maxRows to maxRows - 1 to avoid going out of bounds
-        const aboveRow = document.querySelector(`.row[data-row="${i - 1}"]`);
-        const thisRow = document.querySelector(`.row[data-row="${i}"]`);
-        if (!aboveRow || !thisRow) continue;
-
-        // Remove any profile image tile from destination row
-        removeProfileImageTile(thisRow);
-        // If the source row has a profile image tile, add one to the destination with the same src and username
-        if (aboveRow.firstChild && aboveRow.firstChild.classList.contains('profile-img-tile')) {
-            const aboveImg = aboveRow.firstChild.querySelector('img');
-            const aboveUsername = aboveRow.firstChild.querySelector('.profile-username-overlay');
-            const imgSrc = aboveImg ? aboveImg.src : 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
-            const username = aboveUsername ? aboveUsername.textContent : getCurrentUsername();
-            ensureProfileImageTile(thisRow, imgSrc, username);
-        }
-
-        // Copy letter tiles (skip image tile if present)
-        for (let j = 0; j < wordLength; j++) {
-            const aboveTile = aboveRow.children[aboveRow.children.length > wordLength ? j + 1 : j];
-            const thisTile = thisRow.children[thisRow.children.length > wordLength ? j + 1 : j];
-            thisTile.textContent = aboveTile.textContent;
-            thisTile.className = 'tile';
-            if (aboveTile.classList.contains('correct')) thisTile.classList.add('correct');
-            if (aboveTile.classList.contains('present')) thisTile.classList.add('present');
-            if (aboveTile.classList.contains('absent')) thisTile.classList.add('absent');
-        }
-    }
-
-    // Clear row 1 for the next guess
-    const row1 = document.querySelector(`.row[data-row="1"]`);
-    if (row1) {
-        removeProfileImageTile(row1);
-        for (let j = 0; j < wordLength; j++) {
-            const tile = row1.children[row1.children.length > wordLength ? j + 1 : j];
-            if (tile) {
-                tile.textContent = '';
-                tile.className = 'tile';
-            }
-        }
-    }
-    
-    // Restore the individual best guess in the bottom row after shifting (only during individual mode)
-    displayIndividualBestGuessInBottomRow();
-}
+// This function has been removed - now using simple DOM operations instead
 
 //How rows are moved during gameplay if flow is down
-function shiftRowsDown() {
-    const topRow = document.querySelector(`.row[data-row="0"]`);
-    if (!topRow) return;
-    topRow.classList.add('fade-out');
-    setTimeout(() => {
-        // Move each row up by one position, including the bottom row
-        for (let i = 0; i < maxRows - 1; i++) { // Keep as maxRows - 1 to avoid going out of bounds
-            const currentRow = document.querySelector(`.row[data-row="${i + 1}"]`);
-            const nextRow = document.querySelector(`.row[data-row="${i}"]`);
-            if (!currentRow || !nextRow) continue;
-
-            // Remove any profile image tile from destination row
-            removeProfileImageTile(nextRow);
-            // If the source row has a profile image tile, add one to the destination with the same src and username
-            if (currentRow.firstChild && currentRow.firstChild.classList.contains('profile-img-tile')) {
-                const currentImg = currentRow.firstChild.querySelector('img');
-                const currentUsername = currentRow.firstChild.querySelector('.profile-username-overlay');
-                const imgSrc = currentImg ? currentImg.src : 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
-                const username = currentUsername ? currentUsername.textContent : getCurrentUsername();
-                ensureProfileImageTile(nextRow, imgSrc, username);
-            }
-
-            // Copy letter tiles (skip image tile if present)
-            for (let j = 0; j < wordLength; j++) {
-                const currentTile = currentRow.children[currentRow.children.length > wordLength ? j + 1 : j];
-                const nextTile = nextRow.children[nextRow.children.length > wordLength ? j + 1 : j];
-                nextTile.textContent = currentTile.textContent;
-                nextTile.className = 'tile';
-                if (currentTile.classList.contains('correct')) nextTile.classList.add('correct');
-                if (currentTile.classList.contains('present')) nextTile.classList.add('present');
-                if (currentTile.classList.contains('absent')) nextTile.classList.add('absent');
-            }
-        }
-
-        // Clear the bottom guess row
-        const bottomGuessRow = document.querySelector(`.row[data-row="${maxRows - 1}"]`);
-        if (bottomGuessRow) {
-            removeProfileImageTile(bottomGuessRow);
-            for (let j = 0; j < wordLength; j++) {
-                const tile = bottomGuessRow.children[bottomGuessRow.children.length > wordLength ? j + 1 : j];
-                if (tile) {
-                    tile.textContent = '';
-                    tile.className = 'tile';
-                }
-            }
-        }
-        
-        // Restore the individual best guess in the bottom row after shifting (only during individual mode)
-        // displayIndividualBestGuessInBottomRow();
-        
-        topRow.classList.remove('fade-out');
-    }, 150);
-}
+// This function has been removed - now using simple DOM operations instead
 
 //How cog is set to active when simulate guesses is active
 function setCogSimulateActive() {
@@ -1262,9 +932,8 @@ function simulateAudienceTyping(word, user) {
     // Set the current guessing user
     currentGuessingUser = user;
     
-    // Submit the word directly
+    // Use fastSubmitWord to avoid duplicate processing
     fastSubmitWord(word, user, () => {
-        // Clear the current guessing user after the guess is complete
         currentGuessingUser = null;
     });
 }
@@ -1282,29 +951,8 @@ function fastSubmitWord(word, user, callback) {
     lastSubmittedWord = word.toLowerCase();
     lastSubmittedUser = user;
     
-    // Clear the current row first
-    clearCurrentRow();
-    
-    // Add all letters at once
-    for (let i = 0; i < word.length; i++) {
-        const letter = word[i];
-        const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${i}"]`);
-        if (tile) {
-            tile.textContent = letter.toUpperCase();
-            // Show profile image when first letter is added
-            if (i === 0) {
-                const row = document.querySelector(`.row[data-row="${currentRow}"]`);
-                const userImage = getUserProfileImage(currentGuessingUser ? currentGuessingUser.username : null);
-                ensureProfileImageTile(row, userImage, currentGuessingUser ? currentGuessingUser.username : 'Host');
-            }
-        }
-    }
-    
-    // Set currentTile to wordLength before submitting
-    currentTile = wordLength;
-    
-    // Submit the guess immediately
-    submitGuess();
+    // Process the guess using the new unified function
+    processGuess(word, user.photoUrl, user.username);
     
     // Execute callback after a short delay
     setTimeout(() => {
@@ -1474,11 +1122,13 @@ function simulateGroupAudienceTyping(word, user) {
     // Set the current guessing user
     currentGuessingUser = user;
     
-    // Submit the word directly
-    fastSubmitWord(word, user, () => {
-        // Clear the current guessing user after the guess is complete
+    // Process the guess using the new unified function
+    processGuess(word, user.photoUrl, user.username);
+    
+    // Clear the current guessing user after the guess is complete
+    setTimeout(() => {
         currentGuessingUser = null;
-    });
+    }, 100);
 }
 
 // Helper function to get user profile image by username
@@ -1574,10 +1224,13 @@ function showWinningModal(winningWord) {
 }
 
 function showSingleWinner(winningWord, title, wordDisplay, singleWinner, groupWinners) {
-    // Find the winner from playingUsers or use logged-in user
+    // Find the winner - prioritize winningUser if available
     let winner = null;
     
-    if (currentGuessingUser) {
+    if (winningUser) {
+        // Use the tracked winning user data
+        winner = winningUser;
+    } else if (currentGuessingUser) {
         // If there's a current guessing user (simulated), use them
         winner = currentGuessingUser;
     } else if (playingUsers.length > 0) {
@@ -1586,7 +1239,7 @@ function showSingleWinner(winningWord, title, wordDisplay, singleWinner, groupWi
     } else {
         // Manual guess by logged-in user
         winner = {
-            username: 'Host',
+            username: getCurrentUsername(),
             photoUrl: localStorage.getItem('wordleProfileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg'
         };
     }
@@ -2283,19 +1936,16 @@ function initializeTikTokSettings() {
 function handleRealComment(user) {
     if (isGameOver) return;
 
-    // If we have a winning user waiting, replace current comment with winning user's comment
-    if (winningUser && winningUser.username !== user.username) {
-        console.log('Replacing comment from', user.username, 'with winning user', winningUser.username, 'comment');
-        user = winningUser; // Replace the current user with the winning user
-    }
-
     console.log('TikTok Comment Received:', user);
+    
     // Extract the first word from comment and clean it
     const comment = user.comment.trim();
-    let firstWord = comment.split(' ')[0].replace(/^[^a-zA-Z]+/, ''); // Remove leading non-letters
+    let firstWord = comment.split(' ')[0];
+    
+    // Remove all non-letter characters
+    firstWord = firstWord.replace(/[^a-zA-Z]/g, '');
 
     if (firstWord.length < wordLength) return;
-    //if (firstWord.length > wordLength) firstWord = firstWord.slice(0, wordLength);
     if (firstWord.length > wordLength) return;
     firstWord = firstWord.toLowerCase();
     
@@ -2313,52 +1963,14 @@ function handleRealComment(user) {
         console.log('Winning user set:', winningUser);
     }
 
-    // Create user object for tracking
-    const tiktokUser = {
-        username: user.username,
-        photoUrl: user.photoUrl,
-        gift_name: user.gift_name || '',
-        comment: user.comment,
-        guessedWord: firstWord
-    };
-    console.log('firstWord', firstWord);
-    if (tiktokPlayMode === 'individual') {
-        // Individual mode: immediately process the guess
-        handleTikTokIndividualGuess(firstWord, tiktokUser);
-    } else {
-        // Group mode: add to stacks and process when threshold is reached
-        handleTikTokGroupGuess(firstWord, tiktokUser);
-        winningUser = null;
-    }
+    // Process the guess directly with embedded photoUrl and username
+    processGuess(firstWord, user.photoUrl, user.username);
 }
 
 // Helper function to find the first empty row
 function findFirstEmptyRow() {
-    if (guessFlow === 'down') {
-        for (let row = 0; row < maxRows; row++) {
-            let isEmpty = true;
-            for (let col = 0; col < wordLength; col++) {
-                const tile = document.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
-                if (tile && tile.textContent.trim() !== '') {
-                    isEmpty = false;
-                    break;
-                }
-            }
-            if (isEmpty) return row;
-        }
-    } else if (guessFlow === 'up') {
-        // For up flow, always use row 1 (the current guess row)
-        let isEmpty = true;
-        for (let col = 0; col < wordLength; col++) {
-            const tile = document.querySelector(`.tile[data-row="1"][data-col="${col}"]`);
-            if (tile && tile.textContent.trim() !== '') {
-                isEmpty = false;
-                break;
-            }
-        }
-        if (isEmpty) return 1;
-    }
-    return null; // All rows are filled
+    // With the new approach, always use the bottom row (currentRow is always maxRows - 1)
+    return currentRow;
 }
 
 function handleTikTokIndividualGuess(guessWord, user) {
@@ -2368,16 +1980,13 @@ function handleTikTokIndividualGuess(guessWord, user) {
     // Set the current guessing user
     currentGuessingUser = user;
     
-    // Always use the first empty row
-    const emptyRow = findFirstEmptyRow();
-    if (emptyRow === null) return; // No available row
-    currentRow = emptyRow;
+    // Process the guess using the new unified function
+    processGuess(guessWord, user.photoUrl, user.username);
     
-    // Submit the word directly
-    fastSubmitWord(guessWord, user, () => {
-        // Clear the current guessing user after the guess is complete
+    // Clear the current guessing user after the guess is complete
+    setTimeout(() => {
         currentGuessingUser = null;
-    });
+    }, 100);
 }
 
 function handleTikTokGroupGuess(guessWord, user) {
@@ -2409,22 +2018,13 @@ function handleTikTokGroupGuess(guessWord, user) {
         // Set the current guessing user
         currentGuessingUser = topUser;
         
-        // Find the first empty row
-        let emptyRow;
-        if (guessFlow === 'up') {
-            emptyRow = 1; // Always use row 1 for up flow
-        } else {
-            emptyRow = findFirstEmptyRow();
-        }
+        // Process the guess using the new unified function
+        processGuess(guessWord, topUser.photoUrl, topUser.username);
         
-        if (emptyRow === null) return; // No available row
-        currentRow = emptyRow;
-        
-        // Submit the word directly
-        fastSubmitWord(guessWord, topUser, () => {
-            // Clear the current guessing user after the guess is complete
+        // Clear the current guessing user after the guess is complete
+        setTimeout(() => {
             currentGuessingUser = null;
-        });
+        }, 100);
         
         // Remove the word from the stacks after submission
         delete groupGuessStacks[guessWord];
@@ -2445,29 +2045,17 @@ function handleTikTokGroupGuess(guessWord, user) {
     renderGroupGuessBarChart();
 }
 
-function simulateAudienceTyping(word, user) {
-    // Store the user in the playingUsers array
-    playingUsers.push(user);
-    
-    // Set the current guessing user
-    currentGuessingUser = user;
-    
-    // Submit the word directly
-    fastSubmitWord(word, user, () => {
-        // Clear the current guessing user after the guess is complete
-        currentGuessingUser = null;
-    });
-}
-
 function simulateGroupAudienceTyping(word, user) {
     // Set the current guessing user
     currentGuessingUser = user;
     
-    // Submit the word directly
-    fastSubmitWord(word, user, () => {
-        // Clear the current guessing user after the guess is complete
+    // Process the guess using the new unified function
+    processGuess(word, user.photoUrl, user.username);
+    
+    // Clear the current guessing user after the guess is complete
+    setTimeout(() => {
         currentGuessingUser = null;
-    });
+    }, 100);
 }
 
 // Initialize TikTok event listener
@@ -2492,12 +2080,6 @@ window.addEventListener('handleRealGiftEvent', function(event) {
 });
 
 function handleRealGift(user) {
-    // console.log('TikTok Gift Received:', {
-    //     username: user.username,
-    //     photoUrl: user.photoUrl,
-    //     gift_name: user.gift_name,
-    //     comment: user.comment || ''
-    // });
     console.log('TikTok Gift Received:', user);
 }
 
@@ -2992,3 +2574,178 @@ function startGroupGuessBar(preventWin = false) {
         renderGroupGuessBarChart();
     }, 1000);
 }
+
+// Handle keyboard input
+function handleKeyPress(key) {
+    if (isGameOver) return;
+    
+    if (key === 'enter') {
+        submitGuess();
+    } else if (key === 'backspace') {
+        deleteLetter();
+    } else if (/^[a-z]$/.test(key) && currentTile < wordLength) {
+        addLetter(key);
+    }
+}
+
+// Add a letter to the current tile
+function addLetter(letter) {
+    if (currentTile < wordLength) {
+        const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${currentTile}"]`);
+        if (tile) {
+            tile.textContent = letter.toUpperCase();
+            // Show profile image when first letter is added
+            if (currentTile === 0) {
+                const row = document.querySelector(`.row[data-row="${currentRow}"]`);
+                // Get the correct user image
+                const userImage = getUserProfileImage(currentGuessingUser ? currentGuessingUser.username : null);
+                // Ensure the profile image tile exists with the correct image
+                ensureProfileImageTile(row, userImage, currentGuessingUser ? currentGuessingUser.username : 'Host');
+                const imgTile = row.querySelector('.profile-img-tile');
+                const img = imgTile ? imgTile.querySelector('.profile-img-in-tile') : null;
+                if (img) {
+                    img.style.display = 'block';
+                }
+            }
+            // Remove bounce animation to avoid setTimeout
+            currentTile++;
+        }
+    }
+}
+
+// Delete the last letter
+function deleteLetter() {
+    if (currentTile > 0) {
+        currentTile--;
+        const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${currentTile}"]`);
+        if (tile) {
+            tile.textContent = '';
+            // Remove any state classes when deleting
+            tile.classList.remove('correct', 'present', 'absent');
+            
+            // Hide profile image when all letters are deleted
+            if (currentTile === 0) {
+                const row = document.querySelector(`.row[data-row="${currentRow}"]`);
+                const imgTile = row.querySelector('.profile-img-tile');
+                const img = imgTile ? imgTile.querySelector('.profile-img-in-tile') : null;
+                if (img) {
+                    img.style.display = 'none';
+                }
+            }
+        }
+    }
+}
+
+// Add a new row to the bottom and remove the top row
+function addNewRow() {
+    // Remove the top row
+    const topRow = board.firstChild;
+    if (topRow) {
+        board.removeChild(topRow);
+    }
+    
+    // Add new empty row at the bottom
+    const newRow = createRow(maxRows - 1);
+    board.appendChild(newRow);
+    
+    // Update all row data-row attributes to maintain sequential numbering
+    const allRows = board.querySelectorAll('.row');
+    allRows.forEach((row, index) => {
+        row.setAttribute('data-row', index);
+        // Update all tiles within this row
+        const tiles = row.querySelectorAll('.tile');
+        tiles.forEach(tile => {
+            tile.setAttribute('data-row', index);
+        });
+    });
+    
+    // Current row stays at the bottom
+    currentRow = maxRows - 1;
+}
+
+// Check the guess against the target word
+function checkGuess(guess) {
+    const result = Array(wordLength).fill('absent');
+    const targetLetters = targetWord.split('');
+    
+    // First pass: Mark correct letters
+    for (let i = 0; i < wordLength; i++) {
+        if (guess[i] === targetWord[i]) {
+            result[i] = 'correct';
+            targetLetters[i] = null; // Mark as used
+        }
+    }
+    
+    // Second pass: Mark present letters
+    for (let i = 0; i < wordLength; i++) {
+        if (result[i] === 'absent') {
+            const index = targetLetters.indexOf(guess[i]);
+            if (index !== -1) {
+                result[i] = 'present';
+                targetLetters[index] = null; // Mark as used
+            }
+        }
+    }
+    
+    return result;
+}
+
+// Show a message
+function showMessage(message) {
+    messageDisplay.textContent = message;
+    setTimeout(() => {
+        messageDisplay.textContent = '';
+    }, 3000);
+}
+
+// Update fastSubmitWord to use new approach
+function fastSubmitWord(word, user, callback) {
+    if (!word || word.length !== wordLength) return;
+    
+    // Prevent duplicate word submissions from the same user
+    if (word.toLowerCase() === lastSubmittedWord && 
+        user && lastSubmittedUser && 
+        user.username === lastSubmittedUser.username) {
+        console.log('Duplicate word from same user detected, skipping:', word, user.username);
+        return;
+    }
+    lastSubmittedWord = word.toLowerCase();
+    lastSubmittedUser = user;
+    
+    // Process the guess using the new unified function
+    processGuess(word, user.photoUrl, user.username);
+    
+    // Execute callback after a short delay
+    setTimeout(() => {
+        if (callback) callback();
+    }, 100);
+}
+
+// Add Enter key listener for host input
+document.addEventListener('keydown', (e) => {
+    const hostInput = document.getElementById('host-guess-input');
+    if (document.activeElement === hostInput && e.key === 'Enter') {
+        handleHostGuess();
+        return;
+    }
+    
+    // Check if settings panel is open
+    const settingsPanel = document.getElementById('settings-panel');
+    if (settingsPanel && settingsPanel.classList.contains('open')) {
+        return; // Don't process game keys when settings panel is open
+    }
+    
+    // Check if any input field is focused
+    const activeElement = document.activeElement;
+    if (activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' || 
+        activeElement.tagName === 'SELECT' ||
+        activeElement.isContentEditable
+    )) {
+        return; // Don't process game keys when input fields are focused
+    }
+});
+
+// Add new game button listener
+newGameBtn.addEventListener('click', initializeGame);
