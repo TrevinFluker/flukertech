@@ -121,6 +121,9 @@ const newGameBtn = document.getElementById('new-game-btn');
 let lastSubmittedWord = '';
 let lastSubmittedUser = null;
 
+// Track last username-comment pair to prevent consecutive duplicates
+let lastUserComment = '';
+
 // Function to update the current answer display in settings
 function updateCurrentAnswerDisplay() {
     const answerDisplay = document.getElementById('current-answer-display');
@@ -190,6 +193,9 @@ async function initializeGame() {
     
     // Reset individual best guess
     individualBestGuess = null;
+    
+    // Reset last username-comment tracking for new game
+    lastUserComment = '';
     
     // Update CSS variables
     document.documentElement.style.setProperty('--word-length', wordLength);
@@ -1948,6 +1954,15 @@ function handleRealComment(user) {
     if (firstWord.length < wordLength) return;
     if (firstWord.length > wordLength) return;
     firstWord = firstWord.toLowerCase();
+    
+    // Check if this guess is the same as the last guess
+    if (lastUserComment === firstWord) {
+        console.log('Duplicate guess detected, skipping:', firstWord);
+        return;
+    }
+    
+    // Store this guess as the last one
+    lastUserComment = firstWord;
     
     // Check if this word matches the target word (winning word)
     if (firstWord.toLowerCase() === targetWord.toLowerCase()) {
