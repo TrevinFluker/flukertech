@@ -655,7 +655,23 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
 // Handle Enter key in search input
 document.getElementById('searchInput').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
-        checkGuess(e.target.value);
+        const guess = e.target.value;
+        
+        // Create host user data matching the Chrome extension format
+        const hostUserData = {
+            username: localStorage.getItem('profileUsername') || 'Host',
+            nickname: localStorage.getItem('profileUsername') || 'Host',
+            uniqueId: 'host', // Fixed ID for host across all sessions
+            photoUrl: localStorage.getItem('profileImage') || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg',
+            comment: guess,
+            eventType: 'host'
+        };
+        
+        // Route host guess through the same pipeline as external comments
+        if (typeof window.handleRealComment === 'function') {
+            window.handleRealComment(hostUserData);
+        }
+        
         e.target.value = '';
     }
 });
