@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marble Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div class="red-line"></div>
+        <div class="green-line"></div>
+        <div class="info-panel">
+            <div id="connectionStatus">Connecting...</div>
+            <div id="marbleCount">Marbles: 0</div>
+        </div>
+        
+        <!-- Toast container for marble crossing messages -->
+        <div id="toastContainer" class="toast-container"></div>
+        
+        <!-- Winner message container -->
+        <div id="winnerMessage" class="winner-message" style="display: none;">
+            <div class="winner-content">
+                <h2 id="winnerTitle">🏆 Winner!</h2>
+                <p id="winnerText">Last to cross the green line</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Side Panel -->
+    <div id="sidePanel" class="side-panel">
+        <div class="panel-header">
+            <button id="panelToggle" class="panel-toggle">⚙️</button>
+        </div>
+        
+        <div class="panel-content">
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="gameSettings">
+                        <span>Game Settings</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div id="gameSettings" class="accordion-content">
+                        <div class="setting-group">
+                            <label for="wsUrl">WebSocket URL:</label>
+                            <input type="text" id="wsUrl" value="ws://localhost:21213/" placeholder="ws://localhost:21213/">
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label>Connection Status:</label>
+                            <div id="wsStatus" class="ws-status">Disconnected</div>
+                        </div>
+                        
+                        <div class="setting-group button-group">
+                            <button id="connectBtn" class="btn btn-primary">Connect</button>
+                            <button id="disconnectBtn" class="btn btn-secondary" disabled>Disconnect</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="autoReconnect">Auto Reconnect:</label>
+                            <input type="checkbox" id="autoReconnect" checked>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="marbleSize">Marble Size (px):</label>
+                            <div class="range-container">
+                                <input type="range" id="marbleSize" min="10" max="30" value="15" step="1">
+                                <span id="marbleSizeValue">15px</span>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="redLinePosition">Red Line Position (% from top):</label>
+                            <div class="range-container">
+                                <input type="range" id="redLinePosition" min="10" max="50" value="20" step="1">
+                                <span id="redLineValue">20%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="greenLinePosition">Green Line Position (% from bottom):</label>
+                            <div class="range-container">
+                                <input type="range" id="greenLinePosition" min="10" max="50" value="20" step="1">
+                                <span id="greenLineValue">20%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="startButton" class="btn btn-success">🚀 Start Game (Release Marbles)</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="resetButton" class="btn btn-warning">↩️ Reset Red Line</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="clearMarbles" class="btn btn-warning">Clear All Marbles</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="testMarble" class="btn btn-info">Add Test Marble</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="presetLevels">
+                        <span>🎮 Preset Levels</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div id="presetLevels" class="accordion-content">
+                        <div class="setting-group">
+                            <label for="levelSelect">Choose Level:</label>
+                            <select id="levelSelect">
+                                <option value="">-- Select a Level --</option>
+                                <option value="level1">🟡 Level 1: The Trap Chamber (Medium)</option>
+                                <option value="level2">🔴 Level 2: The Pendulum Prison (Hard)</option>
+                                <option value="level3">⚫ Level 3: The Spiral Vortex (Expert)</option>
+                                <option value="level4">⚫ Level 4: The Maze Lock (Expert)</option>
+                                <option value="level5">🔥 Level 5: The Pinball Nightmare (Insane)</option>
+                                <option value="level6">🔥 Level 6: The Time Trap (Insane)</option>
+                                <option value="level7">💀 Level 7: The Crusher (Nightmare)</option>
+                                <option value="level8">💀 Level 8: The Perfect Storm (Impossible)</option>
+                                <optgroup label="📝 Custom Levels" id="customLevelsGroup" style="display: none;">
+                                    <!-- Custom levels will be populated here dynamically -->
+                                </optgroup>
+                            </select>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <div id="levelDescription" class="level-description">
+                                Select a level to see its description
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="loadLevelBtn" class="btn btn-primary" disabled>🎮 Load Level</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="clearLevelBtn" class="btn btn-secondary">🗑️ Clear All Shapes</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <div class="level-instructions">
+                                <strong>🎯 How to Play:</strong><br>
+                                1. Load a preset level<br>
+                                2. Add marbles (WebSocket or Test)<br>
+                                3. Release marbles with Start button<br>
+                                4. Last marble standing wins!
+                            </div>
+                        </div>
+                        
+                        <!-- Custom Level Creation Section -->
+                        <div class="setting-group custom-level-section">
+                            <hr class="section-divider">
+                            <h4 class="section-title">📝 Create Custom Level</h4>
+                            
+                            <div class="setting-group">
+                                <label for="customLevelName">Level Name:</label>
+                                <input type="text" id="customLevelName" placeholder="My Awesome Level" maxlength="30">
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="customLevelDescription">Description:</label>
+                                <textarea id="customLevelDescription" placeholder="Describe your level design..." maxlength="150" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="customLevelDifficulty">Difficulty:</label>
+                                <select id="customLevelDifficulty">
+                                    <option value="Easy">🟢 Easy</option>
+                                    <option value="Medium">🟡 Medium</option>
+                                    <option value="Hard">🔴 Hard</option>
+                                    <option value="Expert">⚫ Expert</option>
+                                    <option value="Insane">🔥 Insane</option>
+                                    <option value="Nightmare">💀 Nightmare</option>
+                                    <option value="Impossible">💀 Impossible</option>
+                                </select>
+                            </div>
+                            
+                            <div class="setting-group button-group">
+                                <button id="saveCustomLevelBtn" class="btn btn-success" disabled>💾 Save Current Layout</button>
+                                <button id="manageCustomLevelsBtn" class="btn btn-info">📋 Manage Saved Levels</button>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <div class="custom-level-instructions">
+                                    <strong>💡 Instructions:</strong><br>
+                                    1. Draw your level using the Shape Drawing tools<br>
+                                    2. Enter name, description, and difficulty<br>
+                                    3. Click "Save Current Layout" to store in browser<br>
+                                    4. Use "Manage Saved Levels" to load/delete custom levels
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="shapeSettings">
+                        <span>Shape Drawing</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div id="shapeSettings" class="accordion-content">
+                        <div class="setting-group">
+                            <label for="shapeMode">Drawing Mode:</label>
+                            <select id="shapeMode">
+                                <option value="preset">Preset Shapes</option>
+                                <option value="draw">Draw Custom Shape</option>
+                                <option value="pin">Pin Point Shape</option>
+                            </select>
+                        </div>
+                        
+                        <div id="presetShapeControls" class="shape-mode-controls">
+                            <div class="setting-group">
+                                <label for="shapeType">Shape Type:</label>
+                                <select id="shapeType">
+                                    <option value="rectangle">📦 Rectangle</option>
+                                    <option value="circle">⭕ Circle</option>
+                                    <option value="wave">🌊 Wave Flipper</option>
+                                    <option value="bouncer">🚀 Super Bouncer</option>
+                                    <option value="teleporter">🌀 Teleporter</option>
+                                    <option value="blackhole">🕳️ Black Hole</option>
+                                </select>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="shapeSize">Shape Size:</label>
+                                <div class="range-container">
+                                    <input type="range" id="shapeSize" min="20" max="80" value="40" step="5">
+                                    <span id="shapeSizeValue">40px</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="customShapeControls" class="shape-mode-controls" style="display: none;">
+                            <div class="setting-group">
+                                <label for="drawingStroke">Line Thickness:</label>
+                                <div class="range-container">
+                                    <input type="range" id="drawingStroke" min="5" max="20" value="10" step="1">
+                                    <span id="drawingStrokeValue">10px</span>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="drawingSensitivity">Drawing Sensitivity:</label>
+                                <div class="range-container">
+                                    <input type="range" id="drawingSensitivity" min="5" max="25" value="15" step="1">
+                                    <span id="drawingSensitivityValue">15px</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="shapeColor">Shape Color:</label>
+                            <div class="color-container">
+                                <input type="color" id="shapeColor" value="#4CAF50">
+                                <span id="shapeColorValue">#4CAF50</span>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="shapeMovement">Moving Shapes:</label>
+                            <input type="checkbox" id="shapeMovement" checked>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label for="movementSpeed">Movement Speed:</label>
+                            <div class="range-container">
+                                <input type="range" id="movementSpeed" min="0.5" max="3" value="1" step="0.1">
+                                <span id="movementSpeedValue">1.0x</span>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="drawModeBtn" class="btn btn-primary">🎨 Enable Drawing Mode</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="clearShapes" class="btn btn-warning">Clear All Shapes</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="clearCurrentShape" class="btn btn-secondary" style="display: none;">❌ Cancel Current Shape</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <button id="completeShape" class="btn btn-success" style="display: none;">✅ Complete Shape</button>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <div class="drawing-instructions">
+                                <div id="presetInstructions">
+                                    <strong>Preset Shapes:</strong><br>
+                                    1. Select shape type and size<br>
+                                    2. Enable Drawing Mode<br>
+                                    3. Click between lines to place
+                                </div>
+                                <div id="drawInstructions" style="display: none;">
+                                    <strong>Draw Mode:</strong><br>
+                                    1. Enable Drawing Mode<br>
+                                    2. Hold and drag to draw<br>
+                                    3. Release to finish path<br>
+                                    4. Click "Complete Shape"
+                                </div>
+                                <div id="pinInstructions" style="display: none;">
+                                    <strong>Pin Mode:</strong><br>
+                                    1. Enable Drawing Mode<br>
+                                    2. Click to place pin points<br>
+                                    3. Connect dots to form shape<br>
+                                    4. Click "Complete Shape"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Levels Management Modal -->
+    <div id="customLevelsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📋 Manage Custom Levels</h3>
+                <button class="modal-close" id="closeCustomLevelsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="customLevelsList" class="custom-levels-list">
+                    <p class="no-levels-message">No custom levels saved yet. Create your first level!</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="closeModalBtn" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="levels.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
