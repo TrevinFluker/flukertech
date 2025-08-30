@@ -30,6 +30,16 @@ function getGoogleSuggestions(query) {
     });
 }
 
+// Apply comment section visibility based on settings
+function applyCommentSectionVisibility() {
+    const showComments = localStorage.getItem('showCommentsSection') !== 'false'; // Default to true
+    const commentsSection = document.querySelector('.comments');
+    
+    if (commentsSection) {
+        commentsSection.style.display = showComments ? 'flex' : 'none';
+    }
+}
+
 // Initialize category dropdown
 async function initCategories() {
     try {
@@ -269,6 +279,16 @@ function clearGameState() {
     // Clear simulated comments when changing modes
     clearComments();
     
+    // Hide comments and guess container sections
+    const commentsSection = document.querySelector('.comments');
+    const guessContainer = document.querySelector('.guess-container');
+    if (commentsSection) {
+        commentsSection.style.display = 'none';
+    }
+    if (guessContainer) {
+        guessContainer.style.display = 'none';
+    }
+    
     // Update answers accordion to show "Not currently playing"
     updateAnswersAccordion();
 }
@@ -482,7 +502,6 @@ function checkGuess(guess, userInfo) {
     
     // Remove escape character if present
     guess = removeEscapeCharacter(guess);
-    console.log('guess', guess);
     
     if (currentGame.guessed.has(guess.toLowerCase())) return;
     currentGame.guessed.add(guess.toLowerCase());
@@ -592,96 +611,40 @@ function checkGuess(guess, userInfo) {
     }
 }
 
-// The provided matching logic
-function checkGuessLogic(guess, answers) {
-    guess = guess.trim()
-    // Helper function to remove apostrophes and handle plural forms for each word
-    function normalizePhrase(phrase) {
-        return phrase
-            .replace(/'/g, "")  // Remove all apostrophes
-            .split(' ')         // Split phrase into words
-            .map(word => {
-                if (word.endsWith('es')) {
-                    return word.slice(0, -2);  // Remove 'es'
-                } else if (word.endsWith('s')) {
-                    return word.slice(0, -1);  // Remove 's'
-                }
-                return word;
-            })
-            .join(' ');  // Join words back into a normalized phrase
+// checkGuessLogic function has been moved to helperFunctions.js
+
+// Update guess container with latest guess
+function updateGuessContainer(guess, userInfo) {
+    console.log('updateGuessContainer called with:', guess, userInfo);
+
+    // Show the guess container when updating with a new guess
+    const guessContainer = document.querySelector('.guess-container');
+    if (guessContainer.style.display !== 'flex') {
+        guessContainer.style.display = 'flex';
     }
-    
-    // Normalize guess by removing apostrophes and plurals
-    let normalizedGuess = normalizePhrase(guess.toLowerCase());
-    
-    // Array to hold all matching results
-    const matches = [];
-    
-    // Iterate through the answers that are not found and check for all matches
-    for (let answerObj of answers.filter(answer => !answer.found)) {
-        // Normalize each answer by removing apostrophes and plurals
-        let normalizedAnswer = normalizePhrase(answerObj.answer.toLowerCase());
-        
-        // Split the normalized answer into words for exact word matching
-        let answerWords = normalizedAnswer.split(' ');
-        
-        // 1. Check for an exact match (for entire phrases)
-        if (normalizedGuess === normalizedAnswer) {
-            matches.push(answerObj);  // Exact match found, add to results
-            continue;  // Skip further checks for this answer
-        }
-        
-        if (normalizedAnswer.includes(normalizedGuess) && normalizedGuess.includes(' ')) {
-            matches.push(answerObj);  // Substring match found, add to results
-            continue;
-        }
-        
-        if (normalizedAnswer.split('-').includes(normalizedGuess) && normalizedGuess.length > 3) {
-            matches.push(answerObj);  // Hyphenated word match found, add to results
-            continue;
-        }
-                
-        if (normalizedAnswer === normalizedGuess.replaceAll(" ", "-")) {
-            matches.push(answerObj);  // Hyphenated word match found, add to results
-            continue;
-        }
-        
-        if (normalizedGuess.endsWith('e')) {
-            // Remove the last 'e' and compare to normalizedAnswer
-            normalizedGuessWoE = normalizedGuess.slice(0, -1);
-            if (normalizedGuessWoE === normalizedAnswer) {
-                matches.push(answerObj);  // Exact match after modification
-                continue;
-            }
-        }
-        
-        // 2. Check if the guess matches any individual word in the answer (word-on-word matching)
-        if (answerWords.includes(normalizedGuess) && normalizedGuess.length > 3) {
-            matches.push(answerObj);  // Exact word match found, add to results
-            continue;  // Skip further checks for this answer
-        }
-        
-        // 3. If the guess is longer than 3 characters, check for phrase matches
-        if (normalizedGuess.length > 3) {
-            // Check if the guess is a **prefix** of the normalized answer (not just anywhere)
-            if (normalizedAnswer.startsWith(normalizedGuess)) {
-                matches.push(answerObj);  // Partial phrase match found, add to results
-                continue;  // Skip further checks for this answer
-            }
-        }
-    }
-    
-    // Return all matches found (or empty array if none)
-    return matches;
+
+    document.getElementById('guessText').innerText = guess;
+    document.getElementById('guessImg').src = userInfo.photoUrl || 'https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg';
 }
 
 // Give up and reveal all answers
 function giveUp() {
     if (!currentGame) return;
     
+    // Check if any answers were found before giving up
+    const hadAnswers = revealedCount > 0;
+    
     currentGame.revealed.fill(true);
     revealedCount = currentGame.answers.length;
     renderGame();
+    
+    // Show winners if any answers were found
+    if (hadAnswers && !roundWinnersModalShown) {
+        roundWinnersModalShown = true;
+        setTimeout(() => {
+            showRoundWinnersModal();
+        }, 500);
+    }
 }
 
 // Handle typing in search input (removed auto-checking)
@@ -837,6 +800,15 @@ initCategories();
 window.registerComment = function(user) {
     const container = document.getElementById('comments');
     if (!container) return;
+    
+    // Check if comments section should be shown based on settings
+    const showComments = localStorage.getItem('showCommentsSection') !== 'false'; // Default to true
+    
+    if (showComments) {
+        // Show the comments section when a new comment comes through
+        container.style.display = 'flex';
+    }
+    
     const row = document.createElement('div');
     row.className = 'comment-row';
     row.innerHTML = `
@@ -955,8 +927,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Modal duration logic
     const modalDurationInput = document.getElementById('modalDurationInput');
     if (modalDurationInput) {
-        // Load modal duration from localStorage, default to 2 seconds
-        const savedModalDuration = localStorage.getItem('modalDuration') || '2';
+        // Load modal duration from localStorage, default to 3 seconds
+        const savedModalDuration = localStorage.getItem('modalDuration') || '3';
         modalDurationInput.value = savedModalDuration;
         // Save on input
         modalDurationInput.addEventListener('input', function() {
@@ -966,6 +938,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Show Comments Section toggle logic
+    const showCommentsToggle = document.getElementById('showCommentsToggle');
+    if (showCommentsToggle) {
+        // Load showCommentsSection from localStorage, default to true
+        const savedShowComments = localStorage.getItem('showCommentsSection');
+        if (savedShowComments === null) {
+            // Default to true if no setting is saved
+            localStorage.setItem('showCommentsSection', 'true');
+            showCommentsToggle.checked = true;
+        } else {
+            showCommentsToggle.checked = savedShowComments !== 'false';
+        }
+        
+        // Save on change
+        showCommentsToggle.addEventListener('change', function() {
+            localStorage.setItem('showCommentsSection', showCommentsToggle.checked.toString());
+            // Apply visibility immediately when toggle changes
+            applyCommentSectionVisibility();
+        });
+    }
+    
+    // Apply initial comment section visibility
+    applyCommentSectionVisibility();
 
     // Clear Leaderboard button logic
     const clearLeaderboardBtn = document.getElementById('clearLeaderboardBtn');
@@ -1014,6 +1010,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Expose handler for simulation
     window.handleSimulatedComment = function(user) {
         if (typeof window.registerComment === 'function') {
+            updateGuessContainer(user.comment, { username: user.username, photoUrl: user.photoUrl, uniqueId: user.username });
             window.registerComment(user);
         }
     };
@@ -1028,6 +1025,7 @@ document.addEventListener('DOMContentLoaded', function() {
             comment: userData.comment || '',
             followStatus: userData.followStatus,
         };
+        updateGuessContainer(user.comment, { username: user.username, photoUrl: user.photoUrl, uniqueId: user.uniqueId });
         
         if (typeof window.registerComment === 'function') {
             window.registerComment(user);
@@ -1035,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Listen for custom events from Chrome extension
-    window.addEventListener('handleRealCommmentEvent', function(event) {
+    window.addEventListener('handleRealCommentEvent', function(event) {
         if (event.detail && event.detail.comment) {
             window.handleRealComment(event.detail);
             console.log('Received real comment event:', event.detail);
@@ -1087,7 +1085,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.handleRealComment === 'function') {
                 window.handleRealComment(testUserData);
                 console.log('Sent test comment:', testUserData);
-                showToast(`Test comment sent: "${comment}"`, 2000);
                 
                 // Clear the comment field for next test
                 document.getElementById('testComment').value = '';
@@ -1333,6 +1330,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Start the persistent timer once
         showAutomationTimer();
         
+        // Call monitorRoundCompletion only once here
+        monitorRoundCompletion();
+        
         // Start first round
         startAutomationRound();
     }
@@ -1352,42 +1352,46 @@ document.addEventListener('DOMContentLoaded', function() {
         automationRoundCount++;
         console.log(`Starting automation round ${automationRoundCount}`);
 
-        // Get available categories from automation config
-        const availableCategories = getAvailableAutomationCategories();
-        if (availableCategories.length === 0) {
-            console.log('No categories available, clearing game history to continue');
+        // Get categories with unplayed games
+        const categoriesWithUnplayed = getCategoriesWithUnplayedGames();
+        if (categoriesWithUnplayed.length === 0) {
+            console.log('No unplayed games in any category, clearing game history to start fresh');
             localStorage.removeItem('playedGames');
+            updateGameHistoryPercent();
             setTimeout(() => startAutomationRound(), 1000);
             return;
         }
 
-        // Select category (change every 5 rounds or if current category has no available prompts)
+        // Select category (change every 5 rounds or if current category has no unplayed prompts)
+        let needNewCategory = false;
         if (!automationCurrentCategory || automationRoundCount % 5 === 1) {
-            automationCurrentCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
-            document.getElementById('categorySelect').value = automationCurrentCategory;
+            needNewCategory = true;
+        } else {
+            // Check if current category has unplayed games
+            const unplayedInCurrent = getUnplayedPromptsForCategory(automationCurrentCategory);
+            if (unplayedInCurrent.length === 0) {
+                needNewCategory = true;
+                console.log(`Category '${automationCurrentCategory}' has no unplayed games, switching category`);
+            }
         }
 
-        // Get available prompts for current category
-        const availablePrompts = getAvailablePromptsForCategory(automationCurrentCategory);
-        console.log(availablePrompts);
-        if (availablePrompts.length === 0) {
-            // Switch to a different category if current one is exhausted
-            const otherCategories = availableCategories.filter(cat => cat !== automationCurrentCategory);
-            if (otherCategories.length > 0) {
-                automationCurrentCategory = otherCategories[Math.floor(Math.random() * otherCategories.length)];
-                const newPrompts = getAvailablePromptsForCategory(automationCurrentCategory);
-                if (newPrompts.length === 0) {
-                    console.log('All categories exhausted, clearing game history to continue');
-                    localStorage.removeItem('playedGames');
-                    setTimeout(() => startAutomationRound(), 1000);
-                    return;
-                }
-            } else {
-                console.log('All categories exhausted, clearing game history to continue');
-                localStorage.removeItem('playedGames');
-                setTimeout(() => startAutomationRound(), 1000);
-                return;
-            }
+        if (needNewCategory) {
+            automationCurrentCategory = categoriesWithUnplayed[Math.floor(Math.random() * categoriesWithUnplayed.length)];
+            document.getElementById('categorySelect').value = automationCurrentCategory;
+            console.log(`Switched to category: ${automationCurrentCategory}`);
+        }
+
+        // Get unplayed prompts for current category
+        const unplayedPrompts = getUnplayedPromptsForCategory(automationCurrentCategory);
+        console.log(`Unplayed prompts in ${automationCurrentCategory}:`, unplayedPrompts.length);
+        
+        if (unplayedPrompts.length === 0) {
+            // This shouldn't happen due to our checking above, but safety fallback
+            console.log('Unexpected: No unplayed prompts found, clearing game history');
+            localStorage.removeItem('playedGames');
+            updateGameHistoryPercent();
+            setTimeout(() => startAutomationRound(), 1000);
+            return;
         }
 
         // Start the game round
@@ -1396,8 +1400,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reset timer for this round instead of creating new timer
         resetAutomationTimer();
         
-        // Monitor for round completion
-        monitorRoundCompletion();
+        // REMOVE THIS LINE - only call once when automation starts
+        // monitorRoundCompletion();
     }
 
     // Start game for automation with respect to automation flow configuration
@@ -1407,15 +1411,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Get available prompts for this category (respects automation flow config)
-        const availablePrompts = getAvailablePromptsForCategory(category);
-        if (availablePrompts.length === 0) {
-            console.error(`No available prompts for category: ${category}`);
+        // Get unplayed prompts for this category (respects automation flow config and played games)
+        const unplayedPrompts = getUnplayedPromptsForCategory(category);
+        if (unplayedPrompts.length === 0) {
+            console.error(`No unplayed prompts for category: ${category}`);
             return;
         }
 
-        // Select a random prompt from available prompts only
-        const randomPrompt = availablePrompts[Math.floor(Math.random() * availablePrompts.length)];
+        // Select a random prompt from unplayed prompts only
+        const randomPrompt = unplayedPrompts[Math.floor(Math.random() * unplayedPrompts.length)];
         const answers = gameData[category][randomPrompt];
         
         console.log(`Automation selected: ${category} - "${randomPrompt}"`);
@@ -1461,7 +1465,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 1000);
         }
         
-        // Set up timeout for this round with a small delay to ensure synchronization
+        // Set up timeout for this round - NO RECURSIVE LOGIC
         automationTimeout = setTimeout(() => {
             if (automationActive) {
                 // Check if Round Winners modal is showing - if so, extend timeout
@@ -1470,25 +1474,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (isModalShowing) {
                     console.log(`Timer timeout reached but Round Winners modal is showing, extending timeout...`);
-                    // Reschedule timeout for 1 second later to check again
-                    automationTimeout = setTimeout(arguments.callee, 1000);
+                    // Reschedule timeout for 1 second later to check again - NO RECURSION
+                    automationTimeout = setTimeout(() => {
+                        // Check again if modal is still showing
+                        const modalStillShowing = document.getElementById('roundWinnersModal') && 
+                                                document.getElementById('roundWinnersModal').style.display === 'flex';
+                        if (modalStillShowing) {
+                            // Modal still showing, extend again - FINAL EXTENSION
+                            automationTimeout = setTimeout(() => {
+                                handleAutomationTimeout();
+                            }, 1000);
+                        } else {
+                            // Modal finished, proceed with timeout logic
+                            handleAutomationTimeout();
+                        }
+                    }, 1000);
                     return;
                 }
                 
-                console.log(`Automation round ${automationRoundCount} timed out after ${automationTimeoutSeconds} seconds`);
-                
-                // Clear timeout and reset timer state (same cleanup as round completion)
-                if (automationTimeout) {
-                    clearTimeout(automationTimeout);
-                    automationTimeout = null;
-                }
-                automationTimerPaused = false;
-                automationPausedTimeElapsed = 0;
-                
-                // Move to next round
-                setTimeout(() => startAutomationRound(), 1000);
+                // Modal not showing, proceed with timeout logic
+                handleAutomationTimeout();
             }
         }, automationTimeoutSeconds * 1000);
+    }
+
+    // Separate function to handle timeout logic
+    function handleAutomationTimeout() {
+        console.log(`Automation round ${automationRoundCount} timed out after ${automationTimeoutSeconds} seconds`);
+        
+        // Clear timeout and reset timer state
+        if (automationTimeout) {
+            clearTimeout(automationTimeout);
+            automationTimeout = null;
+        }
+        automationTimerPaused = false;
+        automationPausedTimeElapsed = 0;
+        
+        // Store the completed game as played (regardless of whether answers were found)
+        if (currentGame && !currentGame.isImprov) {
+            storePlayedGame(currentGame.category, currentGame.prompt);
+            updateGameHistoryPercent();
+            console.log(`Stored as played (timeout): ${currentGame.category} - "${currentGame.prompt}"`);
+        }
+        
+        // Show winners if any answers were found, then move to next round
+        if (revealedCount > 0 && !roundWinnersModalShown) {
+            roundWinnersModalShown = true;
+            setTimeout(() => {
+                showRoundWinnersModal();
+            }, 500);
+        } else {
+            // No answers found, just move to next round
+            setTimeout(() => startAutomationRound(), 1000);
+        }
     }
 
     function monitorRoundCompletion() {
@@ -1512,15 +1550,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (automationActive) {
                 clearTimeout(automationTimeout); // Cancel timeout since round completed
                 
+                // Store the completed game as played
+                if (currentGame && !currentGame.isImprov) {
+                    storePlayedGame(currentGame.category, currentGame.prompt);
+                    updateGameHistoryPercent();
+                    console.log(`Stored as played: ${currentGame.category} - "${currentGame.prompt}"`);
+                }
+                
                 // Get modal duration
                 const savedDuration = localStorage.getItem('modalDuration');
                 const modalDurationInput = document.getElementById('modalDurationInput');
-                let duration = 2; // default
+                let duration = 3; // default
                 
                 if (savedDuration) {
                     duration = parseFloat(savedDuration);
                 } else if (modalDurationInput) {
-                    duration = parseFloat(modalDurationInput.value) || 2;
+                    duration = parseFloat(modalDurationInput.value) || 3;
                 }
                 
                 console.log(`Automation round ${automationRoundCount} completed. Waiting ${duration} seconds for modal.`);
@@ -1573,6 +1618,40 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         return availablePrompts;
+    }
+
+    function getUnplayedPromptsForCategory(category) {
+        if (!window.gameData || !window.gameData[category]) return [];
+        
+        // Get all available prompts (respects automation config)
+        const availablePrompts = getAvailablePromptsForCategory(category);
+        
+        // Get played games
+        const playedGames = getPlayedGames();
+        const playedInCategory = playedGames[category] || [];
+        
+        // Filter out played prompts
+        const unplayedPrompts = availablePrompts.filter(prompt => 
+            !playedInCategory.includes(prompt)
+        );
+        
+        return unplayedPrompts;
+    }
+
+    function getCategoriesWithUnplayedGames() {
+        if (!window.gameData) return [];
+        
+        const availableCategories = getAvailableAutomationCategories();
+        const categoriesWithUnplayed = [];
+        
+        availableCategories.forEach(category => {
+            const unplayedPrompts = getUnplayedPromptsForCategory(category);
+            if (unplayedPrompts.length > 0) {
+                categoriesWithUnplayed.push(category);
+            }
+        });
+        
+        return categoriesWithUnplayed;
     }
 
     function showAutomationTimer() {
@@ -2187,25 +2266,27 @@ function showRoundWinnersModal() {
     
     // Get all participants (not just those who got answers correct)
     const allParticipants = currentGame.allParticipants || {};
-    const sortedParticipants = Object.values(allParticipants).sort((a, b) => b.correctAnswers - a.correctAnswers);
+    // FILTER: Only include participants with at least 1 correct answer
+    const participantsWithCorrectAnswers = Object.values(allParticipants).filter(participant => participant.correctAnswers > 0);
+    const sortedParticipants = participantsWithCorrectAnswers.sort((a, b) => b.correctAnswers - a.correctAnswers);
     
     // Log round summary
     console.log('🏆 ROUND COMPLETE');
-    console.log('📊 Round Participants:');
+    console.log('📊 Round Participants (with correct answers):');
     sortedParticipants.forEach((participant, index) => {
         const user = participant.user;
         console.log(`  ${index + 1}. ${user.username} (${user.uniqueId}): ${participant.correctAnswers} correct, ${participant.totalGuesses} total guesses`);
     });
     
     if (sortedParticipants.length === 0) {
-        // No participants found, show default message
-        modalBody.innerHTML = '<div style="text-align: center; color: #666; font-size: 1.1rem;">No participants in this round!</div>';
+        // No participants with correct answers found, show default message
+        modalBody.innerHTML = '<div style="text-align: center; color: #666; font-size: 1.1rem;">No correct answers in this round!</div>';
     } else {
         // Update leaderboard with points from this round (only for users who got answers correct)
         const userScores = currentGame.userScores || {};
         const leaderboard = updateLeaderboard(userScores);
         
-        // Display all participants with their statistics
+        // Display participants with correct answers
         sortedParticipants.forEach(participant => {
             const user = participant.user;
             const correctAnswers = participant.correctAnswers;
@@ -2251,15 +2332,15 @@ function showRoundWinnersModal() {
     // Show the modal
     modal.style.display = 'flex';
     
-    // Get modal duration from settings (localStorage first, then input field, default 2 seconds)
+    // Get modal duration from settings (localStorage first, then input field, default 3 seconds)
     const savedDuration = localStorage.getItem('modalDuration');
     const modalDurationInput = document.getElementById('modalDurationInput');
-    let duration = 2; // default
+    let duration = 3; // default
     
     if (savedDuration) {
         duration = parseFloat(savedDuration);
     } else if (modalDurationInput) {
-        duration = parseFloat(modalDurationInput.value) || 2;
+        duration = parseFloat(modalDurationInput.value) || 3;
     }
     
     // Hide modal after specified duration
@@ -2369,6 +2450,7 @@ function getTopLeaderboardUsers(limit = 10) {
     const leaderboard = getLeaderboard();
     return Object.entries(leaderboard)
         .map(([userId, data]) => ({ userId, ...data }))
+        .filter(user => user.totalPoints > 0) // FILTER: Only include users with points
         .sort((a, b) => b.totalPoints - a.totalPoints)
         .slice(0, limit);
 }
@@ -2382,3 +2464,34 @@ function clearLeaderboard() {
         window.updateFloatingLeaderboard();
     }
 }
+
+// Dark mode toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (darkModeToggle) {
+        // Load dark mode setting from localStorage, default to false (light mode)
+        const savedDarkMode = localStorage.getItem('darkMode');
+        if (savedDarkMode === null) {
+            // Default to light mode if no setting is saved
+            localStorage.setItem('darkMode', 'false');
+        }
+        
+        // Apply initial dark mode state
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        }
+        
+        // Toggle dark mode on click
+        darkModeToggle.addEventListener('click', function() {
+            const isCurrentlyDark = document.body.classList.contains('dark-mode');
+            if (isCurrentlyDark) {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'false');
+            } else {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'true');
+            }
+        });
+    }
+});
