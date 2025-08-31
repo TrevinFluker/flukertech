@@ -800,7 +800,7 @@ body {
 .buttons-container-bottom {
     display: flex;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 8px 0px;
     border-top: 1px solid #f0f0f0;
     justify-content: flex-end;
     align-items: center;
@@ -823,6 +823,67 @@ body {
     color: #202124;
     font-weight: 400;
 }
+
+/* .chat-button-container {
+    position: relative;
+}
+
+.chat-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    background: white;
+    color: #202124;
+}
+
+.chat-btn:hover {
+    background: #f1f3f4;
+    border-color: #c4c7c5;
+}
+
+.chat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    background: #4285f4;
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.chat-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    margin-bottom: 8px;
+    background: white;
+    border: 1px solid #dadce0;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 150px;
+}
+
+.chat-menu-content {
+    padding: 12px;
+}
+
+.chat-menu-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #202124;
+    text-align: center;
+} */
 
 .automate-button-container {
     display: flex;
@@ -1631,6 +1692,26 @@ body.dark-mode .game-mode-toggle-container {
 }
 
 body.dark-mode .game-mode-toggle-container .toggle-label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .chat-btn {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+body.dark-mode .chat-btn:hover {
+    background: #3a3a3a;
+    border-color: #555;
+}
+
+body.dark-mode .chat-menu {
+    background: #2d2d2d;
+    border-color: #444;
+}
+
+body.dark-mode .chat-menu-title {
     color: #e0e0e0;
 }
 

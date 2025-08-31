@@ -1267,6 +1267,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Expose function globally so it can be called from other parts of the code
     window.updateFloatingLeaderboard = updateFloatingLeaderboard;
 
+    // // Chat button functionality
+    // const chatBtn = document.getElementById('chatBtn');
+    // const chatMenu = document.getElementById('chatMenu');
+    
+    // if (chatBtn && chatMenu) {
+    //     chatBtn.addEventListener('click', function() {
+    //         chatMenu.style.display = chatMenu.style.display === 'none' ? 'block' : 'none';
+    //     });
+        
+    //     // Close chat menu when clicking outside
+    //     document.addEventListener('click', function(e) {
+    //         if (!chatBtn.contains(e.target) && !chatMenu.contains(e.target)) {
+    //             chatMenu.style.display = 'none';
+    //         }
+    //     });
+    // }
+
     // Automation menu functionality
     const automateCheckbox = document.getElementById('automateCheckbox');
     const automationMenu = document.getElementById('automationMenu');
