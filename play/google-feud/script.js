@@ -849,47 +849,58 @@ window.simulateComment = function(forceAnswer) {
         const unrevealed = window.currentGame.answers.filter((a, i) => !window.currentGame.revealed[i]);
         if (unrevealed.length > 0) {
             const answer = unrevealed[Math.floor(Math.random() * unrevealed.length)];
-            // Generate username with length between 7 and 20 characters
-            const baseUsername = 'user' + Math.floor(Math.random() * 1000);
-            const additionalChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-            const targetLength = Math.floor(Math.random() * 14) + 7; // 7 to 20 characters
-            let username = baseUsername;
-            while (username.length < targetLength) {
-                username += additionalChars[Math.floor(Math.random() * additionalChars.length)];
-            }
+            // Select from realistic usernames with consistent profile pics
+            const realisticUsers = [
+                { username: 'GanstaGranny', photoUrl: 'https://picsum.photos/seed/GanstaGranny/40' },
+                { username: 'user2399034', photoUrl: 'https://picsum.photos/seed/user2399034/40' },
+                { username: 'ma', photoUrl: 'https://picsum.photos/seed/ma/40' },
+                { username: 'MidnightVibes', photoUrl: 'https://picsum.photos/seed/MidnightVibes/40' },
+                { username: 'gamergirl69', photoUrl: 'https://picsum.photos/seed/gamergirl69/40' },
+                { username: 'Jamie2', photoUrl: 'https://picsum.photos/seed/Jamie2/40' },
+                { username: 'mycarbigger', photoUrl: 'https://picsum.photos/seed/mycarbigger/40' },
+                { username: 'kaikai', photoUrl: 'https://picsum.photos/seed/kaikai/40' },
+                { username: 'jillian', photoUrl: 'https://picsum.photos/seed/jillian/40' },
+                { username: 'WaveRider', photoUrl: 'https://picsum.photos/seed/WaveRider/40' }
+            ];
+            const selectedUser = realisticUsers[Math.floor(Math.random() * realisticUsers.length)];
             user = {
-                username: username.substring(0, targetLength),
-                photoUrl: 'https://picsum.photos/40?' + Math.random(),
+                username: selectedUser.username,
+                photoUrl: selectedUser.photoUrl,
                 comment: answer
             };
         }
     }
     if (!user) {
-        const randomNumber = Math.floor(Math.random() * 1000);
         const randomComment = Math.floor(Math.random() * 10);
         const comments = [
-            'This is a comment',
-            'This is another comment',
-            'This is a third comment',
-            'This is a fourth comment',
-            'This is a fifth comment',
-            'This is a sixth comment',
-            'This is a seventh comment',
-            'This is a eighth comment',
-            'This is a ninth comment',
-            'This is a tenth comment'
+            'a friend',
+            'your homie',
+            'a bbl',
+            'shorts',
+            'no money',
+            'your wife',
+            'chains',
+            'something dangerous',
+            'that loud',
+            'a pack'
         ];
-        // Generate username with length between 7 and 20 characters
-        const baseUsername = 'user' + randomNumber;
-        const additionalChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        const targetLength = Math.floor(Math.random() * 14) + 7; // 7 to 20 characters
-        let username = baseUsername;
-        while (username.length < targetLength) {
-            username += additionalChars[Math.floor(Math.random() * additionalChars.length)];
-        }
+        // Select from realistic usernames with consistent profile pics
+        const realisticUsers = [
+            { username: 'GanstaGranny', photoUrl: 'https://picsum.photos/seed/GanstaGranny/40' },
+            { username: 'user2399034', photoUrl: 'https://picsum.photos/seed/user2399034/40' },
+            { username: 'ma', photoUrl: 'https://picsum.photos/seed/ma/40' },
+            { username: 'MidnightVibes', photoUrl: 'https://picsum.photos/seed/MidnightVibes/40' },
+            { username: 'gamergirl69', photoUrl: 'https://picsum.photos/seed/gamergirl69/40' },
+            { username: 'Jamie2', photoUrl: 'https://picsum.photos/seed/Jamie2/40' },
+            { username: 'mycarbigger', photoUrl: 'https://picsum.photos/seed/mycarbigger/40' },
+            { username: 'kaikai', photoUrl: 'https://picsum.photos/seed/kaikai/40' },
+            { username: 'jillian', photoUrl: 'https://picsum.photos/seed/jillian/40' },
+            { username: 'WaveRider', photoUrl: 'https://picsum.photos/seed/WaveRider/40' }
+        ];
+        const selectedUser = realisticUsers[Math.floor(Math.random() * realisticUsers.length)];
         user = {
-            username: username.substring(0, targetLength),
-            photoUrl: 'https://picsum.photos/40?' + Math.random(),
+            username: selectedUser.username,
+            photoUrl: selectedUser.photoUrl,
             comment: comments[randomComment]
         };
     }
