@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONTEXTO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typo-js/1.2.2/typo.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title-container">
+                <img src="https://www.runchatcapture.com/assets/imgs/unlimited.png" alt="Unlimited" class="unlimited-img">
+                <div class="title">CONTEXTO</div>
+            </div>
+            <button class="menu-button" id="menuButton" style="width: 30px;">⋮</button>
+        </div>
+        <div class="game-info">
+            <span class="label" style="font-size: 14px;">GAME:</span> <span id="gameNumber">#923</span> 
+            <!-- <span class="label" style="font-size: 14px;">HINTS:</span> <span id="hintCount">8</span> -->
+            <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span>
+            <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" id="spellcheckToggle" class="spellcheck-toggle" alt="Toggle Spellcheck">
+            <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" id="dupesToggle" class="spellcheck-toggle" alt="Toggle Duplicate Guesses">
+        </div>
+        <div class="input-container">
+            <input type="text" class="word-input" id="wordInput" placeholder="type a word">
+        </div>
+        <div class="error" id="errorMessage"></div>
+        <div class="last-guess" id="lastGuess">
+            <!-- Last guess will be displayed here -->
+        </div>
+        <div id="loading">Loading game data...</div>
+        <div class="guesses-container" id="guessesContainer">
+            <!-- Guesses will be added here dynamically -->
+        </div>
+    </div>
+
+    <!-- Menu overlay -->
+    <div class="overlay" id="menuOverlay">
+        <div class="menu-modal">
+            <div class="menu-option" id="howToPlay">
+                <i>?</i> How to play
+            </div>
+            <div class="menu-option" id="hintOption">
+                <i>💡</i> Hint
+            </div>
+            <div class="menu-option" id="giveUp">
+                <i>🏳️</i> Give up
+            </div>
+            <div class="menu-option" id="selectGame">
+                <i>🎮</i> Select a game
+            </div>
+            <div class="menu-option" id="settings">
+                <i>⚙️</i> Settings
+            </div>
+            <!-- Credits and Feedback sections removed -->
+            <div class="menu-option" id="faq">
+                <i>❓</i> FAQ
+            </div>
+        </div>
+    </div>
+
+    <!-- How to Play Content -->
+    <div class="overlay" id="howToPlayOverlay">
+        <div class="menu-modal">
+            <button class="close-modal" id="closeHowToPlay">✕</button>
+            <div class="how-to-play-content">
+                <p><strong>Find the secret word. You have unlimited guesses.</strong></p>
+                <p><strong>The words were sorted by an artificial intelligence algorithm according to how similar they were to the secret word.</strong></p>
+                <p><strong>After submitting a word, you will see its position. The secret word is number 1.</strong></p>
+                <p><strong>The algorithm analyzed thousands of texts. It uses the context in which words are used to calculate the similarity between them.</strong></p>
+                
+                <div class="icon-key">
+                    <h3>Icon Key</h3>
+                    <div class="icon-item">
+                        <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" alt="Spellcheck On">
+                        <p>Spellcheck is enabled - words will be checked against a dictionary</p>
+                    </div>
+                    <div class="icon-item">
+                        <img src="https://www.runchatcapture.com/assets/imgs/nospellcheck.png" alt="Spellcheck Off">
+                        <p>Spellcheck is disabled - any word will be accepted</p>
+                    </div>
+                    <div class="icon-item">
+                        <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" alt="Accept Duplicates">
+                        <p>Duplicate guesses are allowed</p>
+                    </div>
+                    <div class="icon-item">
+                        <img src="https://www.runchatcapture.com/assets/imgs/blockdupes.png" alt="Block Duplicates">
+                        <p>Duplicate guesses are blocked</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Congrats overlay -->
+    <div class="overlay" id="congratsOverlay">
+        <div class="menu-modal">
+            <div class="congrats-content">
+                <p><strong>Congrats!</strong></p>
+                <p>You got the word <strong id="winningWordText"></strong> in <strong id="finalGuessCount"></strong> guesses.</p>
+                <p class="promo-text">Automate this game for <br/>TikTok and Twitch at:</p>
+                <p><span class="website-link">RunChatCapture.com</span></p>
+                <p><strong id="playAgain">Play again</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Select Game overlay -->
+    <div class="overlay" id="selectGameOverlay">
+        <div class="select-game-modal">
+            <button class="close-modal" id="closeSelectGame">✕</button>
+            
+            <!-- Game Creation UI -->
+            <div id="gameCreationUI">
+                <div class="select-game-header">Create custom game or select randomly:</div>
+                <div class="custom-game-input">
+                    <div class="password-input-container">
+                        <input type="text" id="customWordInput" placeholder="Enter a secret word">
+                        <button class="eye-toggle" id="eyeToggle">👁️</button>
+                    </div>
+                    <button id="createCustomGame">Create Game</button>
+                    <button id="randomGame" class="random-button">Generate Random Game</button>
+                </div>
+                <div class="loading-text" id="loadingGame" style="display: none;">
+                    <span class="spinner"></span> Creating your game...
+                </div>
+            </div>
+            
+            <!-- Word Check UI -->
+            <div id="wordCheckUI" class="word-check-container">
+                <p>This word is not within the vocabulary, would you like to accept the closest similar secret word?</p>
+                <div class="word-check-buttons">
+                    <button id="backToInput" class="back-btn">Back</button>
+                    <button id="acceptSimilarWord" class="continue-btn">Continue</button>
+                </div>
+            </div>
+            
+            <!-- Success Message UI -->
+            <div id="successMessageUI" class="success-message">
+                <p>Your game has been created!</p>
+                <button id="continueToGame" class="continue-btn">Continue</button>
+            </div>
+        </div>
+    </div>
+
+<script src="script.js"></script>
+</body>
+</html>
+
