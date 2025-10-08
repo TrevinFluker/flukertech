@@ -11,11 +11,26 @@ if (savedLanguageOnLoad) {
     currentLanguage = savedLanguageOnLoad;
 }
 
+// Centralized language configuration for file names and labels
+const languageConfigs = {
+    en: { file: 'wordle.json', label: 'English' },
+    es: { file: 'wordle_es.json', label: 'Español' },
+    pl: { file: 'wordle_po.json', label: 'Polski' }
+};
+
+function getLanguageConfig(lang) {
+    return languageConfigs[lang] || languageConfigs.en;
+}
+
+function getLanguageLabel(lang) {
+    return getLanguageConfig(lang).label;
+}
+
 // Function to load word lists from API
 async function loadWordLists() {
     try {
         // Determine which JSON file to load based on language
-        const jsonFile = currentLanguage === 'es' ? 'wordle_es.json' : 'wordle.json';
+        const { file: jsonFile } = getLanguageConfig(currentLanguage);
         const response = await fetch(`https://www.runchatcapture.com/${jsonFile}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -213,7 +228,7 @@ async function initializeGame() {
     
     // Ensure word lists are loaded for the current language before choosing a target word
     if (!wordLists[wordLength] || wordLists[wordLength].length === 0) {
-        messageDisplay.textContent = `Loading word lists for ${currentLanguage === 'es' ? 'Español' : 'English'}...`;
+        messageDisplay.textContent = `Loading word lists for ${getLanguageLabel(currentLanguage)}...`;
         await loadWordLists();
         messageDisplay.textContent = '';
     }
