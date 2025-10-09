@@ -225,6 +225,7 @@
     }
 
     function updateLastGuess(guess) {
+        
         if (!guess) {
             lastGuessContainer.style.display = "none";
             return;

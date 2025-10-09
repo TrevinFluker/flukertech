@@ -90,9 +90,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ttsGameplayInterval) ttsGameplayInterval.value = getTtsGameplayInterval();
     if (ttsGameplayTexts) ttsGameplayTexts.value = getTtsGameplayTexts();
 
-    if (window.GameManager) window.GameManager.getState().then(state => {
-      if (currentAnswerEl) currentAnswerEl.textContent = state.targetWord;
-    });
+    if (window.Contexto) {
+      let state = window.Contexto.getState()
+      currentAnswerEl.textContent = state.targetWord || "Not loaded..."
+    }
   
     // Populate voices
     function populateVoices() {
