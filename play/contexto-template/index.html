@@ -150,9 +150,12 @@
           <div class="loading-text" id="loadingGame" style="display: none;">
             <span class="spinner"></span> Creating your game...
           </div>
+          <div id="customGameError" class="error-text" style="display: none;"></div>
         </div>
         <div id="wordCheckUI" class="word-check-container" style="display: none;">
-          <p>This word is not within the vocabulary, would you like to accept the closest similar secret word?</p>
+          <p>This word is not within the vocabulary.</p>
+          <p>Closest similar secret word: <strong id="suggestedWordDisplay"></strong></p>
+          <p>Would you like to accept this similar word?</p>
           <div class="word-check-buttons">
             <button id="backToInput" class="back-btn">Back</button>
             <button id="acceptSimilarWord" class="continue-btn">Continue</button>

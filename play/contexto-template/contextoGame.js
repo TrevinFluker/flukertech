@@ -39,6 +39,7 @@
     
     const gameCreationUI = document.getElementById("gameCreationUI");
     const wordCheckUI = document.getElementById("wordCheckUI");
+    const suggestedWordDisplay = document.getElementById("suggestedWordDisplay");
     const successMessageUI = document.getElementById("successMessageUI");
     const loadingGame = document.getElementById("loadingGame");
     const backToInput = document.getElementById("backToInput");
@@ -128,9 +129,17 @@
             return true;
         } catch (error) {
             console.error("Error creating custom game:", error);
-            errorMessageElement.textContent = "Failed to create custom game. Please try another word.";
-            errorMessageElement.style.display = "block";
-            loadingElement.style.display = "none";
+            const panelError = document.getElementById("customGameError");
+            if (panelError) {
+                loadingGame.style.display = "none";
+                wordCheckUI.style.display = "none";
+                successMessageUI.style.display = "none";
+                gameCreationUI.style.display = "block";
+                panelError.textContent = "Failed to create custom game. Please try another word.";
+                panelError.style.display = "block";
+                const input = document.getElementById("customWordInput");
+                if (input) input.focus();
+            }
             return false;
         }
     }
@@ -348,10 +357,19 @@
                 loadingGame.style.display = "none";
                 gameCreationUI.style.display = "none";
                 wordCheckUI.style.display = "block";
+                const panelError = document.getElementById("customGameError");
+                if (panelError) {
+                    panelError.style.display = "none";
+                } 
+                if (suggestedWordDisplay) suggestedWordDisplay.textContent = suggestedWord;
             } else {
                 loadingGame.style.display = "none";
                 gameCreationUI.style.display = "none";
                 successMessageUI.style.display = "block";
+                const panelError = document.getElementById("customGameError");
+                if (panelError) {
+                    panelError.style.display = "none";
+                } 
                 gameData = data;
                 targetWord = word;
                 window.SettingsPanel.setCurrentAnswer(word);
@@ -359,8 +377,13 @@
         } catch (error) {
             console.error("Error creating custom game:", error);
             loadingGame.style.display = "none";
-            errorMessageElement.textContent = "Failed to create custom game. Please try another word.";
-            errorMessageElement.style.display = "block";
+            const panelError = document.getElementById("customGameError");
+            if (panelError) {
+                panelError.textContent = "Failed to create custom game. Please try another word.";
+                panelError.style.display = "block";
+                const input = document.getElementById("customWordInput");
+                if (input) input.focus();
+            } 
         }
     }
 
