@@ -36,7 +36,7 @@
     const errorMessageElement = document.getElementById("errorMessage");
     const customWordInput = document.getElementById("customWordInput");
     const createCustomGameButton = document.getElementById("createCustomGame");
-    const eyeToggle = document.getElementById("eyeToggle");
+    
     const gameCreationUI = document.getElementById("gameCreationUI");
     const wordCheckUI = document.getElementById("wordCheckUI");
     const successMessageUI = document.getElementById("successMessageUI");
@@ -47,9 +47,7 @@
     const spellcheckToggle = document.getElementById("spellcheckToggle");
     const dupesToggle = document.getElementById("dupesToggle");
 
-    // Set initial state to password
-    customWordInput.type = "password";
-    eyeToggle.textContent = "🚫";
+    // Secret word input is not shown to audience, keep as text
 
     // ============================================================
     // ⚙️ INITIALIZATION
@@ -279,29 +277,39 @@
 
     menuButton.addEventListener("click", () => (menuOverlay.style.display = "flex"));
     menuOverlay.addEventListener("click", (e) => { if (e.target === menuOverlay) menuOverlay.style.display = "none"; });
-    selectGameOption.addEventListener("click", () => { menuOverlay.style.display = "none"; selectGameOverlay.style.display = "flex"; });
-    playAgain.addEventListener("click", () => { congratsOverlay.style.display = "none"; selectGameOverlay.style.display = "flex"; });
-    closeSelectGame.addEventListener("click", () => (selectGameOverlay.style.display = "none"));
+    if (selectGameOption) {
+        selectGameOption.addEventListener("click", () => {
+            menuOverlay.style.display = "none";
+            if (window.SettingsPanel?.openSettingsPanel) window.SettingsPanel.openSettingsPanel();
+            if (window.SettingsPanel?.expandGameSettingsSection) window.SettingsPanel.expandGameSettingsSection();
+            const input = document.getElementById("customWordInput");
+            if (input) input.focus();
+        });
+    }
+    playAgain.addEventListener("click", () => {
+        congratsOverlay.style.display = "none";
+        if (window.SettingsPanel?.openSettingsPanel) window.SettingsPanel.openSettingsPanel();
+        if (window.SettingsPanel?.expandGameSettingsSection) window.SettingsPanel.expandGameSettingsSection();
+        const input = document.getElementById("customWordInput");
+        if (input) input.focus();
+    });
+    if (closeSelectGame) closeSelectGame.addEventListener("click", () => {
+        const overlay = document.getElementById("selectGameOverlay");
+        if (overlay) overlay.style.display = "none";
+    });
     if (closeHowToPlay) closeHowToPlay.addEventListener("click", () => (howToPlayOverlay.style.display = "none"));
     howToPlayOverlay.addEventListener("click", (e) => { if (e.target === howToPlayOverlay) howToPlayOverlay.style.display = "none"; });
     congratsOverlay.addEventListener("click", (e) => { if (e.target === congratsOverlay) congratsOverlay.style.display = "none"; });
-    selectGameOverlay.addEventListener("click", (e) => { if (e.target === selectGameOverlay) selectGameOverlay.style.display = "none"; });
+    if (selectGameOverlay) selectGameOverlay.addEventListener("click", (e) => { if (e.target === selectGameOverlay) selectGameOverlay.style.display = "none"; });
 
     document.getElementById("randomGame").addEventListener("click", () => {
-        selectGameOverlay.style.display = "none";
+        const overlay = document.getElementById("selectGameOverlay");
+        if (overlay) overlay.style.display = "none";
         const newRandomIndex = Math.floor(Math.random() * (numberOfGames + 1));
         contextoInitGame(newRandomIndex);
     });
 
-    eyeToggle.addEventListener("click", () => {
-        if (customWordInput.type === "password") {
-            customWordInput.type = "text";
-            eyeToggle.textContent = "👁️";
-        } else {
-            customWordInput.type = "password";
-            eyeToggle.textContent = "🚫";
-        }
-    });
+    // removed eye toggle
 
     createCustomGameButton.addEventListener("click", () => {
         const customWord = customWordInput.value.trim();
@@ -371,7 +379,6 @@
         window.SettingsPanel.setCurrentAnswer(suggestedWord);
         document.getElementById("gameNumber").textContent = "Custom";
         updateGuessCount();
-        selectGameOverlay.style.display = "none";
         gameCreationUI.style.display = "block";
         customWordInput.value = "";
         loadingElement.style.display = "none";
@@ -384,7 +391,6 @@
         lastGuessContainer.style.display = "none";
         document.getElementById("gameNumber").textContent = "Custom";
         updateGuessCount();
-        selectGameOverlay.style.display = "none";
         loadingGame.style.display = "none";
         gameCreationUI.style.display = "block";
         successMessageUI.style.display = "none";

@@ -289,6 +289,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeSettingsPanel() {
     document.getElementById("settings-panel")?.classList.remove("open");
   }
+  function expandGameSettingsSection() {
+    const header = document.getElementById("game-settings-header");
+    const content = document.getElementById("game-settings-content");
+    if (!header || !content) return;
+    header.classList.remove("collapsed");
+  }
   function getCurrentAnswer() {
     const el = document.getElementById("current-answer-display");
     return el ? el.textContent : "";
@@ -299,5 +305,5 @@ document.addEventListener("DOMContentLoaded", () => {
     el.textContent = value == null ? "" : String(value);
   }
 
-  window.SettingsPanel = { openSettingsPanel, closeSettingsPanel, getCurrentAnswer, setCurrentAnswer };
+  window.SettingsPanel = { openSettingsPanel, closeSettingsPanel, expandGameSettingsSection, getCurrentAnswer, setCurrentAnswer };
   

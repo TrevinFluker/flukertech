@@ -46,7 +46,6 @@
         <div class="menu-option" id="howToPlay"><i>?</i> How to play</div>
         <div class="menu-option" id="hintOption"><i>💡</i> Hint</div>
         <div class="menu-option" id="giveUp"><i>🏳️</i> Give up</div>
-        <div class="menu-option" id="selectGame"><i>🎮</i> Select a game</div>
         <div class="menu-option" id="settings"><i>⚙️</i> Settings</div>
         <div class="menu-option" id="faq"><i>❓</i> FAQ</div>
       </div>
@@ -97,37 +96,7 @@
       </div>
     </div>
 
-    <!-- SELECT GAME OVERLAY -->
-    <div class="contexto-overlay" id="selectGameOverlay">
-      <div class="contexto-modal select-game-modal">
-        <button class="close-modal" id="closeSelectGame">✕</button>
-        <div id="gameCreationUI">
-          <div class="select-game-header">Create custom game or select randomly:</div>
-          <div class="custom-game-input">
-            <div class="password-input-container">
-              <input type="text" id="customWordInput" placeholder="Enter a secret word">
-              <button class="eye-toggle" id="eyeToggle">👁️</button>
-            </div>
-            <button id="createCustomGame">Create Game</button>
-            <button id="randomGame" class="random-button">Generate Random Game</button>
-          </div>
-          <div class="loading-text" id="loadingGame" style="display: none;">
-            <span class="spinner"></span> Creating your game...
-          </div>
-        </div>
-        <div id="wordCheckUI" class="word-check-container">
-          <p>This word is not within the vocabulary, would you like to accept the closest similar secret word?</p>
-          <div class="word-check-buttons">
-            <button id="backToInput" class="back-btn">Back</button>
-            <button id="acceptSimilarWord" class="continue-btn">Continue</button>
-          </div>
-        </div>
-        <div id="successMessageUI" class="success-message">
-          <p>Your game has been created!</p>
-          <button id="continueToGame" class="continue-btn">Continue</button>
-        </div>
-      </div>
-    </div>
+    
   </div>
 
   <!-- =================================== -->
@@ -162,12 +131,38 @@
       <button id="close-settings" class="close-btn">×</button>
     </div>
 
-    <div class="settings-section">
-      <div class="settings-section-header">
+    <div id="game-settings-section" class="settings-section">
+      <div id="game-settings-header" class="settings-section-header">
         <h3>Game Settings</h3>
         <span class="arrow">▼</span>
       </div>
-      <div class="settings-section-content">
+      <div id="game-settings-content" class="settings-section-content">
+        <!-- Custom Game Creator (moved from modal) -->
+        <div class="setting-item" id="gameCreationUI">
+          <div class="select-game-header">Create custom game or select randomly:</div>
+          <div class="custom-game-input">
+            <div class="password-input-container">
+              <input type="text" id="customWordInput" placeholder="Enter a secret word">
+            </div>
+            <button id="createCustomGame">Create Game</button>
+            <button id="randomGame" class="random-button">Generate Random Game</button>
+          </div>
+          <div class="loading-text" id="loadingGame" style="display: none;">
+            <span class="spinner"></span> Creating your game...
+          </div>
+        </div>
+        <div id="wordCheckUI" class="word-check-container" style="display: none;">
+          <p>This word is not within the vocabulary, would you like to accept the closest similar secret word?</p>
+          <div class="word-check-buttons">
+            <button id="backToInput" class="back-btn">Back</button>
+            <button id="acceptSimilarWord" class="continue-btn">Continue</button>
+          </div>
+        </div>
+        <div id="successMessageUI" class="success-message" style="display: none;">
+          <p>Your game has been created!</p>
+          <button id="continueToGame" class="continue-btn">Continue</button>
+        </div>
+
         <div class="setting-item">
           <label>➤ Current Answer:</label>
           <div id="current-answer-display" style="font-weight: bold; color: #4CAF50; font-size: 18px; letter-spacing: 2px; text-transform: uppercase;">Loading...</div>
