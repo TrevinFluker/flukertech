@@ -57,6 +57,13 @@
     height: 60px;
     width: auto;
   }
+
+  .interactive-logo {
+    height: 29px;
+    width: auto;
+    margin-right: 8px;
+    margin-bottom: 3px;
+  }
   
   .contexto .title {
     font-size: 30px;

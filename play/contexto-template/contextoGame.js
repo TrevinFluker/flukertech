@@ -512,8 +512,9 @@
     });
 
     if (darkToggle) {
+        const container = document.querySelector('.contexto');
         darkToggle.addEventListener('change', () => {
-            const container = document.querySelector('.contexto');
+            
             if (!container) return;
             if (darkToggle.checked) {
                 container.classList.add('contexto-dark');
@@ -523,6 +524,10 @@
                 if (typeof saveDarkModeEnabled === 'function') saveDarkModeEnabled(false);
             }
         });
+        darkToggle.checked = getDarkModeEnabled();
+        if (darkToggle.checked) {
+            container.classList.add('contexto-dark');
+        }
     } 
 
     // ============================================================
