@@ -24,7 +24,6 @@
       </div>
 
       <div class="game-info">
-        <span class="label" style="font-size: 14px;">GAME:</span> <span id="gameNumber">#923</span> 
         <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span>
         <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" id="spellcheckToggle" class="spellcheck-toggle" alt="Toggle Spellcheck">
         <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" id="dupesToggle" class="spellcheck-toggle" alt="Toggle Duplicate Guesses">
@@ -46,8 +45,8 @@
         <div class="menu-option" id="howToPlay"><i>?</i> How to play</div>
         <div class="menu-option" id="hintOption"><i>💡</i> Hint</div>
         <div class="menu-option" id="giveUp"><i>🏳️</i> Give up</div>
-        <div class="menu-option" id="settings"><i>⚙️</i> Settings</div>
-        <div class="menu-option" id="faq"><i>❓</i> FAQ</div>
+        <!-- <div class="menu-option" id="settings"><i>⚙️</i> Settings</div>
+        <div class="menu-option" id="faq"><i>❓</i> FAQ</div> -->
       </div>
     </div>
 
@@ -57,9 +56,13 @@
         <button class="close-modal" id="closeHowToPlay">✕</button>
         <div class="how-to-play-content">
           <p><strong>Find the secret word. You have unlimited guesses.</strong></p>
+        </br>
           <p><strong>The words were sorted by an artificial intelligence algorithm according to how similar they were to the secret word.</strong></p>
+        </br>
           <p><strong>After submitting a word, you will see its position. The secret word is number 1.</strong></p>
+        </br>
           <p><strong>The algorithm analyzed thousands of texts. It uses the context in which words are used to calculate the similarity between them.</strong></p>
+        </br>
           <div class="icon-key">
             <h3>Icon Key</h3>
             <div class="icon-item">
@@ -137,6 +140,10 @@
         <span class="arrow">▼</span>
       </div>
       <div id="game-settings-content" class="settings-section-content">
+        <div class="setting-item">
+          <label for="contextoDarkToggle">Dark Mode:</label>
+          <input type="checkbox" id="contextoDarkToggle" class="setting-checkbox">
+        </div>
         <!-- Custom Game Creator (moved from modal) -->
         <div class="setting-item" id="gameCreationUI">
           <div class="select-game-header">Create custom game or select randomly:</div>

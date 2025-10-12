@@ -47,6 +47,7 @@
     const continueToGame = document.getElementById("continueToGame");
     const spellcheckToggle = document.getElementById("spellcheckToggle");
     const dupesToggle = document.getElementById("dupesToggle");
+    const darkToggle = document.getElementById("contextoDarkToggle");
 
     // Secret word input is not shown to audience, keep as text
 
@@ -77,7 +78,6 @@
         }
 
         try {
-            document.getElementById("gameNumber").textContent = `#${gameIndex}`;
             const response = await fetch(`${API_BASE_URL}/game?index=${gameIndex}`);
 
             if (!response.ok) {
@@ -91,7 +91,7 @@
             if (window.SettingsPanel) window.SettingsPanel.setCurrentAnswer(targetWord);
 
             loadingElement.style.display = "none";
-            updateGuessCount();
+            updateGuessCount(0);
         } catch (error) {
             console.error("Error fetching game data:", error);
             errorMessageElement.textContent = "Failed to load game data. Please check your connection.";
@@ -109,11 +109,9 @@
         errorMessageElement.style.display = "none";
 
         try {
-            document.getElementById("gameNumber").textContent = "Custom";
-
             if (gameData && targetWord === word) {
                 loadingElement.style.display = "none";
-                updateGuessCount();
+                updateGuessCount(0);
                 return true;
             }
 
@@ -125,7 +123,7 @@
             window.SettingsPanel.setCurrentAnswer(word);
 
             loadingElement.style.display = "none";
-            updateGuessCount();
+            updateGuessCount(0);
             return true;
         } catch (error) {
             console.error("Error creating custom game:", error);
@@ -178,40 +176,51 @@
             return true;
         }
     }
-
-    async function submitWord(word) {
+    //In this function, I'm trying to pass the user's comment as the word to be guessed.
+    //I also need to pass the user's photo and username to the other functions within submitWord.
+    async function submitWord(user) {
+        let word = user.comment;
         if (!word || word.trim() === "" || !gameData) return;
 
-        word = word.toLowerCase().trim();
+        word = word.toLowerCase().trim().split(" ")[0];
+        word = word.replace(/[^a-zA-Z]/g, "");
+
         try {
-            const isValidWord = await checkSpelling(word);
-            if (!isValidWord) {
-                errorMessageElement.textContent = "Not a valid English word";
-                errorMessageElement.style.display = "block";
-                return;
-            }
+            // const isValidWord = await checkSpelling(word);
+            // if (!isValidWord) {
+            //     errorMessageElement.textContent = "Not a valid English word";
+            //     errorMessageElement.style.display = "block";
+            //     return;
+            // }
 
             const result = findWordRank(word);
+            // attach attribution for UI overlays
+            if (user && (user.nickname || user.username || user.uniquedId || user.photoUrl)) {
+                result.attribution = {
+                    name: user.nickname || user.username || user.uniquedId || "",
+                    photo: user.photoUrl || ""
+                };
+            }
             errorMessageElement.style.display = "none";
 
             const alreadyGuessed = guesses.some(
                 (g) => g.lemma.toLowerCase() === result.lemma.toLowerCase()
             );
 
-            if (!allowDuplicates && alreadyGuessed) {
-                errorMessageElement.textContent = "Word already guessed";
-                errorMessageElement.style.display = "block";
-                return;
-            }
-
             mostRecentGuessLemma = result.lemma;
             updateLastGuess(result);
+
+            // if (!allowDuplicates && alreadyGuessed) {
+            //     errorMessageElement.textContent = "Word already guessed";
+            //     errorMessageElement.style.display = "block";
+            //     return;
+            // }
 
             if (!alreadyGuessed) {
                 guesses.push(result);
                 guesses.sort((a, b) => a.rank - b.rank);
                 if (guesses.length > 50) guesses = guesses.slice(0, 50);
-                updateGuessCount();
+                updateGuessCount(Number(document.getElementById("guessCount").textContent) + 1);
             }
 
             renderPreviousGuesses();
@@ -246,9 +255,18 @@
 
         const progressWidth = Math.max(1, 100 - guess.rank / 30);
         lastGuessContainer.className = "last-guess " + bgClass;
+        const attribHtml = (guess.attribution && (guess.attribution.name || guess.attribution.photo)) ? `
+            <span class="guess-attrib">
+                ${guess.attribution.photo ? `<img class=\"guess-attrib-photo\" src=\"${guess.attribution.photo}\" alt=\"${guess.attribution.name}\"/>` : ""}
+                ${guess.attribution.name ? `<span class=\"guess-attrib-name\">${guess.attribution.name}</span>` : ""}
+            </span>
+        ` : "";
+
         lastGuessContainer.innerHTML = `
             <div class="progress-bar" style="width:${progressWidth}%"></div>
-            <span>${guess.lemma}</span><span>${guess.rank}</span>`;
+            <span>${guess.lemma}</span>
+            ${attribHtml}
+            <span>${guess.rank}</span>`;
     }
 
     function renderPreviousGuesses() {
@@ -266,15 +284,24 @@
             else guessElement.classList.add("red-bg");
 
             const progressWidth = Math.max(1, 100 - guess.rank / 30);
+            const attribHtml = (guess.attribution && (guess.attribution.name || guess.attribution.photo)) ? `
+                <span class="guess-attrib">
+                    ${guess.attribution.photo ? `<img class=\"guess-attrib-photo\" src=\"${guess.attribution.photo}\" alt=\"${guess.attribution.name}\"/>` : ""}
+                    ${guess.attribution.name ? `<span class=\"guess-attrib-name\">${guess.attribution.name}</span>` : ""}
+                </span>
+            ` : "";
+
             guessElement.innerHTML = `
                 <div class="progress-bar" style="width:${progressWidth}%"></div>
-                <span>${guess.lemma}</span><span>${guess.rank}</span>`;
+                <span>${guess.lemma}</span>
+                ${attribHtml}
+                <span>${guess.rank}</span>`;
             guessesContainer.appendChild(guessElement);
         });
     }
 
-    function updateGuessCount() {
-        guessCountDisplay.textContent = guesses.length;
+    function updateGuessCount(c) {
+        guessCountDisplay.textContent = c;
     }
 
     // ============================================================
@@ -400,8 +427,7 @@
         lastGuessContainer.style.display = "none";
         targetWord = suggestedWord;
         window.SettingsPanel.setCurrentAnswer(suggestedWord);
-        document.getElementById("gameNumber").textContent = "Custom";
-        updateGuessCount();
+        updateGuessCount(0);
         gameCreationUI.style.display = "block";
         customWordInput.value = "";
         loadingElement.style.display = "none";
@@ -412,8 +438,7 @@
         mostRecentGuessLemma = null;
         guessesContainer.innerHTML = "";
         lastGuessContainer.style.display = "none";
-        document.getElementById("gameNumber").textContent = "Custom";
-        updateGuessCount();
+        updateGuessCount(0);
         loadingGame.style.display = "none";
         gameCreationUI.style.display = "block";
         successMessageUI.style.display = "none";
@@ -428,19 +453,39 @@
 
     document.getElementById("hintOption").addEventListener("click", () => {
         menuOverlay.style.display = "none";
-        if (guesses.length > 0) {
-            const bestGuessRank = guesses[0].rank;
-            if (gameData && gameData.results) {
-                for (let i = bestGuessRank - 2; i >= 0; i--) {
-                    const nextBestWord = gameData.results.find((item) => parseInt(item.rank) === i + 1);
-                    if (nextBestWord) {
-                        submitWord(nextBestWord.lemma);
-                        return;
-                    }
-                }
+        if (!(gameData && Array.isArray(gameData.results))) {
+            alert("Hint: Game data not loaded yet.");
+            return;
+        }
+
+        const hasGuesses = Array.isArray(guesses) && guesses.length > 0;
+        const lowestRank = hasGuesses ? Math.min(...guesses.map(g => Number(g.rank))) : null;
+
+        // Do not provide hints when the best guess is rank 2 or better
+        if (lowestRank != null && lowestRank <= 2) {
+            return;
+        }
+
+        let targetRank;
+        if (lowestRank != null && lowestRank < 300) {
+            // Never hint ranks below 3
+            targetRank = Math.max(2, lowestRank - 1);
+        } else {
+            targetRank = 300;
+        }
+
+        let hintItem = gameData.results.find(item => parseInt(item.rank) === targetRank);
+        if (!hintItem) {
+            for (let r = targetRank - 1; r >= 3; r--) {
+                hintItem = gameData.results.find(item => parseInt(item.rank) === r);
+                if (hintItem) break;
             }
         }
-        alert("Hint: No better hint available. Try common words.");
+
+        if (hintItem) {
+            submitWord(hintItem.lemma);
+            return;
+        }
     });
 
     document.getElementById("giveUp").addEventListener("click", () => {
@@ -465,6 +510,20 @@
             ? "https://www.runchatcapture.com/assets/imgs/acceptdupes.png"
             : "https://www.runchatcapture.com/assets/imgs/blockdupes.png";
     });
+
+    if (darkToggle) {
+        darkToggle.addEventListener('change', () => {
+            const container = document.querySelector('.contexto');
+            if (!container) return;
+            if (darkToggle.checked) {
+                container.classList.add('contexto-dark');
+                if (typeof saveDarkModeEnabled === 'function') saveDarkModeEnabled(true);
+            } else {
+                container.classList.remove('contexto-dark');
+                if (typeof saveDarkModeEnabled === 'function') saveDarkModeEnabled(false);
+            }
+        });
+    } 
 
     // ============================================================
     // 🌐 EXPOSE PUBLIC API

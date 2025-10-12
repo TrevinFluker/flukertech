@@ -183,11 +183,14 @@ function speakText(text) {
   
 
 function handleRealComment(user) {
-    // Example: take user's comment as a guess
-    console.log("New TikTok comment guess:", user);
-
-    // TODO: integrate guess validation here
-    // e.g., check against current answer, update leaderboard, etc.
+    // Forward TikTok comment as a guess to Contexto
+    try {
+        if (window.Contexto?.submitWord) {
+            window.Contexto.submitWord(user);
+        }
+    } catch (e) {
+        console.warn("Failed to forward comment to game:", e);
+    }
 }
 
 function handleRealGift(user) {

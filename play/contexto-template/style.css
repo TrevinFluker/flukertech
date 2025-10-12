@@ -1,7 +1,7 @@
 /* =======================================================
    🎨 CONTEXTO STYLES (NAMESPACED)
    ======================================================= */
-   .contexto * {
+  .contexto * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -24,6 +24,14 @@
     padding: 20px;
     overflow: hidden;
     min-height: 100vh;
+  }
+
+  /* Dark mode container */
+  .contexto-dark {
+    background-color: #15202b !important;
+  }
+  .contexto-dark * {
+    color: #ffffff !important;
   }
   
   .contexto .container {
@@ -109,6 +117,19 @@
     font-weight: 900;
     z-index: 0;
   }
+  /* centered attribution for last guess */
+  .contexto .last-guess .guess-attrib {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #333;
+  }
   
   .contexto .guesses-container {
     display: flex;
@@ -127,6 +148,41 @@
     color: #333;
     z-index: 0;
   }
+  /* Only the most recent guess has a border; others have none */
+  .contexto-dark .guess-recent { border-color: #ffffff; }
+  /* Attribution centered overlay inside guess item */
+  .contexto .guess-attrib {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+  }
+  .contexto .guess-attrib-photo {
+    width: 43px;
+    height: 43px;
+    object-fit: cover;
+  }
+  .contexto .guess-attrib-name {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .contexto .guess-recent {
+    border: 3px solid #423232;
+    border-radius: 8px;
+  }
+  /* Ensure recent guess has white border in dark mode */
+  .contexto-dark .guess-recent {
+    border: 3px solid #ffffff;
+  }
   
   .contexto .progress-bar {
     position: absolute;
@@ -140,6 +196,19 @@
   .contexto .blue-bg .progress-bar { background-color: #b6e0d8; }
   .contexto .yellow-bg .progress-bar { background-color: #f6e4a1; }
   .contexto .red-bg .progress-bar { background-color: #f2c4c4; }
+
+  /* Dark mode guess tier colors */
+  .contexto-dark .blue-bg .progress-bar { background-color: #00ba7c; }
+  .contexto-dark .yellow-bg .progress-bar { background-color: #ef7d31; }
+  .contexto-dark .red-bg .progress-bar { background-color: #f91880; }
+
+  .contexto-dark .word-input {
+    background: #0f1620;
+    color: #ffffff;
+    border-color: #22303c;
+  }
+  .contexto-dark .last-guess { border-color: #ffffff; }
+  .contexto-dark .error { color: #ffb3b3; }
   
   /* Overlays specific to CONTEXTO (renamed to prevent collision) */
   .contexto-overlay {
@@ -158,10 +227,16 @@
     padding: 20px;
     max-width: 400px;
     width: 90%;
-    max-height: 80vh;
+    max-height: 500px;
     overflow-y: auto;
     position: absolute;
     top: 10%;
+  }
+
+  /* Apply dark mode palette to contexto-modal */
+  .contexto-dark .contexto-modal {
+    background-color: #15202b;
+    color: #ffffff;
   }
   
   .contexto .menu-option {
@@ -174,6 +249,18 @@
   
   .contexto .menu-option:last-child { border-bottom: none; }
   .contexto .menu-option i { margin-right: 10px; width: 24px; text-align: center; }
+
+  .icon-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .icon-item img {
+    width: 40px;
+    height: 40px;
+    margin-right: 15px;
+  }
   
   .contexto .close-modal {
     position: absolute;

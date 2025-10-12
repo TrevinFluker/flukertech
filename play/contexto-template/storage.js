@@ -50,7 +50,9 @@ const STORAGE_KEYS = {
 
     // Profile
     PROFILE_IMAGE: "profileImage",
-    PROFILE_USERNAME: "profileUsername"
+    PROFILE_USERNAME: "profileUsername",
+    // Display
+    DARK_MODE: "contextoDarkMode"
 };
 
 // --- Generic helpers ---
@@ -189,3 +191,7 @@ function getProfileImage() { return getItem(STORAGE_KEYS.PROFILE_IMAGE, ""); }
 
 function saveProfileUsername(name) { saveItem(STORAGE_KEYS.PROFILE_USERNAME, name); }
 function getProfileUsername() { return getItem(STORAGE_KEYS.PROFILE_USERNAME, "Host"); }
+
+// --- Display ---
+function saveDarkModeEnabled(val) { saveItem(STORAGE_KEYS.DARK_MODE, !!val); }
+function getDarkModeEnabled() { return getItem(STORAGE_KEYS.DARK_MODE, false); }

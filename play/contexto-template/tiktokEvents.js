@@ -2,12 +2,17 @@
 // Handles incoming TikTok events from Chrome extension and routes them to GameManager
 
 // Comment event listener
-window.addEventListener("handleRealCommmentEvent", function(event) {
+window.addEventListener("handleRealCommentEvent", function(event) {
+  console.log("handleRealCommentEvent", event);
     const user = {
       username: event.detail.username,
+      nickname: event.detail.nickname,
+      uniquedId: event.detail.uniqueId,
       photoUrl: event.detail.photoUrl,
+      followStatus: event.detail.followStatus,
       gift_name: event.detail.gift_name || "",
-      comment: event.detail.comment
+      comment: event.detail.comment,
+      eventType: event.detail.eventType
     };
   
     // Pass the guess/comment to GameManager
@@ -18,9 +23,14 @@ window.addEventListener("handleRealCommmentEvent", function(event) {
   window.addEventListener("handleRealGiftEvent", function(event) {
     const user = {
       username: event.detail.username,
+      nickname: event.detail.nickname,
+      uniquedId: event.detail.uniqueId,
       photoUrl: event.detail.photoUrl,
-      gift_name: event.detail.gift_name,
-      comment: event.detail.comment || ""
+      giftName: event.detail.giftName,
+      diamondCount: event.detail.diamondCount,
+      giftCount: event.detail.giftCount,
+      comment: event.detail.comment || "",
+      eventType: event.detail.eventType
     };
   
     // Pass the gift to GameManager
