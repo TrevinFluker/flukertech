@@ -13,6 +13,7 @@
     let spellcheckEnabled = true;
     let allowDuplicates = true;
     let suggestedWord = "";
+    let winnerDeclared = false; // prevent multiple winners per round
     const numberOfGames = 300;
     const API_BASE_URL = "https://ccbackend.com";
 
@@ -69,6 +70,7 @@
     async function contextoInitGame(gameIndex = null) {
         guesses = [];
         mostRecentGuessLemma = null;
+        winnerDeclared = false;
         guessesContainer.innerHTML = "";
         lastGuessContainer.style.display = "none";
         loadingElement.style.display = "block";
@@ -104,6 +106,7 @@
     async function initCustomGame(word) {
         guesses = [];
         mostRecentGuessLemma = null;
+        winnerDeclared = false;
         guessesContainer.innerHTML = "";
         lastGuessContainer.style.display = "none";
         loadingElement.style.display = "block";
@@ -180,6 +183,7 @@
     //In this function, I'm trying to pass the user's comment as the word to be guessed.
     //I also need to pass the user's photo and username to the other functions within submitWord.
     async function submitWord(user) {
+        if (winnerDeclared) return;
         let word = user.comment;
         if (!word || word.trim() === "" || !gameData) return;
 
@@ -228,6 +232,8 @@
             wordInput.value = "";
 
             if (result.rank === 1) {
+                if (winnerDeclared) return;
+                winnerDeclared = true;
                 if (lastWord) lastWord.textContent = result.lemma;
                 if (window.GameManager) {
                     window.GameManager.endRound("win", [{ name: user.nickname, photo: user.photoUrl, uniqueId: user.uniqueId }], result.lemma);
