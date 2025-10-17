@@ -48,6 +48,7 @@
     const spellcheckToggle = document.getElementById("spellcheckToggle");
     const dupesToggle = document.getElementById("dupesToggle");
     const darkToggle = document.getElementById("contextoDarkToggle");
+    const lastWord = document.getElementById("lastWord");
 
     // Secret word input is not shown to audience, keep as text
 
@@ -195,9 +196,9 @@
 
             const result = findWordRank(word);
             // attach attribution for UI overlays
-            if (user && (user.nickname || user.username || user.uniquedId || user.photoUrl)) {
+            if (user && (user.nickname || user.username || user.uniqueId || user.photoUrl)) {
                 result.attribution = {
-                    name: user.nickname || user.username || user.uniquedId || "",
+                    name: user.nickname || user.username || user.uniqueId || "",
                     photo: user.photoUrl || ""
                 };
             }
@@ -227,8 +228,9 @@
             wordInput.value = "";
 
             if (result.rank === 1) {
+                if (lastWord) lastWord.textContent = result.lemma;
                 if (window.GameManager) {
-                    window.GameManager.endRound("win", [{ name: "Chat", photo: "https://picsum.photos/seed/chat/100" }], result.lemma);
+                    window.GameManager.endRound("win", [{ name: user.nickname, photo: user.photoUrl, uniqueId: user.uniqueId }], result.lemma);
                 } else {
                     congratsOverlay.style.display = "flex";
                 }
@@ -453,10 +455,6 @@
 
     document.getElementById("hintOption").addEventListener("click", () => {
         menuOverlay.style.display = "none";
-        if (!(gameData && Array.isArray(gameData.results))) {
-            alert("Hint: Game data not loaded yet.");
-            return;
-        }
 
         const hasGuesses = Array.isArray(guesses) && guesses.length > 0;
         const lowestRank = hasGuesses ? Math.min(...guesses.map(g => Number(g.rank))) : null;
@@ -493,8 +491,8 @@
         if (gameData && gameData.results) {
             const winningWord = gameData.results.find((item) => parseInt(item.rank) === 1);
             if (winningWord) submitWord(winningWord.lemma);
-            else alert("The target word was: " + targetWord);
-        } else alert("The target word was: " + targetWord);
+            else console.log("The target word was: " + targetWord);
+        } else console.log("The target word was: " + targetWord);
     });
 
     spellcheckToggle.addEventListener("click", () => {
@@ -543,6 +541,7 @@
         renderPreviousGuesses,
         updateGuessCount,
         getState: () => ({ targetWord, guesses, gameData }),
+        processGift,
         guesses,
         targetWord,
         gameData
@@ -550,3 +549,45 @@
 
     initDictionary();
 })();
+
+// Process gifts routed from GameManager. If gift name matches saved hint gift, submit next-best words.
+function processGift(user) {
+    try {
+        const savedName = typeof getHintGiftName === 'function' ? (getHintGiftName() || '').trim().toLowerCase() : '';
+        const incoming = String(user?.giftName || '').trim().toLowerCase();
+        const count = Number(user?.giftCount) || 0;
+        if (!savedName || !incoming || incoming !== savedName) return;
+        const state = window.Contexto.getState();
+        const data = state.gameData;
+        if (!data || !Array.isArray(data.results) || data.results.length === 0) return;
+
+        // Determine current best rank from guesses
+        const currentGuesses = state.guesses || [];
+        let lowestRank = Math.min(...currentGuesses.map(g => Number(g.rank)));
+        let targetFrom = isFinite(lowestRank) ? Math.max(1, lowestRank - 1) : 300;
+
+        // Build a map rank -> lemma for fast lookup
+        const rankToItem = {};
+        data.results.forEach(it => { const r = parseInt(it.rank); if (!isNaN(r)) rankToItem[r] = it; });
+
+        let submitted = 0;
+        let r = targetFrom;
+        while (submitted < count && r >= 1) {
+            if (rankToItem[r]) {
+                const lemma = rankToItem[r].lemma;
+                // submit as if this user commented the word
+                window.Contexto.submitWord({
+                    comment: lemma,
+                    nickname: user?.nickname,
+                    username: user?.username,
+                    uniqueId: user?.uniqueId,
+                    photoUrl: user?.photoUrl
+                });
+                submitted++;
+            }
+            r--;
+        }
+    } catch (e) {
+        console.warn('processGift failed:', e);
+    }
+}

@@ -27,6 +27,7 @@
 
       <div class="game-info">
         <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span>
+        <span class="label" style="font-size: 14px;">LAST WORD:</span> <span id="lastWord"></span>
         <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" id="spellcheckToggle" class="spellcheck-toggle" alt="Toggle Spellcheck">
         <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" id="dupesToggle" class="spellcheck-toggle" alt="Toggle Duplicate Guesses">
       </div>
@@ -65,7 +66,7 @@
         </br>
           <p><strong>The algorithm analyzed thousands of texts. It uses the context in which words are used to calculate the similarity between them.</strong></p>
         </br>
-          <div class="icon-key">
+          <!-- <div class="icon-key">
             <h3>Icon Key</h3>
             <div class="icon-item">
               <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" alt="Spellcheck On">
@@ -83,7 +84,7 @@
               <img src="https://www.runchatcapture.com/assets/imgs/blockdupes.png" alt="Block Duplicates">
               <p>Duplicate guesses are blocked</p>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -111,13 +112,12 @@
   <!-- Winning Modal -->
   <div id="winning-overlay" class="winning-overlay">
     <div id="winning-modal" class="winning-modal">
-      <div id="winning-title" class="winning-title">Congratulations!</div>
-      <div id="winning-word" class="winning-word"></div>
+      <div id="winning-title" class="winning-title"></div>
       <div id="single-winner" class="single-winner">
         <img id="winner-photo" class="winner-photo" src="" alt="Winner">
-        <div id="winner-name" class="winner-name"></div>
       </div>
       <div id="multiple-winners" class="multiple-winners"></div>
+      <div id="winning-site" class="winning-site">RunChatCapture.com</div>
     </div>
   </div>
 
@@ -180,10 +180,17 @@
           <div id="current-answer-display" style="font-weight: bold; color: #4CAF50; font-size: 18px; letter-spacing: 2px; text-transform: uppercase;">Loading...</div>
         </div>
         <div class="setting-item">
+          <label for="hint-gift-input">Hint Gift (Must match gift gallery name):</label>
+          <input type="text" id="hint-gift-input" class="setting-input-wide" placeholder="e.g., Rose" />
+        </div>
+        <div class="setting-item">
+          <button id="clear-leaderboard" class="test-btn">Clear Leaderboard</button>
+        </div>
+        <div class="setting-item">
           <label for="language-select">Language:</label>
           <select id="language-select" class="setting-select">
             <option value="en" selected>English</option>
-            <option value="es">Español</option>
+            <!-- <option value="es">Español</option> -->
           </select>
         </div>
       </div>
@@ -350,6 +357,7 @@ There are single player and group modes.</textarea>
         <button id="prevLeaderboardPage" class="leaderboard-nav-btn">‹</button>
         <span id="leaderboardPageInfo" class="leaderboard-page-info">1/1</span>
         <button id="nextLeaderboardPage" class="leaderboard-nav-btn">›</button>
+          <button id="toggleLeaderboardOpacity" class="leaderboard-nav-btn" title="Toggle Opacity">◐</button>
         <button id="toggleFloatingLeaderboard" class="floating-leaderboard-toggle">−</button>
       </div>
     </div>
@@ -357,6 +365,7 @@ There are single player and group modes.</textarea>
       <div class="leaderboard-list" id="leaderboardList">
         <div class="leaderboard-empty">No players yet</div>
       </div>
+      <button id="toggleLeaderboardHeight" class="leaderboard-height-toggle" title="Toggle height">↕️</button>
     </div>
   </div>
 

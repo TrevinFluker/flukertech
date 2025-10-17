@@ -3,11 +3,10 @@
 
 // Comment event listener
 window.addEventListener("handleRealCommentEvent", function(event) {
-  console.log("handleRealCommentEvent", event);
     const user = {
       username: event.detail.username,
       nickname: event.detail.nickname,
-      uniquedId: event.detail.uniqueId,
+      uniqueId: event.detail.uniqueId,
       photoUrl: event.detail.photoUrl,
       followStatus: event.detail.followStatus,
       gift_name: event.detail.gift_name || "",
@@ -24,7 +23,7 @@ window.addEventListener("handleRealCommentEvent", function(event) {
     const user = {
       username: event.detail.username,
       nickname: event.detail.nickname,
-      uniquedId: event.detail.uniqueId,
+      uniqueId: event.detail.uniqueId,
       photoUrl: event.detail.photoUrl,
       giftName: event.detail.giftName,
       diamondCount: event.detail.diamondCount,

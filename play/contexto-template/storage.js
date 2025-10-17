@@ -52,7 +52,9 @@ const STORAGE_KEYS = {
     PROFILE_IMAGE: "profileImage",
     PROFILE_USERNAME: "profileUsername",
     // Display
-    DARK_MODE: "contextoDarkMode"
+    DARK_MODE: "contextoDarkMode",
+    // Game integrations
+    HINT_GIFT_NAME: "contextoHintGiftName"
 };
 
 // --- Generic helpers ---
@@ -195,3 +197,7 @@ function getProfileUsername() { return getItem(STORAGE_KEYS.PROFILE_USERNAME, "H
 // --- Display ---
 function saveDarkModeEnabled(val) { saveItem(STORAGE_KEYS.DARK_MODE, !!val); }
 function getDarkModeEnabled() { return getItem(STORAGE_KEYS.DARK_MODE, false); }
+
+// --- Game integrations ---
+function saveHintGiftName(value) { saveItem(STORAGE_KEYS.HINT_GIFT_NAME, String(value || "")); }
+function getHintGiftName() { return getItem(STORAGE_KEYS.HINT_GIFT_NAME, ""); }

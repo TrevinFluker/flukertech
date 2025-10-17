@@ -50,11 +50,34 @@ function endRound(result, winners = [], answer = "") {
             speakText(randomText);
         }
         }
-    } else if (result === "loss") {
+
+    // 🔗 Update the floating leaderboard with winners
+    try {
+      if (Array.isArray(winners) && winners.length && window.Leaderboard?.updateLeaderboard) {
+        const userScores = {};
+        
+        winners.forEach(w => {
+            console.log('UNIQUE ID', w.uniqueId);
+          const uniqueId = w.uniqueId 
+          const username = w.name 
+          const user = { uniqueId, username, photoUrl: w.photo };
+          userScores[uniqueId] = { user, count: 1 };
+        });
+        window.Leaderboard.updateLeaderboard(userScores);
+        if (window.updateFloatingLeaderboard) window.updateFloatingLeaderboard();
+      }
+    } catch (e) {
+      console.warn("Failed to update leaderboard:", e);
+    }
+    } 
+    else if (result === "loss") {
         showMessage(`The word was ${answer}`, "error");
     }
-
-    setTimeout(hideWinningModal, (getWinningModalDuration() || 5) * 1000);
+    setTimeout(() => {
+        hideWinningModal();
+        initGame();
+        if (window.Contexto?.initGame) window.Contexto.initGame();
+    }, (getWinningModalDuration() || 5) * 1000);
 }
 
 function nextGame() {
@@ -80,20 +103,25 @@ function clearMessage() {
 
 function showWinningModal(winners, word) {
     const overlay = document.getElementById("winning-overlay");
-    const modalWord = document.getElementById("winning-word");
     const singleWinner = document.getElementById("single-winner");
     const multipleWinners = document.getElementById("multiple-winners");
+    const titleEl = document.getElementById("winning-title");
 
     if (!overlay) return;
 
-    modalWord.innerText = word;
+    if (titleEl) {
+        if (winners && winners.length > 0) {
+            const name = winners[0].name || "Player";
+            titleEl.innerText = `🏆 '${name}' won with '${word}'`;
+        } else {
+            titleEl.innerText = `🏆 Winner with ${word}`;
+        }
+    }
 
     if (winners.length === 1) {
         // Show single winner
         singleWinner.style.display = "flex";
         multipleWinners.style.display = "none";
-
-        document.getElementById("winner-name").innerText = winners[0].name;
         document.getElementById("winner-photo").src = winners[0].photo;
     } else if (winners.length > 1) {
         // Show multiple winners
@@ -106,7 +134,6 @@ function showWinningModal(winners, word) {
             div.className = "multi-winner";
             div.innerHTML = `
                 <img class="multi-winner-photo" src="${w.photo}" alt="${w.name}" />
-                <div class="multi-winner-name">${w.name}</div>
             `;
             multipleWinners.appendChild(div);
         });
@@ -117,11 +144,16 @@ function showWinningModal(winners, word) {
     }
 
     overlay.classList.add("show");
+
+    // Start confetti for the duration of the modal
+    const durationMs = Math.max(1000, (getWinningModalDuration() || 5) * 1000);
+    startConfetti(durationMs);
 }
 
 function hideWinningModal() {
     const overlay = document.getElementById("winning-overlay");
     if (overlay) overlay.classList.remove("show");
+    stopConfetti();
 }
 
 function showInstructionPopup(text, gifUrl, durationSec = 3) {
@@ -181,6 +213,93 @@ function speakText(text) {
     }
   }
   
+// Simple confetti implementation using canvas
+let confettiCanvas, confettiCtx, confettiTimer;
+function startConfetti(durationMs) {
+    try {
+        stopConfetti();
+        confettiCanvas = document.createElement('canvas');
+        confettiCanvas.id = 'confetti-canvas';
+        confettiCanvas.style.position = 'fixed';
+        confettiCanvas.style.pointerEvents = 'none';
+        confettiCanvas.style.zIndex = '1100';
+        document.body.appendChild(confettiCanvas);
+
+        function updateBounds() {
+            const container = document.querySelector('.container');
+            if (container) {
+                const rect = container.getBoundingClientRect();
+                confettiCanvas.style.left = rect.left + 'px';
+                confettiCanvas.style.top = rect.top + 'px';
+                confettiCanvas.style.width = rect.width + 'px';
+                confettiCanvas.style.height = rect.height + 'px';
+                confettiCanvas.width = Math.max(1, Math.floor(rect.width));
+                confettiCanvas.height = Math.max(1, Math.floor(rect.height));
+            } else {
+                confettiCanvas.style.left = '0px';
+                confettiCanvas.style.top = '0px';
+                confettiCanvas.style.width = '100%';
+                confettiCanvas.style.height = '100%';
+                confettiCanvas.width = window.innerWidth;
+                confettiCanvas.height = window.innerHeight;
+            }
+        }
+        updateBounds();
+        confettiCtx = confettiCanvas.getContext('2d');
+
+        const pieces = Array.from({ length: 280 }).map(() => ({
+            x: Math.random() * confettiCanvas.width,
+            y: Math.random() * -confettiCanvas.height,
+            size: 4 + Math.random() * 6, // square side length
+            color: `hsl(${Math.random()*360},90%,60%)`,
+            speed: 2 + Math.random() * 4,
+            angle: Math.random() * Math.PI * 2,
+            rot: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.1
+        }));
+
+        function draw() {
+            if (!confettiCtx) return;
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            pieces.forEach(p => {
+                p.y += p.speed;
+                p.x += Math.sin(p.angle += 0.03);
+                p.rot += p.rotSpeed;
+                if (p.y - p.size > confettiCanvas.height) {
+                    p.y = -10;
+                    p.x = Math.random() * confettiCanvas.width;
+                }
+                confettiCtx.save();
+                confettiCtx.translate(p.x, p.y);
+                confettiCtx.rotate(p.rot);
+                confettiCtx.fillStyle = p.color;
+                const half = p.size / 2;
+                confettiCtx.fillRect(-half, -half, p.size, p.size);
+                confettiCtx.restore();
+            });
+            confettiTimer = requestAnimationFrame(draw);
+        }
+        draw();
+
+        setTimeout(stopConfetti, durationMs);
+        const onResizeScroll = () => { if (confettiCanvas) updateBounds(); };
+        window.addEventListener('resize', onResizeScroll);
+        window.addEventListener('scroll', onResizeScroll, { passive: true });
+    } catch (e) {
+        console.warn('Confetti start failed:', e);
+    }
+}
+
+function stopConfetti() {
+    try {
+        if (confettiTimer) cancelAnimationFrame(confettiTimer);
+        confettiTimer = null;
+        if (confettiCanvas && confettiCanvas.parentNode) confettiCanvas.parentNode.removeChild(confettiCanvas);
+        confettiCanvas = null;
+        confettiCtx = null;
+    } catch {}
+}
+
 
 function handleRealComment(user) {
     // Forward TikTok comment as a guess to Contexto
@@ -194,10 +313,13 @@ function handleRealComment(user) {
 }
 
 function handleRealGift(user) {
-    console.log("New TikTok gift event:", user);
-
-    // TODO: integrate logic here
-    // e.g., trigger hint reveal, bonus round, extra life, etc.
+    try {
+        if (window.Contexto?.processGift) {
+            window.Contexto.processGift(user);
+        }
+    } catch (e) {
+        console.warn("Failed to forward gift to game:", e);
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

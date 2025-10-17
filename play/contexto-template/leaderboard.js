@@ -18,7 +18,7 @@ function getLeaderboard() {
       const points = userScore.count;
       const userId = user.uniqueId;
       const username = user.username;
-  
+
       if (!leaderboard[userId]) {
         leaderboard[userId] = {
           totalPoints: 0,
@@ -51,13 +51,16 @@ function getLeaderboard() {
     localStorage.removeItem("gameLeaderboard");
     showToast("Leaderboard cleared!");
     updateFloatingLeaderboard();
+    location.reload();
   }
   
   // --- Floating leaderboard DOM refs ---
   const floatingLeaderboard = document.getElementById("floatingLeaderboard");
   const leaderboardHeader = document.getElementById("leaderboardHeader");
-  const toggleFloatingLeaderboard = document.getElementById("toggleFloatingLeaderboard");
+const toggleFloatingLeaderboard = document.getElementById("toggleFloatingLeaderboard");
+const toggleLeaderboardOpacity = document.getElementById("toggleLeaderboardOpacity");
   const floatingLeaderboardBody = document.getElementById("floatingLeaderboardBody");
+const toggleLeaderboardHeight = document.getElementById("toggleLeaderboardHeight");
   const prevLeaderboardPage = document.getElementById("prevLeaderboardPage");
   const nextLeaderboardPage = document.getElementById("nextLeaderboardPage");
   const leaderboardPageInfo = document.getElementById("leaderboardPageInfo");
@@ -118,6 +121,27 @@ function getLeaderboard() {
       }
     });
   }
+
+// Opacity toggle (not persisted)
+if (toggleLeaderboardOpacity && floatingLeaderboard) {
+  toggleLeaderboardOpacity.addEventListener("click", function () {
+    floatingLeaderboard.classList.toggle("opacity-50");
+  });
+}
+
+// Height toggle (not persisted): toggles between 290px max-height and no max-height
+if (toggleLeaderboardHeight && floatingLeaderboardBody) {
+  toggleLeaderboardHeight.addEventListener("click", function () {
+    const current = window.getComputedStyle(floatingLeaderboardBody).getPropertyValue('max-height');
+    if (!current || current === 'none') {
+      floatingLeaderboardBody.style.maxHeight = '290px';
+      floatingLeaderboardBody.style.overflowY = 'auto';
+    } else {
+      floatingLeaderboardBody.style.maxHeight = 'none';
+      floatingLeaderboardBody.style.overflowY = 'visible';
+    }
+  });
+}
   
   // --- Pagination ---
   if (prevLeaderboardPage) {

@@ -24,6 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // ---------- DOM refs ----------
     // Game settings
     const languageSelect = document.getElementById("language-select");
+  const hintGiftInput = document.getElementById("hint-gift-input");
+  const clearLeaderboardBtn = document.getElementById("clear-leaderboard");
   
     // Simulate
     const simulateGuesses = document.getElementById("simulate-guesses");
@@ -67,7 +69,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const testTtsBtn = document.getElementById("test-tts");
   
     // ---------- Populate from storage on load ----------
-    if (languageSelect) languageSelect.value = getLanguage();
+  if (languageSelect) languageSelect.value = getLanguage();
+  if (hintGiftInput && typeof getHintGiftName === 'function') hintGiftInput.value = getHintGiftName();
     if (simulateGuesses) simulateGuesses.checked = !!getSimulateGuesses();
   
     if (winningSoundUrl) winningSoundUrl.value = getWinningSoundUrl() || winningSoundUrl.value || "";
@@ -118,6 +121,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (languageSelect) {
       languageSelect.addEventListener("change", () => saveLanguage(languageSelect.value));
     }
+  if (hintGiftInput && typeof saveHintGiftName === 'function') {
+    hintGiftInput.addEventListener('input', () => saveHintGiftName(hintGiftInput.value));
+  }
   
     if (simulateGuesses) {
       simulateGuesses.addEventListener("change", () => saveSimulateGuesses(simulateGuesses.checked));
@@ -276,6 +282,25 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
         GameManager.speakText("This is a test of text to speech.");
+      });
+    }
+
+    // Clear leaderboard
+    if (clearLeaderboardBtn) {
+      clearLeaderboardBtn.addEventListener("click", () => {
+        const confirmed = window.confirm("Clear the leaderboard? This cannot be undone.\nReload the page to see the change.");
+        if (!confirmed) return;
+        if (window.Leaderboard && typeof window.Leaderboard.clearLeaderboard === 'function') {
+          window.Leaderboard.clearLeaderboard();
+        } else {
+          // Fallback if leaderboard module is unavailable
+          try {
+            localStorage.removeItem("gameLeaderboard");
+            if (typeof window.updateFloatingLeaderboard === 'function') {
+              window.updateFloatingLeaderboard();
+            }
+          } catch (e) {}
+        }
       });
     }
   });
