@@ -1,6 +1,8 @@
 // contextoGame.js
 // Contexto gameplay logic safely namespaced for use by GameManager
 
+let allowHintsThisRound = true; // globally visible so gift handler can check
+
 (function () {
     // ============================================================
     // 🧠 GAME STATE
@@ -9,7 +11,6 @@
     let guesses = [];
     let targetWord = "";
     let mostRecentGuessLemma = null;
-    let guessRankIsThreeOrHigher = true;
     let dictionary = null;
     let spellcheckEnabled = true;
     let allowDuplicates = true;
@@ -71,6 +72,7 @@
     async function contextoInitGame(gameIndex = null) {
         guesses = [];
         mostRecentGuessLemma = null;
+        allowHintsThisRound = true;
         guessesContainer.innerHTML = "";
         lastGuessContainer.style.display = "none";
         loadingElement.style.display = "block";
@@ -91,7 +93,6 @@
             const targetWordObj = gameData.results.find((item) => parseInt(item.rank) === 1);
             targetWord = targetWordObj ? targetWordObj.lemma : "unknown";
             winnerDeclared = false;
-            guessRankIsThreeOrHigher = true;
             if (window.SettingsPanel) window.SettingsPanel.setCurrentAnswer(targetWord);
 
             loadingElement.style.display = "none";
@@ -107,6 +108,7 @@
     async function initCustomGame(word) {
         guesses = [];
         mostRecentGuessLemma = null;
+        allowHintsThisRound = true;
         guessesContainer.innerHTML = "";
         lastGuessContainer.style.display = "none";
         loadingElement.style.display = "block";
@@ -125,7 +127,6 @@
             gameData = await response.json();
             targetWord = word;
             winnerDeclared = false;
-            guessRankIsThreeOrHigher = true;
             window.SettingsPanel.setCurrentAnswer(word);
 
             loadingElement.style.display = "none";
@@ -201,11 +202,7 @@
             // }
 
             const result = findWordRank(word);
-            // if the guess is rank 2 or lower, set guessRankIsThreeOrHigher to false
-            if (result.rank <= 2) {
-                guessRankIsThreeOrHigher = false;
-            }
-
+            if (result.rank <= 2) allowHintsThisRound = false;
             // attach attribution for UI overlays
             if (user && (user.nickname || user.username || user.uniqueId || user.photoUrl)) {
                 result.attribution = {
@@ -565,9 +562,8 @@
 
 // Process gifts routed from GameManager. If gift name matches saved hint gift, submit next-best words.
 function processGift(user) {
-    // if guessRankIsThreeOrHigher is false, return
-    if (!guessRankIsThreeOrHigher) return;
     try {
+        if (!allowHintsThisRound) return;
         const savedName = typeof getHintGiftName === 'function' ? (getHintGiftName() || '').trim().toLowerCase() : '';
         const incoming = String(user?.giftName || '').trim().toLowerCase();
         const count = Number(user?.giftCount) || 0;
