@@ -14,7 +14,7 @@
     let allowDuplicates = true;
     let suggestedWord = "";
     let winnerDeclared = false; // prevent multiple winners per round
-    const numberOfGames = 300;
+    const numberOfGames = 1100;
     const API_BASE_URL = "https://ccbackend.com";
 
     // ============================================================
