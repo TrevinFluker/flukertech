@@ -9,6 +9,7 @@
     let guesses = [];
     let targetWord = "";
     let mostRecentGuessLemma = null;
+    let guessRankIsThreeOrHigher = true;
     let dictionary = null;
     let spellcheckEnabled = true;
     let allowDuplicates = true;
@@ -90,6 +91,7 @@
             const targetWordObj = gameData.results.find((item) => parseInt(item.rank) === 1);
             targetWord = targetWordObj ? targetWordObj.lemma : "unknown";
             winnerDeclared = false;
+            guessRankIsThreeOrHigher = true;
             if (window.SettingsPanel) window.SettingsPanel.setCurrentAnswer(targetWord);
 
             loadingElement.style.display = "none";
@@ -123,6 +125,7 @@
             gameData = await response.json();
             targetWord = word;
             winnerDeclared = false;
+            guessRankIsThreeOrHigher = true;
             window.SettingsPanel.setCurrentAnswer(word);
 
             loadingElement.style.display = "none";
@@ -198,6 +201,11 @@
             // }
 
             const result = findWordRank(word);
+            // if the guess is rank 2 or lower, set guessRankIsThreeOrHigher to false
+            if (result.rank <= 2) {
+                guessRankIsThreeOrHigher = false;
+            }
+
             // attach attribution for UI overlays
             if (user && (user.nickname || user.username || user.uniqueId || user.photoUrl)) {
                 result.attribution = {
@@ -557,6 +565,8 @@
 
 // Process gifts routed from GameManager. If gift name matches saved hint gift, submit next-best words.
 function processGift(user) {
+    // if guessRankIsThreeOrHigher is false, return
+    if (!guessRankIsThreeOrHigher) return;
     try {
         const savedName = typeof getHintGiftName === 'function' ? (getHintGiftName() || '').trim().toLowerCase() : '';
         const incoming = String(user?.giftName || '').trim().toLowerCase();
