@@ -70,7 +70,6 @@
     async function contextoInitGame(gameIndex = null) {
         guesses = [];
         mostRecentGuessLemma = null;
-        winnerDeclared = false;
         guessesContainer.innerHTML = "";
         lastGuessContainer.style.display = "none";
         loadingElement.style.display = "block";
@@ -82,15 +81,15 @@
 
         try {
             const response = await fetch(`${API_BASE_URL}/game?index=${gameIndex}`);
-
+            
             if (!response.ok) {
                 throw new Error("Failed to fetch game data from game endpoint");
             }
 
             gameData = await response.json();
-
             const targetWordObj = gameData.results.find((item) => parseInt(item.rank) === 1);
             targetWord = targetWordObj ? targetWordObj.lemma : "unknown";
+            winnerDeclared = false;
             if (window.SettingsPanel) window.SettingsPanel.setCurrentAnswer(targetWord);
 
             loadingElement.style.display = "none";
@@ -106,7 +105,6 @@
     async function initCustomGame(word) {
         guesses = [];
         mostRecentGuessLemma = null;
-        winnerDeclared = false;
         guessesContainer.innerHTML = "";
         lastGuessContainer.style.display = "none";
         loadingElement.style.display = "block";
@@ -124,6 +122,7 @@
 
             gameData = await response.json();
             targetWord = word;
+            winnerDeclared = false;
             window.SettingsPanel.setCurrentAnswer(word);
 
             loadingElement.style.display = "none";
