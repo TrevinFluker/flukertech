@@ -323,6 +323,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         if (e.key === "Enter") submitWord({
             comment: wordInput.value,
             username: "host",
+            nickname: "host",
             uniqueId: "host",
             photoUrl: "https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png"
         });
@@ -499,6 +500,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             submitWord({
                 comment: hintItem.lemma,
                 username: "host",
+                nickname: "host",
                 uniqueId: "host",
                 photoUrl: "https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png"
             });
@@ -513,6 +515,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             if (winningWord) submitWord({
                 comment: winningWord.lemma,
                 username: "host",
+                nickname: "host",
                 uniqueId: "host",
                 photoUrl: "https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png"
             });
