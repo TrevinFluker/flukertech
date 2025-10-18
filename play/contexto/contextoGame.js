@@ -320,7 +320,12 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     // 🧩 EVENT LISTENERS
     // ============================================================
     wordInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") submitWord(wordInput.value);
+        if (e.key === "Enter") submitWord({
+            comment: wordInput.value,
+            username: "host",
+            uniqueId: "host",
+            photoUrl: "https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png"
+        });
     });
 
     menuButton.addEventListener("click", () => (menuOverlay.style.display = "flex"));
@@ -491,7 +496,12 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         }
 
         if (hintItem) {
-            submitWord(hintItem.lemma);
+            submitWord({
+                comment: hintItem.lemma,
+                username: "host",
+                uniqueId: "host",
+                photoUrl: "https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png"
+            });
             return;
         }
     });
@@ -500,7 +510,12 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         menuOverlay.style.display = "none";
         if (gameData && gameData.results) {
             const winningWord = gameData.results.find((item) => parseInt(item.rank) === 1);
-            if (winningWord) submitWord(winningWord.lemma);
+            if (winningWord) submitWord({
+                comment: winningWord.lemma,
+                username: "host",
+                uniqueId: "host",
+                photoUrl: "https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png"
+            });
             else console.log("The target word was: " + targetWord);
         } else console.log("The target word was: " + targetWord);
     });
