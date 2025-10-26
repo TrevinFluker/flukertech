@@ -18,6 +18,20 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     let winnerDeclared = false; // prevent multiple winners per round
     const numberOfGames = 1100;
     const API_BASE_URL = "https://ccbackend.com";
+    const API_BASE_BACKUP_URL = "https://ccbackend2.com";
+
+    // Centralized API fetch with failover to backup base URL
+    async function apiFetch(path, options = {}) {
+        try {
+            const primaryResponse = await fetch(`${API_BASE_URL}${path}`, options);
+            if (!primaryResponse.ok) throw new Error(`Primary API error: ${primaryResponse.status}`);
+            return primaryResponse;
+        } catch (primaryError) {
+            const backupResponse = await fetch(`${API_BASE_BACKUP_URL}${path}`, options);
+            if (!backupResponse.ok) throw new Error(`Backup API error: ${backupResponse.status}`);
+            return backupResponse;
+        }
+    }
 
     // ============================================================
     // 🎨 DOM ELEMENTS
@@ -83,7 +97,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/game?index=${gameIndex}`);
+            const response = await apiFetch(`/game?index=${gameIndex}`);
             
             if (!response.ok) {
                 throw new Error("Failed to fetch game data from game endpoint");
@@ -121,7 +135,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
                 return true;
             }
 
-            const response = await fetch(`${API_BASE_URL}/rank?word=${word}`);
+            const response = await apiFetch(`/rank?word=${word}`);
             if (!response.ok) throw new Error("Failed to generate custom game");
 
             gameData = await response.json();
@@ -391,7 +405,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
 
     async function checkCustomWordValidity(word) {
         try {
-            const response = await fetch(`${API_BASE_URL}/rank?word=${word}`);
+            const response = await apiFetch(`/rank?word=${word}`);
             if (!response.ok) throw new Error("Failed to generate custom game");
             const data = await response.json();
 
