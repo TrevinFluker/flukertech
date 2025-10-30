@@ -615,7 +615,7 @@ function processGift(user) {
 
         let submitted = 0;
         let r = targetFrom;
-        while (submitted < count && r >= 1) {
+        while (submitted < count && r >= 2) {
             if (rankToItem[r]) {
                 const lemma = rankToItem[r].lemma;
                 // submit as if this user commented the word
