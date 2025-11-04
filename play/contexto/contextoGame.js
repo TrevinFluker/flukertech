@@ -612,23 +612,73 @@ function processGift(user) {
         // Build a map rank -> lemma for fast lookup
         const rankToItem = {};
         data.results.forEach(it => { const r = parseInt(it.rank); if (!isNaN(r)) rankToItem[r] = it; });
+        
+        // Track which lemmas have already been guessed to avoid duplicates
+        const guessedLemmaSet = new Set((currentGuesses || []).map(g => String(g.lemma || '').toLowerCase()));
+        
+        // Get max rank for upward search if needed
+        const allRanks = Object.keys(rankToItem).map(n => parseInt(n)).filter(n => !isNaN(n));
+        const maxRankPresent = allRanks.length ? Math.max(...allRanks) : 10000;
 
         let submitted = 0;
         let r = targetFrom;
-        while (submitted < count && r >= 2) {
-            if (rankToItem[r]) {
-                const lemma = rankToItem[r].lemma;
-                // submit as if this user commented the word
-                window.Contexto.submitWord({
-                    comment: lemma,
-                    nickname: user?.nickname,
-                    username: user?.username,
-                    uniqueId: user?.uniqueId,
-                    photoUrl: user?.photoUrl
-                });
-                submitted++;
+        let searchingDown = true;
+        
+        while (submitted < count) {
+            if (searchingDown) {
+                // Search downward from current r to 2
+                if (r >= 2) {
+                    if (rankToItem[r]) {
+                        const lemma = rankToItem[r].lemma;
+                        const lemmaLc = String(lemma || '').toLowerCase();
+                        
+                        // Check if this lemma has already been guessed
+                        if (!guessedLemmaSet.has(lemmaLc)) {
+                            // submit as if this user commented the word
+                            window.Contexto.submitWord({
+                                comment: lemma,
+                                nickname: user?.nickname,
+                                username: user?.username,
+                                uniqueId: user?.uniqueId,
+                                photoUrl: user?.photoUrl
+                            });
+                            guessedLemmaSet.add(lemmaLc);
+                            submitted++;
+                        }
+                    }
+                    r--;
+                } else {
+                    // Reached below rank 2, switch to searching upward
+                    searchingDown = false;
+                    r = 3; // Start searching from rank 3 upward
+                }
+            } else {
+                // Search upward from current r
+                if (r <= maxRankPresent) {
+                    if (rankToItem[r]) {
+                        const lemma = rankToItem[r].lemma;
+                        const lemmaLc = String(lemma || '').toLowerCase();
+                        
+                        // Check if this lemma has already been guessed
+                        if (!guessedLemmaSet.has(lemmaLc)) {
+                            // submit as if this user commented the word
+                            window.Contexto.submitWord({
+                                comment: lemma,
+                                nickname: user?.nickname,
+                                username: user?.username,
+                                uniqueId: user?.uniqueId,
+                                photoUrl: user?.photoUrl
+                            });
+                            guessedLemmaSet.add(lemmaLc);
+                            submitted++;
+                        }
+                    }
+                    r++;
+                } else {
+                    // No more ranks to search
+                    break;
+                }
             }
-            r--;
         }
     } catch (e) {
         console.warn('processGift failed:', e);
