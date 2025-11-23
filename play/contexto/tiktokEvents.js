@@ -3,8 +3,6 @@
 
 // Comment event listener
 window.addEventListener("handleRealCommentEvent", function(event) {
-  console.log('receiving on webpage')
-  console.log(event);
     const user = {
       username: event.detail.username,
       nickname: event.detail.nickname,

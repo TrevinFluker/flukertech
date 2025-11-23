@@ -216,7 +216,6 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             // }
 
             const result = findWordRank(word);
-            if (result.rank <= 2) allowHintsThisRound = false;
             // attach attribution for UI overlays
             if (user && (user.nickname || user.username || user.uniqueId || user.photoUrl)) {
                 result.attribution = {
@@ -592,6 +591,18 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     initDictionary();
 })();
 
+// Helper: find the first rank between startRank and maxRank (inclusive)
+// that is NOT yet guessed and exists in rankToItem.
+function findNextEmptyRank(startRank, maxRank, guesses, rankToItem) {
+    const guessedRanks = new Set((guesses || []).map(g => Number(g.rank)));
+    for (let r = startRank; r <= maxRank; r++) {
+        if (!guessedRanks.has(r) && rankToItem[r]) {
+            return r;
+        }
+    }
+    return null;
+}
+
 // Process gifts routed from GameManager. If gift name matches saved hint gift, submit next-best words.
 function processGift(user) {
     try {
@@ -601,34 +612,72 @@ function processGift(user) {
         const count = Number(user?.giftCount) || 0;
         if (!savedName || !incoming || incoming !== savedName) return;
         const state = window.Contexto.getState();
+        console.log("state", state);
         const data = state.gameData;
+        console.log("data", data.results);
         if (!data || !Array.isArray(data.results) || data.results.length === 0) return;
 
         // Determine current best rank from guesses
         const currentGuesses = state.guesses || [];
         let lowestRank = Math.min(...currentGuesses.map(g => Number(g.rank)));
-        let targetFrom = isFinite(lowestRank) ? Math.max(1, lowestRank - 1) : 300;
+        console.log("lowestRank", lowestRank);
+        if (lowestRank > 2) {
+            let targetFrom = isFinite(lowestRank) ? Math.max(1, lowestRank - 1) : 300;
+            console.log("currentGuesses", currentGuesses);
+            console.log("lowestRank", lowestRank);
+            console.log("targetFrom", targetFrom);
 
-        // Build a map rank -> lemma for fast lookup
-        const rankToItem = {};
-        data.results.forEach(it => { const r = parseInt(it.rank); if (!isNaN(r)) rankToItem[r] = it; });
+            // Build a map rank -> lemma for fast lookup
+            const rankToItem = {};
+            data.results.forEach(it => { const r = parseInt(it.rank); if (!isNaN(r)) rankToItem[r] = it; });
 
-        let submitted = 0;
-        let r = targetFrom;
-        while (submitted < count && r >= 2) {
-            if (rankToItem[r]) {
-                const lemma = rankToItem[r].lemma;
-                // submit as if this user commented the word
+            let submitted = 0;
+            let r = targetFrom;
+            while (submitted < count && r >= 2) {
+                if (rankToItem[r]) {
+                    const lemma = rankToItem[r].lemma;
+                    // submit as if this user commented the word
+                    window.Contexto.submitWord({
+                        comment: lemma,
+                        nickname: user?.nickname,
+                        username: user?.username,
+                        uniqueId: user?.uniqueId,
+                        photoUrl: user?.photoUrl
+                    });
+                    submitted++;
+                }
+                r--;
+            }
+        } else if (lowestRank === 2) {
+            const rankToItem = {};
+            data.results.forEach(it => { const r = parseInt(it.rank); if (!isNaN(r)) rankToItem[r] = it; });
+            // Each submission should dynamically find the next available (unguessed) rank,
+            // starting at 2 and scanning upward every time.
+            let submitted = 0;
+            while (submitted < count) {
+                const liveState = window.Contexto.getState();
+                const liveGuesses = liveState.guesses || [];
+
+                const targetFrom = findNextEmptyRank(2, 300, liveGuesses, rankToItem);
+                if (targetFrom == null) break; // nothing left in the range
+
+                console.log("liveGuesses", liveGuesses);
+                console.log("lowestRank", lowestRank);
+                console.log("targetFrom (dynamic first empty rank >=2)", targetFrom);
+
+                const item = rankToItem[targetFrom];
+                if (!item) break;
+
                 window.Contexto.submitWord({
-                    comment: lemma,
+                    comment: item.lemma,
                     nickname: user?.nickname,
                     username: user?.username,
                     uniqueId: user?.uniqueId,
                     photoUrl: user?.photoUrl
                 });
+
                 submitted++;
             }
-            r--;
         }
     } catch (e) {
         console.warn('processGift failed:', e);
