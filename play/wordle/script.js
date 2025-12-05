@@ -132,6 +132,18 @@ const board = document.getElementById('board');
 const messageDisplay = document.getElementById('message');
 const newGameBtn = document.getElementById('new-game-btn');
 
+// Delegate clicks from the on-screen keyboard to the key handler
+const keyboardElement = document.querySelector('.keyboard');
+if (keyboardElement) {
+    keyboardElement.addEventListener('click', (e) => {
+        const keyButton = e.target.closest('.key');
+        if (!keyButton) return;
+        const key = keyButton.getAttribute('data-key');
+        if (!key) return;
+        handleKeyPress(key.toLowerCase());
+    });
+}
+
 // Track the last submitted word to prevent duplicates
 let lastSubmittedWord = '';
 let lastSubmittedUser = null;
@@ -144,6 +156,18 @@ function updateCurrentAnswerDisplay() {
     const answerDisplay = document.getElementById('current-answer-display');
     if (answerDisplay && targetWord) {
         answerDisplay.textContent = targetWord.toUpperCase();
+    }
+}
+
+// Show or hide Polish-specific keyboard row based on current language
+function updateKeyboardLayoutForLanguage() {
+    const polishRow = document.querySelector('.keyboard-row-polish');
+    if (!polishRow) return;
+    
+    if (currentLanguage === 'pl') {
+        polishRow.style.display = 'flex';
+    } else {
+        polishRow.style.display = 'none';
     }
 }
 
@@ -268,6 +292,9 @@ async function initializeGame() {
             key.classList.add('key-wide');
         }
     });
+
+    // Ensure correct keyboard layout for the selected language
+    updateKeyboardLayoutForLanguage();
 }
 
 // Unified guess processing function
@@ -475,7 +502,9 @@ function initializeSettingsPanel() {
                 // Start a new game with the new language
                 initializeGame();
                 
-                showMessage(`Language changed to ${currentLanguage === 'es' ? 'Español' : 'English'}`);
+                // Update keyboard layout and announce language change
+                updateKeyboardLayoutForLanguage();
+                showMessage(`Language changed to ${getLanguageLabel(currentLanguage)}`);
             }
         });
     }
@@ -1964,7 +1993,9 @@ function handleRealComment(user) {
     let firstWord = comment.split(' ')[0];
     
     // Remove all non-letter characters
-    firstWord = firstWord.replace(/[^a-zA-Z]/g, '');
+    if (currentLanguage !== 'pl') {
+        firstWord = firstWord.replace(/[^a-zA-Z]/g, '');
+    }
 
     if (firstWord.length < wordLength) return;
     if (firstWord.length > wordLength) return;
@@ -2605,6 +2636,20 @@ function startGroupGuessBar(preventWin = false) {
     }, 1000);
 }
 
+// Determine if a key represents a valid letter for the current language
+function isLetterKeyAllowed(key) {
+    if (!key) return false;
+    const lower = key.toLowerCase();
+    
+    if (currentLanguage === 'pl') {
+        // English letters plus full Polish alphabet
+        return /^[a-ząćęłńóśźż]$/.test(lower);
+    }
+    
+    // Default: basic Latin letters
+    return /^[a-z]$/.test(lower);
+}
+
 // Handle keyboard input
 function handleKeyPress(key) {
     if (isGameOver) return;
@@ -2613,7 +2658,7 @@ function handleKeyPress(key) {
         submitGuess();
     } else if (key === 'backspace') {
         deleteLetter();
-    } else if (/^[a-z]$/.test(key) && currentTile < wordLength) {
+    } else if (isLetterKeyAllowed(key) && currentTile < wordLength) {
         addLetter(key);
     }
 }
