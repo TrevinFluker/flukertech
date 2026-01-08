@@ -325,6 +325,9 @@ function processGuess(guess, photoUrl, username) {
             photoUrl: photoUrl,
             guessedWord: guess
         };
+
+        // Update floating leaderboard for this winner, if available
+        updateLeaderboardOnWin(username, photoUrl);
         
         showMessage("Wonderful!");
         isGameOver = true;
@@ -362,6 +365,36 @@ function processGuess(guess, photoUrl, username) {
             showLossModal(targetWord);
             return;
         }
+    }
+}
+
+// Update the floating leaderboard when a user wins
+function updateLeaderboardOnWin(username, photoUrl) {
+    try {
+        if (!window.Leaderboard || typeof window.Leaderboard.updateLeaderboard !== 'function') {
+            return;
+        }
+
+        const safeUsername = (username && String(username).trim()) || getCurrentUsername();
+        const safePhoto = photoUrl;
+
+        const userId = safeUsername.toLowerCase();
+        const userScores = {};
+        userScores[userId] = {
+            user: {
+                uniqueId: userId,
+                username: safeUsername,
+                photoUrl: safePhoto
+            },
+            count: 1
+        };
+
+        window.Leaderboard.updateLeaderboard(userScores);
+        if (typeof window.updateFloatingLeaderboard === 'function') {
+            window.updateFloatingLeaderboard();
+        }
+    } catch (e) {
+        console.warn('Failed to update Wordle leaderboard:', e);
     }
 }
 
@@ -475,6 +508,7 @@ function initializeSettingsPanel() {
     const stackHeightInput = document.getElementById('stack-height');
     const decreaseHeightBtn = document.getElementById('decrease-height');
     const increaseHeightBtn = document.getElementById('increase-height');
+    const clearLeaderboardButton = document.getElementById('clear-leaderboard');
 
     // Load saved language setting
     const savedLanguage = localStorage.getItem('wordleLanguage');
@@ -697,6 +731,25 @@ function initializeSettingsPanel() {
 
     // Initialize TikTok settings
     initializeTikTokSettings();
+
+    // Wire up clear leaderboard button in settings panel
+    if (clearLeaderboardButton) {
+        clearLeaderboardButton.addEventListener('click', () => {
+            const confirmed = window.confirm('Clear the Wordle leaderboard? This cannot be undone.');
+            if (!confirmed) return;
+
+            try {
+                if (window.Leaderboard && typeof window.Leaderboard.clearLeaderboard === 'function') {
+                    window.Leaderboard.clearLeaderboard();
+                } else {
+                    // Fallback: clear storage directly if leaderboard script not loaded
+                    localStorage.removeItem('wordleLeaderboard');
+                }
+            } catch (e) {
+                console.warn('Failed to clear Wordle leaderboard:', e);
+            }
+        });
+    }
 
     // Initialize statistics manager
     statisticsManager = new StatisticsManager();

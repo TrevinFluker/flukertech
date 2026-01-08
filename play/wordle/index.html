@@ -152,6 +152,26 @@
         </svg>
     </button>
 
+      <!-- Floating Leaderboard -->
+    <div id="floatingLeaderboard" class="floating-leaderboard">
+        <div class="floating-leaderboard-header" id="leaderboardHeader">
+        <span>🏆 Leaderboard</span>
+        <div class="leaderboard-controls">
+            <button id="prevLeaderboardPage" class="leaderboard-nav-btn">‹</button>
+            <span id="leaderboardPageInfo" class="leaderboard-page-info">1/1</span>
+            <button id="nextLeaderboardPage" class="leaderboard-nav-btn">›</button>
+            <button id="toggleLeaderboardOpacity" class="leaderboard-nav-btn" title="Toggle Opacity">◐</button>
+            <button id="toggleFloatingLeaderboard" class="floating-leaderboard-toggle">−</button>
+        </div>
+        </div>
+        <div class="floating-leaderboard-body" id="floatingLeaderboardBody">
+        <div class="leaderboard-list" id="leaderboardList">
+            <div class="leaderboard-empty">No players yet</div>
+        </div>
+        <button id="toggleLeaderboardHeight" class="leaderboard-height-toggle" title="Toggle height">↕️</button>
+        </div>
+    </div>
+
     <script>
         // Load settings panel
         fetch('settings-panel.html')
@@ -161,5 +181,6 @@
             });
     </script>
     <script src="script.js"></script>
+    <script src="leaderboard.js"></script>
 </body>
 </html>
