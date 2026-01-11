@@ -17,8 +17,8 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     let suggestedWord = "";
     let winnerDeclared = false; // prevent multiple winners per round
     const numberOfGames = 1100;
-    const API_BASE_URL = "https://ccbackend.com";
-    const API_BASE_BACKUP_URL = "https://ccbackend2.com";
+    const API_BASE_URL = "https://ccbackend2.com";
+    const API_BASE_BACKUP_URL = "https://ccbackend.com";
 
     // Centralized API fetch with failover to backup base URL
     async function apiFetch(path, options = {}) {
