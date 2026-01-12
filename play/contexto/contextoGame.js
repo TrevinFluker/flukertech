@@ -21,14 +21,31 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     const API_BASE_BACKUP_URL = "https://ccbackend.com";
 
     // Centralized API fetch with failover to backup base URL
+    // The primary request is limited to 10 seconds; on timeout (or other failure)
+    // the backup endpoint is used.
     async function apiFetch(path, options = {}) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10_000); // 10 seconds
+
         try {
-            const primaryResponse = await fetch(`${API_BASE_URL}${path}`, options);
-            if (!primaryResponse.ok) throw new Error(`Primary API error: ${primaryResponse.status}`);
+            const primaryResponse = await fetch(`${API_BASE_URL}${path}`, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!primaryResponse.ok) {
+                throw new Error(`Primary API error: ${primaryResponse.status}`);
+            }
             return primaryResponse;
         } catch (primaryError) {
+            clearTimeout(timeoutId);
+            console.warn("Primary API failed or timed out, falling back to backup:", primaryError);
+
             const backupResponse = await fetch(`${API_BASE_BACKUP_URL}${path}`, options);
-            if (!backupResponse.ok) throw new Error(`Backup API error: ${backupResponse.status}`);
+            if (!backupResponse.ok) {
+                throw new Error(`Backup API error: ${backupResponse.status}`);
+            }
             return backupResponse;
         }
     }
