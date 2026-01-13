@@ -25,7 +25,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     // the backup endpoint is used.
     async function apiFetch(path, options = {}) {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10_000); // 10 seconds
+        const timeoutId = setTimeout(() => controller.abort(), 5_000); // 10 seconds
 
         try {
             const primaryResponse = await fetch(`${API_BASE_URL}${path}`, {
