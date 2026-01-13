@@ -11,7 +11,8 @@ window.addEventListener("handleRealCommentEvent", function(event) {
       followStatus: event.detail.followStatus,
       gift_name: event.detail.gift_name || "",
       comment: event.detail.comment,
-      eventType: event.detail.eventType
+      eventType: event.detail.eventType,
+      tikfinityUsername: event.detail.tikfinityUsername || null
     };
   
     // Pass the guess/comment to GameManager
