@@ -629,20 +629,14 @@ function processGift(user) {
         const count = Number(user?.giftCount) || 0;
         if (!savedName || !incoming || incoming !== savedName) return;
         const state = window.Contexto.getState();
-        console.log("state", state);
         const data = state.gameData;
-        console.log("data", data.results);
         if (!data || !Array.isArray(data.results) || data.results.length === 0) return;
 
         // Determine current best rank from guesses
         const currentGuesses = state.guesses || [];
         let lowestRank = Math.min(...currentGuesses.map(g => Number(g.rank)));
-        console.log("lowestRank", lowestRank);
         if (lowestRank > 2) {
             let targetFrom = isFinite(lowestRank) ? Math.max(1, lowestRank - 1) : 300;
-            console.log("currentGuesses", currentGuesses);
-            console.log("lowestRank", lowestRank);
-            console.log("targetFrom", targetFrom);
 
             // Build a map rank -> lemma for fast lookup
             const rankToItem = {};
@@ -677,10 +671,6 @@ function processGift(user) {
 
                 const targetFrom = findNextEmptyRank(2, 300, liveGuesses, rankToItem);
                 if (targetFrom == null) break; // nothing left in the range
-
-                console.log("liveGuesses", liveGuesses);
-                console.log("lowestRank", lowestRank);
-                console.log("targetFrom (dynamic first empty rank >=2)", targetFrom);
 
                 const item = rankToItem[targetFrom];
                 if (!item) break;

@@ -30,12 +30,10 @@ function initGame() {
   }
 
 function startRound() {
-    console.log("Starting new round...");
     showMessage("Round Started");
 }
 
 function endRound(result, winners = [], answer = "") {
-    console.log("Ending round:", result);
 
     if (result === "win") {
         const url = getWinningSoundUrl();
@@ -57,7 +55,6 @@ function endRound(result, winners = [], answer = "") {
         const userScores = {};
         
         winners.forEach(w => {
-            console.log('UNIQUE ID', w.uniqueId);
           const uniqueId = w.uniqueId 
           const username = w.name 
           const user = { uniqueId, username, photoUrl: w.photo };
@@ -81,7 +78,6 @@ function endRound(result, winners = [], answer = "") {
 }
 
 function nextGame() {
-    console.log("Moving to next game...");
     initGame();
     startRound();
 }
