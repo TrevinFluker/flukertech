@@ -19,13 +19,28 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     const numberOfGames = 1100;
     const API_BASE_URL = "https://ccbackend2.com";
     const API_BASE_BACKUP_URL = "https://ccbackend.com";
+    const FALLBACK_WORDS = [
+        "motorcycle", "pharmacist", "dictionary", "cherry", "foam", "cleaver", "perjury", "scallop",
+        "basement", "flu", "atlas", "vampire", "cobbler", "garage", "disinfectant", "mill", "raisin",
+        "flame", "beetle", "airbag", "pony", "lever", "pool", "marshmallow", "wool", "cabin",
+        "waterfall", "cage", "oyster", "spool", "florist", "sphere", "plum", "geometry", "fury",
+        "porcelain", "yam", "treadmill", "laboratory", "notebook", "tadpole", "acid", "lie", "omelet",
+        "dust", "igloo", "nun", "toaster", "dessert", "pill", "screwdriver", "literature", "porridge",
+        "raccoon", "bucket", "lighthouse", "alley", "protractor", "lighter", "lentil", "envy",
+        "seagull", "bride", "oven", "bamboo", "shoelace", "receipt", "faucet", "shelf", "limousine",
+        "charger", "tray", "bookstore", "rope", "registry", "bungalow", "umbrella", "costume",
+        "lawyer", "cucumber", "enemy", "tongue", "makeup", "hose", "cliff", "ice", "rocket", "butter",
+        "mayor", "pink", "boot", "waiter", "shale", "myth", "reptile", "joystick", "villain",
+        "fishbowl", "knee", "lollipop", "pianist"
+    ];
 
     // Centralized API fetch with failover to backup base URL
-    // The primary request is limited to 10 seconds; on timeout (or other failure)
-    // the backup endpoint is used.
+    // The primary request is limited to 5 seconds; on timeout (or other failure)
+    // the backup endpoint is used (also limited to 5 seconds).
+    // If both fail, falls back to a random word from FALLBACK_WORDS list.
     async function apiFetch(path, options = {}) {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5_000); // 10 seconds
+        const timeoutId = setTimeout(() => controller.abort(), 5_000); // 5 seconds
 
         try {
             const primaryResponse = await fetch(`${API_BASE_URL}${path}`, {
@@ -42,11 +57,36 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             clearTimeout(timeoutId);
             console.warn("Primary API failed or timed out, falling back to backup:", primaryError);
 
-            const backupResponse = await fetch(`${API_BASE_BACKUP_URL}${path}`, options);
-            if (!backupResponse.ok) {
-                throw new Error(`Backup API error: ${backupResponse.status}`);
+            // Try backup API with 5-second timeout
+            const backupController = new AbortController();
+            const backupTimeoutId = setTimeout(() => backupController.abort(), 4_000); // 4 seconds
+
+            try {
+                const backupResponse = await fetch(`${API_BASE_BACKUP_URL}${path}`, {
+                    ...options,
+                    signal: backupController.signal
+                });
+                clearTimeout(backupTimeoutId);
+
+                if (!backupResponse.ok) {
+                    throw new Error(`Backup API error: ${backupResponse.status}`);
+                }
+                return backupResponse;
+            } catch (backupError) {
+                clearTimeout(backupTimeoutId);
+                console.warn("Backup API failed or timed out, falling back to random word:", backupError);
+
+                // Fallback to random word from the list
+                const randomWord = FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)];
+                const fallbackUrl = `https://www.runchatcapture.com/scripts/contexto_results/contexto-${randomWord}.json`;
+                console.log(`Attempting fallback to: ${fallbackUrl}`);
+                
+                const fallbackResponse = await fetch(fallbackUrl, options);
+                if (!fallbackResponse.ok) {
+                    throw new Error(`Fallback API error: ${fallbackResponse.status}`);
+                }
+                return fallbackResponse;
             }
-            return backupResponse;
         }
     }
 
