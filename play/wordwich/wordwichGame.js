@@ -14,25 +14,24 @@
     let suggestedWord = "";
     let winnerDeclared = false; // prevent multiple winners per round
     
-    // Boundary words
-    let closestBefore = "aardvark";
-    let closestAfter = "zulu";
+    // Boundary words with attribution
+    let closestBefore = { word: "aardvark", photo: null };
+    let closestAfter = { word: "zulu", photo: null };
     
-    // Subset of common words for random game selection
-    // make these words lowercase
-    const COMMON_WORDS = [
-        "apple", "beach", "chair", "dance", "earth",
-        "forest", "garden", "happy", "island", "jungle"
-    ];
-    
+    // Reference common words from a.js (loaded globally)
+    const COMMON_WORDS = window.COMMON_WORDS || [];
     const WORDS_JSON_URL = "https://www.runchatcapture.com/wordwich.json";
+    
+    // Placeholder toggle state
+    let showHintPlaceholder = false;
+    let placeholderInterval = null;
 
     // ============================================================
     // 🎨 DOM ELEMENTS
     // ============================================================
     const wordInput = document.getElementById("wordInput");
-    const guessesContainerBefore = document.getElementById("guessesContainerBefore");
-    const guessesContainerAfter = document.getElementById("guessesContainerAfter");
+    const guessesContainer = document.getElementById("guessesContainer");
+    const recentGuessBar = document.getElementById("recentGuessBar");
     const menuButton = document.getElementById("menuButton");
     const menuOverlay = document.getElementById("menuOverlay");
     const selectGameOverlay = document.getElementById("selectGameOverlay");
@@ -108,13 +107,17 @@
         guesses = [];
         mostRecentGuess = null;
         winnerDeclared = false;
-        closestBefore = "aardvark";
-        closestAfter = "zulu";
-        guessesContainerBefore.innerHTML = "";
-        guessesContainerAfter.innerHTML = "";
+        closestBefore = { word: "aardvark", photo: null };
+        closestAfter = { word: "zulu", photo: null };
+        guessesContainer.innerHTML = "";
+        if (recentGuessBar) recentGuessBar.style.display = 'none';
+        updateBoundaryDisplay();
         loadingElement.style.display = "block";
         errorMessageElement.style.display = "none";
         updateInputPlaceholder();
+        
+        // Restart placeholder toggle for new game
+        startPlaceholderToggle();
 
         try {
             // Ensure words list is loaded
@@ -150,12 +153,16 @@
     async function initCustomGame(word) {
         guesses = [];
         mostRecentGuess = null;
-        closestBefore = "aardvark";
-        closestAfter = "zulu";
-        guessesContainerBefore.innerHTML = "";
-        guessesContainerAfter.innerHTML = "";
+        closestBefore = { word: "aardvark", photo: null };
+        closestAfter = { word: "zulu", photo: null };
+        guessesContainer.innerHTML = "";
+        if (recentGuessBar) recentGuessBar.style.display = 'none';
+        updateBoundaryDisplay();
         errorMessageElement.style.display = "none";
         updateInputPlaceholder();
+        
+        // Restart placeholder toggle for custom game
+        startPlaceholderToggle();
 
         const upperWord = word.toUpperCase();
         
@@ -184,6 +191,47 @@
         } else {
             return { word: guessUpper, comparison: "lower" }; // Need to guess lower alphabetically
         }
+    }
+
+    function getClosenessScore(guess) {
+        const guessUpper = guess.toUpperCase();
+        const targetUpper = targetWord.toUpperCase();
+        
+        // Calculate first-letter distance
+        const firstLetterDistance = Math.abs(guessUpper.charCodeAt(0) - targetUpper.charCodeAt(0));
+        
+        // If first letters match, count matching letters (in same position)
+        if (firstLetterDistance === 0) {
+            let matchingLetters = 0;
+            const minLength = Math.min(guessUpper.length, targetUpper.length);
+            for (let i = 0; i < minLength; i++) {
+                if (guessUpper[i] === targetUpper[i]) {
+                    matchingLetters++;
+                }
+            }
+            // Return negative score (closer is more negative for sorting)
+            // 3+ letters = -3, 2 letters = -2, 1 letter = -1
+            return -matchingLetters;
+        }
+        
+        // Return first letter distance (lower is closer)
+        return firstLetterDistance;
+    }
+    
+    function getTotalAlphabeticalDistance(guess) {
+        const guessUpper = guess.toUpperCase();
+        const targetUpper = targetWord.toUpperCase();
+        
+        let totalDistance = 0;
+        const maxLength = Math.max(guessUpper.length, targetUpper.length);
+        
+        for (let i = 0; i < maxLength; i++) {
+            const guessChar = i < guessUpper.length ? guessUpper.charCodeAt(i) : 0;
+            const targetChar = i < targetUpper.length ? targetUpper.charCodeAt(i) : 0;
+            totalDistance += Math.abs(guessChar - targetChar);
+        }
+        
+        return totalDistance;
     }
 
     function getClosenessColor(guess) {
@@ -222,8 +270,95 @@
 
     function updateInputPlaceholder() {
         if (wordInput) {
-            wordInput.placeholder = `The secret word is between ${closestBefore} and ${closestAfter}`;
+            if (showHintPlaceholder) {
+                wordInput.placeholder = "Green letters match the secret word position";
+            } else {
+                wordInput.placeholder = `The word is alphabetically between ${closestBefore.word} and ${closestAfter.word}`;
+            }
         }
+    }
+    
+    function getLetterMatches(guess) {
+        const guessUpper = guess.toUpperCase();
+        const targetUpper = targetWord.toUpperCase();
+        const matches = [];
+        let stillMatching = true;
+        
+        for (let i = 0; i < guessUpper.length; i++) {
+            if (stillMatching && i < targetUpper.length && guessUpper[i] === targetUpper[i]) {
+                matches.push({ letter: guessUpper[i], match: true });
+            } else {
+                matches.push({ letter: guessUpper[i], match: false });
+                stillMatching = false; // Stop matching after first non-match
+            }
+        }
+        
+        return matches;
+    }
+    
+    function countCorrectLetters(guess) {
+        const guessUpper = guess.toUpperCase();
+        const targetUpper = targetWord.toUpperCase();
+        let count = 0;
+        
+        // Only count consecutive matches from the beginning
+        for (let i = 0; i < Math.min(guessUpper.length, targetUpper.length); i++) {
+            if (guessUpper[i] === targetUpper[i]) {
+                count++;
+            } else {
+                break; // Stop counting after first non-match
+            }
+        }
+        
+        return count;
+    }
+    
+    function getFirstLetterDistance(guess) {
+        const guessUpper = guess.toUpperCase();
+        const targetUpper = targetWord.toUpperCase();
+        
+        if (!guessUpper.length || !targetUpper.length) return 0;
+        
+        // Calculate alphabetical distance (target - guess)
+        // Negative means guess is after target, positive means guess is before target
+        const distance = targetUpper.charCodeAt(0) - guessUpper.charCodeAt(0);
+        return distance;
+    }
+    
+    function updateBoundaryDisplay() {
+        // Get elements dynamically to ensure DOM is ready
+        const boundaryBeforeElement = document.querySelector('.boundary-word-inline:first-child');
+        const boundaryAfterElement = document.querySelector('.boundary-word-inline:last-child');
+        
+        if (boundaryBeforeElement) {
+            const photoHtml = closestBefore.photo ? 
+                `<img class="boundary-photo" src="${closestBefore.photo}" alt=""/>` : '';
+            boundaryBeforeElement.innerHTML = `
+                ${photoHtml}
+                <span class="boundary-label">${closestBefore.word}</span>
+            `;
+        }
+        if (boundaryAfterElement) {
+            const photoHtml = closestAfter.photo ? 
+                `<img class="boundary-photo" src="${closestAfter.photo}" alt=""/>` : '';
+            boundaryAfterElement.innerHTML = `
+                ${photoHtml}
+                <span class="boundary-label">${closestAfter.word}</span>
+            `;
+        }
+    }
+    
+    function startPlaceholderToggle() {
+        // Clear any existing interval
+        if (placeholderInterval) {
+            clearInterval(placeholderInterval);
+        }
+        
+        // Toggle placeholder every 3 seconds
+        placeholderInterval = setInterval(() => {
+            showHintPlaceholder = !showHintPlaceholder;
+            updateInputPlaceholder();
+        }, 3000);
     }
 
     async function checkSpelling(word) {
@@ -256,11 +391,6 @@
             // Check if word is in the list
             const isValidWord = wordsList.includes(word);
             if (!isValidWord) {
-                errorMessageElement.textContent = "Not in word list";
-                errorMessageElement.style.display = "block";
-                setTimeout(() => {
-                    errorMessageElement.style.display = "none";
-                }, 2000);
                 return;
             }
 
@@ -301,6 +431,7 @@
 
             if (result.comparison === "correct") {
                 if (winnerDeclared) return;
+                lastWord.textContent = result.word;
                 winnerDeclared = true;
                 if (window.GameManager) {
                     window.GameManager.endRound("win", [{ 
@@ -319,31 +450,113 @@
         }
     }
 
-    function renderPreviousGuesses() {
-        guessesContainerBefore.innerHTML = "";
-        guessesContainerAfter.innerHTML = "";
+    function updateRecentGuessDisplay() {
+        if (!mostRecentGuess || guesses.length === 0) {
+            if (recentGuessBar) recentGuessBar.style.display = 'none';
+            return;
+        }
         
-        // Separate guesses based on their comparison result
-        const beforeTarget = guesses.filter(g => g.comparison === "higher").sort((a, b) => a.word.localeCompare(b.word));
-        const afterTarget = guesses.filter(g => g.comparison === "lower").sort((a, b) => a.word.localeCompare(b.word));
+        const recentGuess = guesses.find(g => g.word === mostRecentGuess);
+        if (!recentGuess) return;
+        
+        const letterMatches = getLetterMatches(recentGuess.word);
+        const correctCount = countCorrectLetters(recentGuess.word);
+        const firstLetterDist = getFirstLetterDistance(recentGuess.word);
+        
+        // Build word with colored letters
+        const wordHtml = letterMatches.map(({letter, match}) => {
+            return `<span class="letter ${match ? 'letter-correct' : ''}">${letter.toLowerCase()}</span>`;
+        }).join('');
+        
+        const attribHtml = (recentGuess.attribution && (recentGuess.attribution.name || recentGuess.attribution.photo)) ? `
+            <span class="guess-attrib">
+                ${recentGuess.attribution.photo ? `<img class="guess-attrib-photo" src="${recentGuess.attribution.photo}" alt="${recentGuess.attribution.name}"/>` : ""}
+                ${recentGuess.attribution.name ? `<span class="guess-attrib-name">${recentGuess.attribution.name}</span>` : ""}
+            </span>
+        ` : "";
+        
+        // Show green count for consecutive matches, or red distance for first letter
+        let countBadge = '';
+        if (correctCount > 0) {
+            countBadge = `<span class="correct-count">${correctCount}</span>`;
+        } else if (firstLetterDist !== 0) {
+            const sign = firstLetterDist > 0 ? '+' : '';
+            countBadge = `<span class="distance-count">${sign}${firstLetterDist}</span>`;
+        }
+        
+        if (recentGuessBar) {
+            recentGuessBar.innerHTML = `
+                ${attribHtml}
+                <span class="guess-word-center">${wordHtml}</span>
+                ${countBadge}
+            `;
+            recentGuessBar.style.display = 'flex';
+        }
+    }
+
+    function renderPreviousGuesses() {
+        guessesContainer.innerHTML = "";
+        
+        if (guesses.length === 0) {
+            updateBoundaryDisplay();
+            if (recentGuessBar) recentGuessBar.style.display = 'none';
+            return;
+        }
+        
+        // Update the recent guess display
+        updateRecentGuessDisplay();
+        
+        // Sort ALL guesses by badge number first, then by absolute alphabetical distance within each number group
+        const sortedGuesses = [...guesses].sort((a, b) => {
+            const scoreA = getClosenessScore(a.word);
+            const scoreB = getClosenessScore(b.word);
+            
+            // Primary sort: by badge number (score)
+            if (scoreA !== scoreB) {
+                return scoreA - scoreB;
+            }
+            
+            // Secondary sort: by total alphabetical distance when badge numbers are same
+            const distA = getTotalAlphabeticalDistance(a.word);
+            const distB = getTotalAlphabeticalDistance(b.word);
+            
+            // Debug logging
+            if (scoreA === scoreB) {
+                console.log(`Tiebreaker: ${a.word}(${distA}) vs ${b.word}(${distB})`);
+            }
+            
+            return distA - distB;
+        });
 
         // Update closest boundaries for placeholder
+        const beforeTarget = guesses.filter(g => g.comparison === "higher").sort((a, b) => a.word.localeCompare(b.word));
+        const afterTarget = guesses.filter(g => g.comparison === "lower").sort((a, b) => a.word.localeCompare(b.word));
+        
         if (beforeTarget.length > 0) {
-            closestBefore = beforeTarget[beforeTarget.length - 1].word.toLowerCase();
+            const closest = beforeTarget[beforeTarget.length - 1];
+            closestBefore = { 
+                word: closest.word.toLowerCase(), 
+                photo: closest.attribution?.photo || null 
+            };
         } else {
-            closestBefore = "aardvark";
+            closestBefore = { word: "aardvark", photo: null };
         }
         
         if (afterTarget.length > 0) {
-            closestAfter = afterTarget[0].word.toLowerCase();
+            const closest = afterTarget[0];
+            closestAfter = { 
+                word: closest.word.toLowerCase(), 
+                photo: closest.attribution?.photo || null 
+            };
         } else {
-            closestAfter = "zulu";
+            closestAfter = { word: "zulu", photo: null };
         }
         
         updateInputPlaceholder();
+        updateBoundaryDisplay();
 
-        // Render ALL guesses before target
-        beforeTarget.forEach((guess) => {
+        // Render all guesses sorted by closeness
+        sortedGuesses.forEach((guess) => {
             const guessElement = document.createElement("div");
             guessElement.classList.add("guess-item");
 
@@ -351,7 +564,15 @@
                 guessElement.classList.add("guess-recent");
             }
 
-            const color = getClosenessColor(guess.word);
+            const letterMatches = getLetterMatches(guess.word);
+            const correctCount = countCorrectLetters(guess.word);
+            const firstLetterDist = getFirstLetterDistance(guess.word);
+            
+            // Build word with colored letters
+            const wordHtml = letterMatches.map(({letter, match}) => {
+                return `<span class="letter ${match ? 'letter-correct' : ''}">${letter.toLowerCase()}</span>`;
+            }).join('');
+            
             const attribHtml = (guess.attribution && (guess.attribution.name || guess.attribution.photo)) ? `
                 <span class="guess-attrib">
                     ${guess.attribution.photo ? `<img class="guess-attrib-photo" src="${guess.attribution.photo}" alt="${guess.attribution.name}"/>` : ""}
@@ -359,41 +580,27 @@
                 </span>
             ` : "";
 
-            guessElement.innerHTML = `
-                ${attribHtml}
-                <span class="guess-word-center">${guess.word.toLowerCase()}</span>
-                <span style="color: ${color}; font-size: 24px;">▼</span>`;
-            guessesContainerBefore.appendChild(guessElement);
-        });
-
-        // Render ALL guesses after target
-        afterTarget.forEach((guess) => {
-            const guessElement = document.createElement("div");
-            guessElement.classList.add("guess-item");
-
-            if (guess.word === mostRecentGuess) {
-                guessElement.classList.add("guess-recent");
+            // Show green count for consecutive matches, or red distance for first letter
+            let countBadge = '';
+            if (correctCount > 0) {
+                countBadge = `<span class="correct-count">${correctCount}</span>`;
+            } else if (firstLetterDist !== 0) {
+                const sign = firstLetterDist > 0 ? '+' : '';
+                countBadge = `<span class="distance-count">${sign}${firstLetterDist}</span>`;
             }
 
-            const color = getClosenessColor(guess.word);
-            const attribHtml = (guess.attribution && (guess.attribution.name || guess.attribution.photo)) ? `
-                <span class="guess-attrib">
-                    ${guess.attribution.photo ? `<img class="guess-attrib-photo" src="${guess.attribution.photo}" alt="${guess.attribution.name}"/>` : ""}
-                    ${guess.attribution.name ? `<span class="guess-attrib-name">${guess.attribution.name}</span>` : ""}
-                </span>
-            ` : "";
-
             guessElement.innerHTML = `
                 ${attribHtml}
-                <span class="guess-word-center">${guess.word.toLowerCase()}</span>
-                <span style="color: ${color}; font-size: 24px;">▲</span>`;
-            guessesContainerAfter.appendChild(guessElement);
+                <span class="guess-word-center">${wordHtml}</span>
+                ${countBadge}`;
+            guessesContainer.appendChild(guessElement);
         });
     }
 
     function updateGuessCount(c) {
         guessCountDisplay.textContent = c;
     }
+
 
     // ============================================================
     // 🧩 EVENT LISTENERS
@@ -529,8 +736,8 @@
         continueToGame.addEventListener("click", () => {
             guesses = [];
             mostRecentGuess = null;
-            guessesContainerBefore.innerHTML = "";
-            guessesContainerAfter.innerHTML = "";
+            guessesContainer.innerHTML = "";
+            if (recentGuessBar) recentGuessBar.style.display = 'none';
             updateGuessCount(0);
             loadingGame.style.display = "none";
             gameCreationUI.style.display = "block";
@@ -598,7 +805,8 @@
         if (darkToggle.checked) {
             container.classList.add('contexto-dark');
         }
-    } 
+    }
+
 
     // ============================================================
     // 🌐 EXPOSE PUBLIC API
@@ -626,6 +834,12 @@
         console.log("Success:", success);
         console.log("Words loaded:", wordsList.length);
         console.log("Time:", new Date().toISOString());
+        
+        // Initialize boundary display
+        updateBoundaryDisplay();
+        
+        // Start placeholder toggle
+        startPlaceholderToggle();
         
         // Show a visual indicator if loading failed
         if (!success || wordsList.length === 0) {

@@ -298,6 +298,7 @@ function stopConfetti() {
 
 
 function handleRealComment(user) {
+    console.log("handleRealComment called with:", user);
     // Forward TikTok comment as a guess to Wordwich
     try {
         if (window.Wordwich?.submitWord) {

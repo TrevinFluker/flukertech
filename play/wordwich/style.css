@@ -84,10 +84,55 @@
     margin-bottom: 15px;
     font-size: 18px;
     color: #3b302a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
   }
   
   .contexto .game-info .label {
     font-weight: 700;
+  }
+
+  /* Boundary words container */
+  .contexto .boundary-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    margin-top: 10px;
+  }
+
+  .contexto .boundary-word-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .contexto .boundary-photo {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 2px solid #D2606D;
+  }
+
+  .contexto .boundary-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #D2606D;
+    padding: 4px 8px;
+    background: rgba(210, 96, 109, 0.1);
+    border-radius: 4px;
+  }
+
+  .contexto-dark .boundary-label {
+    color: #D2606D;
+    background: rgba(210, 96, 109, 0.15);
+  }
+  
+  .contexto-dark .boundary-photo {
+    border-color: #D2606D;
   }
   
   .contexto .spellcheck-toggle {
@@ -101,6 +146,12 @@
   .contexto .input-container {
     position: relative;
     margin-bottom: 5px;
+    margin-top: 4px;
+  }
+
+  /* Recent guess bar - matches guess-item exactly */
+  .contexto .recent-guess-bar {
+    margin-bottom: 5px;
   }
   
   .contexto .word-input {
@@ -108,19 +159,48 @@
     padding: 15px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 18px;
+    font-size: 16px;
     outline: none;
+  }
+
+  .contexto .custom-placeholder {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #999;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .contexto .custom-placeholder.hidden {
+    display: none;
+  }
+
+  .contexto .custom-placeholder .boundary-word-text {
+    color: #D2606D !important;
+  }
+
+  .contexto-dark .custom-placeholder {
+    color: #888;
+  }
+
+  .contexto-dark .custom-placeholder .boundary-word-text {
+    color: #D2606D !important;
   }
   
   .contexto .guesses-container {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    margin-top: 10px;
   }
   
   .contexto .guess-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 0px 15px;
     border-radius: 5px;
     font-size: 18px;
@@ -128,20 +208,64 @@
     overflow: hidden;
     color: #333;
     z-index: 0;
+    min-height: 43px;
   }
 
-  /* Boundary words styling */
-  .contexto .boundary-word {
-    background: #f0f0f0;
-    opacity: 0.7;
-    justify-content: center;
-    min-height: 43px;
-    padding: 10px 15px;
+  /* Letter styling for matches */
+  .contexto .guess-word-center .letter {
+    display: inline-block;
+    transition: color 0.3s ease;
   }
-  .contexto-dark .boundary-word {
-    background: #252525;
-    border-color: #555;
+
+  .contexto .guess-word-center .letter-correct {
+    color: #538d4e !important;
+    font-weight: 900;
   }
+
+  .contexto-dark .guess-word-center .letter-correct {
+    color: #6aaa64 !important;
+  }
+
+  /* Correct letter count badge (green) */
+  .contexto .correct-count {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #538d4e;
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 12px;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .contexto-dark .correct-count {
+    background: #6aaa64;
+  }
+
+  /* First letter distance badge (red) */
+  .contexto .distance-count {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #d32f2f;
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 12px;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .contexto-dark .distance-count {
+    background: #f44336;
+  }
+
 
   /* Only the most recent guess has a border; others have none */
   .contexto-dark .guess-recent { border-color: #ffffff; }
@@ -160,7 +284,7 @@
     object-fit: cover;
   }
   .contexto .guess-attrib-name {
-    max-width: 140px;
+    max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -172,7 +296,7 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    font-size: 18px;
+    font-size: 19px;
     color: #333;
   }
 

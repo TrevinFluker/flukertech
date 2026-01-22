@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
     BOARD_WIDTH: "wwBoardWidth",
     KEYBOARD_VISIBILITY_OFF: "wwKeyboardVisibilityOff",
     STREAK_VISIBILITY: "wwStreakVisibility",
+    VISIBLE_ROWS: "wwVisibleRows", // For Wordwich row count display
 
     // Simulation
     SIMULATE_GUESSES: "wwSimulateGuesses",
@@ -98,6 +99,9 @@ function getKeyboardVisibilityOff() { return getItem(STORAGE_KEYS.KEYBOARD_VISIB
 
 function saveStreakVisibility(val) { saveItem(STORAGE_KEYS.STREAK_VISIBILITY, val); }
 function getStreakVisibility() { return getItem(STORAGE_KEYS.STREAK_VISIBILITY, true); }
+
+function saveVisibleRows(rows) { saveItem(STORAGE_KEYS.VISIBLE_ROWS, rows); }
+function getVisibleRows() { return getItem(STORAGE_KEYS.VISIBLE_ROWS, 5); }
 
 // --- Simulation ---
 function saveSimulateGuesses(val) { saveItem(STORAGE_KEYS.SIMULATE_GUESSES, val); }

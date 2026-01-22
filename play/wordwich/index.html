@@ -33,26 +33,26 @@
       <div class="error" id="errorMessage"></div>
       <div id="loading" style="display: none;">Loading game data...</div>
       
-      <!-- Hardcoded boundary: aardvark (top boundary - before all guesses) -->
-      <div class="guess-item boundary-word">
-        <span class="guess-word-center">aardvark</span>
+      <!-- Boundary words above input -->
+      <div class="boundary-container">
+        <div class="boundary-word-inline">
+          <span class="boundary-label">aardvark</span>
+        </div>
+        <div class="boundary-word-inline">
+          <span class="boundary-label">zulu</span>
+        </div>
       </div>
       
-      <!-- Guesses before the target word (need to go higher) -->
-      <div class="guesses-container" id="guessesContainerBefore"></div>
-      
-      <!-- Input positioned between the guess groups -->
+      <!-- Input positioned above guesses -->
       <div class="input-container">
         <input type="text" class="word-input" id="wordInput" placeholder="type a word">
       </div>
       
-      <!-- Guesses after the target word (need to go lower) -->
-      <div class="guesses-container" id="guessesContainerAfter"></div>
+      <!-- Most recent guess display -->
+      <div class="recent-guess-bar guess-item" id="recentGuessBar" style="display: none;"></div>
       
-      <!-- Hardcoded boundary: zulu (bottom boundary - after all guesses) -->
-      <div class="guess-item boundary-word">
-        <span class="guess-word-center">zulu</span>
-      </div>
+      <!-- Single guess container sorted by closeness -->
+      <div class="guesses-container" id="guessesContainer"></div>
     </div>
 
     <!-- WORDWICH MENU OVERLAY -->
@@ -70,12 +70,16 @@
         <div class="how-to-play-content">
           <p><strong>Find the secret word. You have unlimited guesses.</strong></p>
         </br>
-          <p><strong>After each guess, you'll be told if the secret word comes HIGHER or LOWER alphabetically.</strong></p>
+          <p><strong>After each guess, you'll see which letters match:</strong></p>
+          <p style="margin-left: 20px;"><span style="color: #538d4e; font-weight: 900;">Green letters</span> are in the correct position from the start</p>
+          <p style="margin-left: 20px;">Normal letters are not in the correct position</p>
         </br>
-          <p><strong>Use the clues to narrow down the word - it's like playing a guessing game with the alphabet!</strong></p>
+          <p><strong>Number badges show your progress:</strong></p>
+          <p style="margin-left: 20px;"><span style="background: #538d4e; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800;">Green number</span> = consecutive correct letters</p>
+          <p style="margin-left: 20px;"><span style="background: #d32f2f; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800;">Red number</span> = how many letters away your first letter is</p>
         </br>
-          <p><strong>Example: If you guess "MUSIC" and see "⬇️ LOWER", the secret word comes before MUSIC alphabetically (like "APPLE" or "BRIDGE").</strong></p>
-        </br>
+          <p><strong>Guesses are sorted from closest to farthest!</strong></p>
+          <p style="margin-left: 20px;">The top guess is your closest match so far.</p>
         </div>
       </div>
     </div>
@@ -356,6 +360,7 @@ There are single player and group modes.</textarea>
 
   <!-- Scripts -->
   <script src="storage.js"></script>
+  <script src="a.js"></script>
   <script src="wordwichGame.js"></script> 
   <script src="gameManager.js"></script>
   <script src="settingsPanel.js"></script>
