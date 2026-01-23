@@ -16,12 +16,14 @@
       <div class="header">
         <div class="title-container">
           
-          <div class="title">WORDWICH</div>
+          <div class="title" style="padding-left: 36px;">WORDWICH</div>
           &nbsp;
           <img src="https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png" alt="Wordwich" class="interactive-logo">
         </div>
         <button class="menu-button" id="menuButton" style="width: 30px;">⋮</button>
       </div>
+
+      <div class="subtitle" style="font-size: 20px;">Can you find the secret word?</div>
 
       <div class="game-info">
         <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span>
@@ -31,28 +33,18 @@
       </div>
 
       <div class="error" id="errorMessage"></div>
-      <div id="loading" style="display: none;">Loading game data...</div>
+      <div id="loading" style="display: none; text-align: center;">Loading game data...</div>
       
-      <!-- Boundary words above input -->
-      <div class="boundary-container">
-        <div class="boundary-word-inline">
-          <span class="boundary-label">aardvark</span>
-        </div>
-        <div class="boundary-word-inline">
-          <span class="boundary-label">zulu</span>
-        </div>
-      </div>
+      <!-- Guesses before target (above input) -->
+      <div class="guesses-container" id="guessesContainerBefore"></div>
       
-      <!-- Input positioned above guesses -->
+      <!-- Input positioned between guess containers -->
       <div class="input-container">
         <input type="text" class="word-input" id="wordInput" placeholder="type a word">
       </div>
       
-      <!-- Most recent guess display -->
-      <div class="recent-guess-bar guess-item" id="recentGuessBar" style="display: none;"></div>
-      
-      <!-- Single guess container sorted by closeness -->
-      <div class="guesses-container" id="guessesContainer"></div>
+      <!-- Guesses after target (below input) -->
+      <div class="guesses-container" id="guessesContainerAfter"></div>
     </div>
 
     <!-- WORDWICH MENU OVERLAY -->
@@ -73,10 +65,6 @@
           <p><strong>After each guess, you'll see which letters match:</strong></p>
           <p style="margin-left: 20px;"><span style="color: #538d4e; font-weight: 900;">Green letters</span> are in the correct position from the start</p>
           <p style="margin-left: 20px;">Normal letters are not in the correct position</p>
-        </br>
-          <p><strong>Number badges show your progress:</strong></p>
-          <p style="margin-left: 20px;"><span style="background: #538d4e; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800;">Green number</span> = consecutive correct letters</p>
-          <p style="margin-left: 20px;"><span style="background: #d32f2f; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800;">Red number</span> = how many letters away your first letter is</p>
         </br>
           <p><strong>Guesses are sorted from closest to farthest!</strong></p>
           <p style="margin-left: 20px;">The top guess is your closest match so far.</p>
@@ -140,6 +128,14 @@
         <div class="setting-item">
           <label for="contextoDarkToggle">Dark Mode:</label>
           <input type="checkbox" id="contextoDarkToggle" class="setting-checkbox">
+        </div>
+        <div class="setting-item">
+          <label for="visible-rows">Visible Rows:</label>
+          <div class="number-input-container">
+            <button class="number-input-btn" id="decrease-visible-rows">-</button>
+            <input type="number" id="visible-rows" class="setting-input" value="5" min="5" max="12">
+            <button class="number-input-btn" id="increase-visible-rows">+</button>
+          </div>
         </div>
         <!-- Custom Game Creator -->
         <div class="setting-item" id="gameCreationUI">

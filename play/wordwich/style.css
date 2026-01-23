@@ -1,6 +1,10 @@
 /* =======================================================
    🎨 CONTEXTO STYLES (NAMESPACED)
    ======================================================= */
+  :root {
+    --max-container-height: 240px; /* Default: 5 rows * 48px */
+  }
+  
   .contexto * {
     box-sizing: border-box;
     margin: 0;
@@ -18,7 +22,7 @@
   }
 
   .contexto {
-    background-color: #f8f4ed;
+    background-color: #ffffff;
     display: flex;
     justify-content: center;
     padding: 20px;
@@ -31,6 +35,9 @@
     background-color: #15202b !important;
   }
   .contexto-dark * {
+    color: #ffffff !important;
+  }
+  .contexto-dark .subtitle {
     color: #ffffff !important;
   }
   
@@ -72,6 +79,15 @@
     color: #3b302a;
   }
   
+  .contexto .subtitle {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #3b302a;
+    margin-top: 10px;
+    margin-bottom: 15px;
+  }
+  
   .contexto .menu-button {
     background: none;
     border: none;
@@ -82,10 +98,11 @@
   
   .contexto .game-info {
     margin-bottom: 15px;
-    font-size: 18px;
+    font-size: 12px;
     color: #3b302a;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     flex-wrap: wrap;
   }
@@ -94,46 +111,6 @@
     font-weight: 700;
   }
 
-  /* Boundary words container */
-  .contexto .boundary-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-    margin-top: 10px;
-  }
-
-  .contexto .boundary-word-inline {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .contexto .boundary-photo {
-    width: 30px;
-    height: 30px;
-    border-radius: 4px;
-    object-fit: cover;
-    border: 2px solid #D2606D;
-  }
-
-  .contexto .boundary-label {
-    font-size: 16px;
-    font-weight: 600;
-    color: #D2606D;
-    padding: 4px 8px;
-    background: rgba(210, 96, 109, 0.1);
-    border-radius: 4px;
-  }
-
-  .contexto-dark .boundary-label {
-    color: #D2606D;
-    background: rgba(210, 96, 109, 0.15);
-  }
-  
-  .contexto-dark .boundary-photo {
-    border-color: #D2606D;
-  }
   
   .contexto .spellcheck-toggle {
     cursor: pointer;
@@ -146,12 +123,7 @@
   .contexto .input-container {
     position: relative;
     margin-bottom: 5px;
-    margin-top: 4px;
-  }
-
-  /* Recent guess bar - matches guess-item exactly */
-  .contexto .recent-guess-bar {
-    margin-bottom: 5px;
+    margin-top: 10px;
   }
   
   .contexto .word-input {
@@ -195,6 +167,32 @@
     flex-direction: column;
     gap: 5px;
     margin-top: 10px;
+    height: var(--max-container-height);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #c0bdb8 transparent;
+  }
+  
+  .contexto .guesses-container::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .contexto .guesses-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .contexto .guesses-container::-webkit-scrollbar-thumb {
+    background-color: #c0bdb8;
+    border-radius: 4px;
+  }
+  
+  .contexto-dark .guesses-container {
+    scrollbar-color: #4a5568 transparent;
+  }
+  
+  .contexto-dark .guesses-container::-webkit-scrollbar-thumb {
+    background-color: #4a5568;
   }
   
   .contexto .guess-item {
@@ -209,6 +207,7 @@
     color: #333;
     z-index: 0;
     min-height: 43px;
+    background-color: #ebe8e0;
   }
 
   /* Letter styling for matches */
@@ -226,8 +225,9 @@
     color: #6aaa64 !important;
   }
 
-  /* Correct letter count badge (green) */
+  /* Correct letter count badge (green) - HIDDEN */
   .contexto .correct-count {
+    display: none;
     position: absolute;
     right: 15px;
     top: 50%;
@@ -246,8 +246,9 @@
     background: #6aaa64;
   }
 
-  /* First letter distance badge (red) */
+  /* First letter distance badge (red) - HIDDEN */
   .contexto .distance-count {
+    display: none;
     position: absolute;
     right: 15px;
     top: 50%;
@@ -307,6 +308,10 @@
   /* Ensure recent guess has white border in dark mode */
   .contexto-dark .guess-recent {
     border: 3px solid #ffffff;
+  }
+  
+  .contexto-dark .guess-item {
+    background-color: #1a2634;
   }
   
   .contexto .progress-bar {
@@ -981,6 +986,11 @@ body.dark-mode .leaderboard-empty {
     align-items: center;
     gap: 8px;
   }
+  #wordInput {
+    height:40px;
+    
+  }
+
   .settings-panel #customWordInput {
     background-color: #2a2a2c;
     color: #ffffff;

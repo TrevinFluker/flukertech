@@ -25,6 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Game settings
     const languageSelect = document.getElementById("language-select");
   const clearLeaderboardBtn = document.getElementById("clear-leaderboard");
+  const visibleRows = document.getElementById("visible-rows");
+  const decVisibleRows = document.getElementById("decrease-visible-rows");
+  const incVisibleRows = document.getElementById("increase-visible-rows");
   
     // Simulate
     const simulateGuesses = document.getElementById("simulate-guesses");
@@ -70,6 +73,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // ---------- Populate from storage on load ----------
   if (languageSelect) languageSelect.value = getLanguage();
     if (simulateGuesses) simulateGuesses.checked = !!getSimulateGuesses();
+    if (visibleRows) {
+      visibleRows.value = getVisibleRows();
+      updateContainerHeights(getVisibleRows());
+    }
   
     if (winningSoundUrl) winningSoundUrl.value = getWinningSoundUrl() || winningSoundUrl.value || "";
     if (winningModalDuration) winningModalDuration.value = getWinningModalDuration();
@@ -116,8 +123,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   
     // ---------- Persist on change ----------
+    const clamp = (num, min, max) => Math.max(min, Math.min(max, num));
+    
     if (languageSelect) {
       languageSelect.addEventListener("change", () => saveLanguage(languageSelect.value));
+    }
+  
+    if (visibleRows) {
+      const updateVisibleRows = () => {
+        const val = clamp(parseInt(visibleRows.value || "5", 10), 5, 12);
+        visibleRows.value = val;
+        saveVisibleRows(val);
+        updateContainerHeights(val);
+      };
+      visibleRows.addEventListener("input", updateVisibleRows);
+      if (decVisibleRows) decVisibleRows.addEventListener("click", () => {
+        visibleRows.value = clamp(Number(visibleRows.value) - 1, 5, 12);
+        saveVisibleRows(Number(visibleRows.value));
+        updateContainerHeights(Number(visibleRows.value));
+      });
+      if (incVisibleRows) incVisibleRows.addEventListener("click", () => {
+        visibleRows.value = clamp(Number(visibleRows.value) + 1, 5, 12);
+        saveVisibleRows(Number(visibleRows.value));
+        updateContainerHeights(Number(visibleRows.value));
+      });
     }
   
     if (simulateGuesses) {
@@ -127,7 +156,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (winningSoundUrl) {
       winningSoundUrl.addEventListener("input", () => saveWinningSoundUrl(winningSoundUrl.value.trim()));
     }
-    const clamp = (num, min, max) => Math.max(min, Math.min(max, num));
   
     if (winningModalDuration) {
       const updateWinDur = () => {
@@ -297,6 +325,14 @@ document.addEventListener("DOMContentLoaded", () => {
           } catch (e) {}
         }
       });
+    }
+    
+    // ---------- Update container heights based on visible rows ----------
+    function updateContainerHeights(rows) {
+      const rowHeight = 48; // 43px min-height + 5px gap
+      const maxHeight = rowHeight * rows;
+      const style = document.documentElement.style;
+      style.setProperty('--max-container-height', `${maxHeight}px`);
     }
   });
   
