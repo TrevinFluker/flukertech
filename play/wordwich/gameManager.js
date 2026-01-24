@@ -11,6 +11,9 @@ function initGame() {
     hideInstructionPopup();
     clearMessage();
   
+    const hintDisplay = document.getElementById('hintDisplay');
+    if (hintDisplay) hintDisplay.style.display = 'none';
+  
     if (getInstructionActive()) {
       showInstructionPopup(
         getInstructionText(),
@@ -310,10 +313,11 @@ function handleRealComment(user) {
 }
 
 function handleRealGift(user) {
-    // Gifts currently not used for hints in Wordwich
     try {
         console.log("Gift received:", user);
-        // Future: Could add gift-based hints here
+        if (window.Wordwich?.processGift) {
+            window.Wordwich.processGift(user);
+        }
     } catch (e) {
         console.warn("Failed to process gift:", e);
     }

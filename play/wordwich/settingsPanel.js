@@ -78,6 +78,10 @@ document.addEventListener("DOMContentLoaded", () => {
       updateContainerHeights(getVisibleRows());
     }
   
+    // Hint gift name
+    const hintGiftName = document.getElementById("hint-gift-name");
+    if (hintGiftName) hintGiftName.value = getHintGiftName() || "";
+  
     if (winningSoundUrl) winningSoundUrl.value = getWinningSoundUrl() || winningSoundUrl.value || "";
     if (winningModalDuration) winningModalDuration.value = getWinningModalDuration();
   
@@ -151,6 +155,17 @@ document.addEventListener("DOMContentLoaded", () => {
   
     if (simulateGuesses) {
       simulateGuesses.addEventListener("change", () => saveSimulateGuesses(simulateGuesses.checked));
+    }
+  
+    // Hint gift name
+    if (hintGiftName) {
+      hintGiftName.addEventListener("input", () => {
+        saveHintGiftName(hintGiftName.value.trim());
+        // Restart placeholder toggle when hint gift name changes
+        if (window.Wordwich?.restartPlaceholderToggle) {
+          window.Wordwich.restartPlaceholderToggle();
+        }
+      });
     }
   
     if (winningSoundUrl) {

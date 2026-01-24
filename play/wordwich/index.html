@@ -26,8 +26,8 @@
       <div class="subtitle" style="font-size: 20px;">Can you find the secret word?</div>
 
       <div class="game-info">
-        <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span>
-        <span class="label" style="font-size: 14px;">LAST WORD:</span> <span id="lastWord"></span>
+        <span class="label" style="font-size: 14px;">GUESSES:</span> <span style="font-size: 16px;" id="guessCount">0</span>
+        <span class="label" style="font-size: 14px;">LAST WORD:</span> <span style="font-size: 16px;" id="lastWord"></span>
         <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" id="spellcheckToggle" class="spellcheck-toggle" alt="Toggle Spellcheck">
         <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" id="dupesToggle" class="spellcheck-toggle" alt="Toggle Duplicate Guesses">
       </div>
@@ -36,7 +36,10 @@
       <div id="loading" style="display: none; text-align: center;">Loading game data...</div>
       
       <!-- Guesses before target (above input) -->
-      <div class="guesses-container" id="guessesContainerBefore"></div>
+      <div class="guesses-container before-container" id="guessesContainerBefore"></div>
+      
+      <!-- Hint display directly above input -->
+      <div id="hintDisplay" class="hint-display" style="display: none;"></div>
       
       <!-- Input positioned between guess containers -->
       <div class="input-container">
@@ -44,7 +47,7 @@
       </div>
       
       <!-- Guesses after target (below input) -->
-      <div class="guesses-container" id="guessesContainerAfter"></div>
+      <div class="guesses-container after-container" id="guessesContainerAfter"></div>
     </div>
 
     <!-- WORDWICH MENU OVERLAY -->
@@ -62,12 +65,13 @@
         <div class="how-to-play-content">
           <p><strong>Find the secret word. You have unlimited guesses.</strong></p>
         </br>
-          <p><strong>After each guess, you'll see which letters match:</strong></p>
-          <p style="margin-left: 20px;"><span style="color: #538d4e; font-weight: 900;">Green letters</span> are in the correct position from the start</p>
-          <p style="margin-left: 20px;">Normal letters are not in the correct position</p>
-        </br>
           <p><strong>Guesses are sorted from closest to farthest!</strong></p>
-          <p style="margin-left: 20px;">The top guess is your closest match so far.</p>
+          <p style="margin-left: 20px;">Words closest to the guess bar are alphabetically closer to the secret word.</p>
+        </br>
+          <p><strong>After each guess, you'll see which letters match:</strong></p>
+          <p style="margin-left: 20px;"><span style="color: #538d4e; font-weight: 900;">Green letters</span> are in the correct position from the start of the word</p>
+          <p style="margin-left: 20px;">If a word has no green letters, the secret word begins with a different letter.</p>
+
         </div>
       </div>
     </div>
@@ -177,6 +181,10 @@
             <option value="en" selected>English</option>
             <!-- <option value="es">Español</option> -->
           </select>
+        </div>
+        <div class="setting-item">
+          <label for="hint-gift-name">Gift Name for Hints:</label>
+          <input type="text" id="hint-gift-name" class="setting-input-wide" placeholder="e.g., Rose">
         </div>
       </div>
     </div>

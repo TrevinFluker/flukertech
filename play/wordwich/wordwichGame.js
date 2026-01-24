@@ -13,6 +13,9 @@
     let allowDuplicates = true;
     let suggestedWord = "";
     let winnerDeclared = false; // prevent multiple winners per round
+    let hintDisplayed = false; // Track if hint shown this round
+    let placeholderToggleInterval = null; // Track placeholder toggle interval
+    let showingHintPlaceholder = false; // Track which placeholder is showing
     
     // Boundary words with attribution
     let closestBefore = { word: "aardvark", photo: null };
@@ -103,12 +106,16 @@
         guesses = [];
         mostRecentGuess = null;
         winnerDeclared = false;
+        hintDisplayed = false;
         closestBefore = { word: "aardvark", photo: null };
         closestAfter = { word: "zulu", photo: null };
         if (guessesContainerBefore) guessesContainerBefore.innerHTML = "";
         if (guessesContainerAfter) guessesContainerAfter.innerHTML = "";
         loadingElement.style.display = "block";
         errorMessageElement.style.display = "none";
+        
+        // Stop any existing placeholder toggle
+        stopPlaceholderToggle();
         updateInputPlaceholder();
 
         try {
@@ -131,6 +138,10 @@
 
             loadingElement.style.display = "none";
             updateGuessCount(0);
+            
+            // Start placeholder toggle
+            startPlaceholderToggle();
+            
             console.log("Game initialized successfully");
             return true;
         } catch (error) {
@@ -150,6 +161,9 @@
         if (guessesContainerBefore) guessesContainerBefore.innerHTML = "";
         if (guessesContainerAfter) guessesContainerAfter.innerHTML = "";
         errorMessageElement.style.display = "none";
+        
+        // Stop any existing placeholder toggle
+        stopPlaceholderToggle();
         updateInputPlaceholder();
 
         const upperWord = word.toUpperCase();
@@ -163,6 +177,10 @@
         winnerDeclared = false;
         if (window.SettingsPanel) window.SettingsPanel.setCurrentAnswer(targetWord);
         updateGuessCount(0);
+        
+        // Start placeholder toggle
+        startPlaceholderToggle();
+        
         return true;
     }
 
@@ -258,7 +276,62 @@
 
     function updateInputPlaceholder() {
         if (wordInput) {
-            wordInput.placeholder = `The word is alphabetically between '${closestBefore.word}' and '${closestAfter.word}'`;
+            if (showingHintPlaceholder) {
+                // Show hint placeholder
+                const hintGiftName = typeof getHintGiftName === 'function' ? getHintGiftName() : '';
+                wordInput.placeholder = `${hintGiftName} for hint`;
+            } else {
+                // Show normal placeholder
+                wordInput.placeholder = `The word is alphabetically between '${closestBefore.word}' and '${closestAfter.word}'`;
+            }
+        }
+    }
+    
+    function startPlaceholderToggle() {
+        // Clear any existing interval
+        if (placeholderToggleInterval) {
+            clearInterval(placeholderToggleInterval);
+            placeholderToggleInterval = null;
+        }
+        
+        // Only start if hint gift name is set
+        const hintGiftName = typeof getHintGiftName === 'function' ? getHintGiftName() : '';
+        if (!hintGiftName || !hintGiftName.trim()) {
+            showingHintPlaceholder = false;
+            updateInputPlaceholder();
+            return;
+        }
+        
+        // Reset to normal placeholder initially
+        showingHintPlaceholder = false;
+        updateInputPlaceholder();
+        
+        // Toggle every 4 seconds
+        placeholderToggleInterval = setInterval(() => {
+            // Fade out
+            if (wordInput) {
+                wordInput.style.opacity = '0';
+                
+                // Change text after fade out (250ms)
+                setTimeout(() => {
+                    showingHintPlaceholder = !showingHintPlaceholder;
+                    updateInputPlaceholder();
+                    
+                    // Fade in
+                    wordInput.style.opacity = '1';
+                }, 250);
+            }
+        }, 4000);
+    }
+    
+    function stopPlaceholderToggle() {
+        if (placeholderToggleInterval) {
+            clearInterval(placeholderToggleInterval);
+            placeholderToggleInterval = null;
+        }
+        showingHintPlaceholder = false;
+        if (wordInput) {
+            wordInput.style.opacity = '1';
         }
     }
     
@@ -375,12 +448,26 @@
             }
 
             renderPreviousGuesses();
-            wordInput.value = "";
+            
+            // Only clear input if this was the host's guess
+            if (user.uniqueId === "host") {
+                wordInput.value = "";
+                
+                // Remove has-text class to show fake cursor again
+                const inputContainer = document.querySelector('.input-container');
+                if (inputContainer) {
+                    inputContainer.classList.remove('has-text');
+                }
+            }
 
             if (result.comparison === "correct") {
                 if (winnerDeclared) return;
                 lastWord.textContent = result.word;
                 winnerDeclared = true;
+                
+                // Stop placeholder toggle when game ends
+                stopPlaceholderToggle();
+                
                 if (window.GameManager) {
                     window.GameManager.endRound("win", [{ 
                         name: user.nickname || user.username, 
@@ -506,6 +593,8 @@
     // 🧩 EVENT LISTENERS
     // ============================================================
     if (wordInput) {
+        const inputContainer = document.querySelector('.input-container');
+        
         wordInput.addEventListener("keypress", (e) => {
             if (e.key === "Enter") submitWord({
                 comment: wordInput.value,
@@ -515,6 +604,20 @@
                 photoUrl: "https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png"
             });
         });
+        
+        // Toggle fake cursor based on input content
+        wordInput.addEventListener('input', () => {
+            if (wordInput.value.length > 0) {
+                inputContainer.classList.add('has-text');
+            } else {
+                inputContainer.classList.remove('has-text');
+            }
+        });
+        
+        // Initialize on load
+        if (wordInput.value.length > 0) {
+            inputContainer.classList.add('has-text');
+        }
     }
 
     if (menuButton) menuButton.addEventListener("click", () => (menuOverlay.style.display = "flex"));
@@ -709,6 +812,62 @@
 
 
     // ============================================================
+    // 🎁 GIFT PROCESSING
+    // ============================================================
+    async function processGift(user) {
+        try {
+            // Only allow one hint per round
+            if (hintDisplayed) return;
+            
+            // Check if gift name matches configured hint gift
+            const savedGiftName = (typeof getHintGiftName === 'function' ? getHintGiftName() : '').trim().toLowerCase();
+            const incomingGiftName = String(user?.giftName || '').trim().toLowerCase();
+            
+            if (!savedGiftName || !incomingGiftName || incomingGiftName !== savedGiftName) {
+                return;
+            }
+            
+            // Get current target word
+            if (!targetWord) return;
+            
+            // Fetch hint from JSON
+            const response = await fetch('/play/wordwich/hints_output.json');
+            if (!response.ok) return;
+            
+            const hints = await response.json();
+            const hint = hints[targetWord.toLowerCase()];
+            
+            if (hint) {
+                showHint(hint, user);
+                hintDisplayed = true;
+            }
+        } catch (e) {
+            console.warn('Failed to process gift hint:', e);
+        }
+    }
+
+    function showHint(hintText, user) {
+        const hintDisplay = document.getElementById('hintDisplay');
+        if (!hintDisplay) return;
+        
+        const attribHtml = (user && (user.nickname || user.username || user.photoUrl)) ? `
+            <span class="hint-attrib">
+                ${user.photoUrl ? `<img class="hint-attrib-photo" src="${user.photoUrl}" alt="${user.nickname || user.username}"/>` : ''}
+                ${user.nickname || user.username ? `<span class="hint-attrib-name">${user.nickname || user.username}</span>` : ''}
+            </span>
+        ` : '';
+        
+        hintDisplay.innerHTML = `
+            <span class="hint-icon">💡</span>
+            ${attribHtml}
+            <span class="hint-text">${hintText}</span>
+        `;
+        
+        hintDisplay.style.display = 'flex';
+    }
+
+
+    // ============================================================
     // 🌐 EXPOSE PUBLIC API
     // ============================================================
     window.Wordwich = {
@@ -720,7 +879,14 @@
         renderPreviousGuesses,
         updateGuessCount,
         getState: () => ({ targetWord, guesses, wordsList }),
-        loadWordsList
+        loadWordsList,
+        processGift,
+        startPlaceholderToggle,
+        stopPlaceholderToggle,
+        restartPlaceholderToggle: () => {
+            stopPlaceholderToggle();
+            startPlaceholderToggle();
+        }
     };
 
     // Initialize by loading words list
