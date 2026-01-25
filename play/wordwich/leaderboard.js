@@ -52,9 +52,9 @@ function getLeaderboard() {
   
   function clearLeaderboard() {
     localStorage.removeItem(WW_LEADERBOARD_KEY);
+    currentLeaderboardPage = 1; // Reset to first page
+    updateFloatingLeaderboard(); // Update the UI
     showToast("Leaderboard cleared!");
-    updateFloatingLeaderboard();
-    location.reload();
   }
   
   // --- Floating leaderboard DOM refs ---

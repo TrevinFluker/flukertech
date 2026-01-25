@@ -326,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Clear leaderboard
     if (clearLeaderboardBtn) {
       clearLeaderboardBtn.addEventListener("click", () => {
-        const confirmed = window.confirm("Clear the leaderboard? This cannot be undone.\nReload the page to see the change.");
+        const confirmed = window.confirm("Clear the leaderboard? This cannot be undone.");
         if (!confirmed) return;
         if (window.Leaderboard && typeof window.Leaderboard.clearLeaderboard === 'function') {
           window.Leaderboard.clearLeaderboard();
