@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Space Invaders</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="leftControls">
+        <div id="soundControls" class="control-section">
+            <h3>SOUNDS</h3>
+            <div class="sound-option">
+                <label for="shootSound">Shoot:</label>
+                <select id="shootSound" class="sound-select">
+                    <option value="laser1">Laser</option>
+                    <option value="laser2">Laser 2</option>
+                    <option value="pew">Pew (Soft)</option>
+                    <option value="zap">Zap (Sharp)</option>
+                    <option value="silent">Silent</option>
+                </select>
+            </div>
+            <div class="sound-option">
+                <label for="hitSound">Hit:</label>
+                <select id="hitSound" class="sound-select">
+                    <option value="blip1">Blip</option>
+                    <option value="blip2">Blip 2 (Soft)</option>
+                    <option value="ping">Ping</option>
+                    <option value="tap">Tap (Subtle)</option>
+                    <option value="silent">Silent</option>
+                </select>
+            </div>
+            <div class="sound-option">
+                <label for="explosionSound">Explosion:</label>
+                <select id="explosionSound" class="sound-select">
+                    <option value="boom1">Boom</option>
+                    <option value="boom2">Boom 2 (Deep)</option>
+                    <option value="crunch">Crunch</option>
+                    <option value="silent">Silent</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="weaponControls" class="control-section">
+            <h3>WEAPONS</h3>
+            <button id="singleShot" class="weapon-btn active">Single Shot</button>
+            <button id="doubleShot" class="weapon-btn">Double Shot</button>
+            <button id="tripleShot" class="weapon-btn">Triple Shot</button>
+        </div>
+        
+        <div id="enemyControls" class="control-section">
+            <h3>ENEMIES</h3>
+            <button id="spawnBoss" class="enemy-btn">Spawn Boss (30 HP)</button>
+            <button id="spawnWeaver" class="enemy-btn weaver-btn">Spawn Weaver (4 HP)</button>
+        </div>
+    </div>
+    
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div>SCORE: <span id="score">0</span></div>
+        </div>
+        <div id="gameOver">
+            GAME OVER
+            <div>Press R to Restart</div>
+            <a href="https://RunChatCapture.com" target="_blank" id="runChatLink">RunChatCapture.com</a>
+        </div>
+        <div id="instructions">
+            ARROW KEYS to Move | SPACE to Shoot
+        </div>
+    </div>
+    
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>

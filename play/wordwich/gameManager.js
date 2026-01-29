@@ -324,9 +324,23 @@ function handleRealGift(user) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Load persisted settings and start the first round
-    initGame();
-    if (window.Wordwich?.initGame) window.Wordwich.initGame();
+    // Check if tutorial should run
+    const tutorialSeen = getTutorialSeen();
+    console.log("Tutorial check:", { tutorialSeen, tutorialAvailable: !!window.Tutorial });
+    
+    if (!tutorialSeen && window.Tutorial) {
+        console.log("Starting tutorial...");
+        // Tutorial will initialize the game after completion
+        setTimeout(() => {
+            if (window.Wordwich?.initGame) window.Wordwich.initGame();
+            window.Tutorial.start();
+        }, 500);
+    } else {
+        console.log("Skipping tutorial, loading normal game...");
+        // Load persisted settings and start the first round
+        initGame();
+        if (window.Wordwich?.initGame) window.Wordwich.initGame();
+    }
 });
 
 // ----------------------------

@@ -81,6 +81,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Hint gift name
     const hintGiftName = document.getElementById("hint-gift-name");
     if (hintGiftName) hintGiftName.value = getHintGiftName() || "";
+
+    // Tutorial toggle
+    const tutorialSeenToggle = document.getElementById("tutorial-seen-toggle");
+    if (tutorialSeenToggle) tutorialSeenToggle.checked = !!getTutorialSeen();
   
     if (winningSoundUrl) winningSoundUrl.value = getWinningSoundUrl() || winningSoundUrl.value || "";
     if (winningModalDuration) winningModalDuration.value = getWinningModalDuration();
@@ -164,6 +168,26 @@ document.addEventListener("DOMContentLoaded", () => {
         // Restart placeholder toggle when hint gift name changes
         if (window.Wordwich?.restartPlaceholderToggle) {
           window.Wordwich.restartPlaceholderToggle();
+        }
+      });
+    }
+
+    // Tutorial toggle
+    if (tutorialSeenToggle) {
+      tutorialSeenToggle.addEventListener("change", () => {
+        if (!tutorialSeenToggle.checked) {
+          // User wants to watch tutorial again
+          const confirmed = window.confirm("This will reload the page to show the tutorial again. Continue?");
+          if (confirmed) {
+            saveTutorialSeen(false);
+            window.location.reload();
+          } else {
+            // User cancelled, restore checkbox state
+            tutorialSeenToggle.checked = true;
+          }
+        } else {
+          // User is marking tutorial as seen
+          saveTutorialSeen(true);
         }
       });
     }

@@ -57,7 +57,9 @@ const STORAGE_KEYS = {
     // Game integrations
     HINT_GIFT_NAME: "wwHintGiftName",
     // Leaderboard
-    LEADERBOARD: "wwGameLeaderboard"
+    LEADERBOARD: "wwGameLeaderboard",
+    // Tutorial
+    TUTORIAL_SEEN: "wwSeenTutorial"
 };
 
 // --- Generic helpers ---
@@ -207,3 +209,7 @@ function getDarkModeEnabled() { return getItem(STORAGE_KEYS.DARK_MODE, false); }
 // --- Game integrations ---
 function saveHintGiftName(value) { saveItem(STORAGE_KEYS.HINT_GIFT_NAME, String(value || "")); }
 function getHintGiftName() { return getItem(STORAGE_KEYS.HINT_GIFT_NAME, ""); }
+
+// --- Tutorial ---
+function saveTutorialSeen(val) { saveItem(STORAGE_KEYS.TUTORIAL_SEEN, val); }
+function getTutorialSeen() { return getItem(STORAGE_KEYS.TUTORIAL_SEEN, false); }

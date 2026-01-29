@@ -866,6 +866,38 @@
         hintDisplay.style.display = 'flex';
     }
 
+    // ============================================================
+    // 🎓 TUTORIAL HELPER FUNCTIONS
+    // ============================================================
+    function setTargetWord(word) {
+        if (!word) return;
+        targetWord = word.toUpperCase();
+        winnerDeclared = false;
+        hintDisplayed = false;
+        if (window.SettingsPanel) window.SettingsPanel.setCurrentAnswer(targetWord);
+    }
+
+    async function triggerHint() {
+        try {
+            if (hintDisplayed) return;
+            if (!targetWord) return;
+            
+            // Fetch hint from JSON
+            const response = await fetch('/play/wordwich/hints_output.json');
+            if (!response.ok) return;
+            
+            const hints = await response.json();
+            const hint = hints[targetWord.toLowerCase()];
+            
+            if (hint) {
+                showHint(hint, { nickname: 'Tutorial', photoUrl: 'https://via.placeholder.com/50' });
+                hintDisplayed = true;
+            }
+        } catch (e) {
+            console.warn('Failed to trigger hint:', e);
+        }
+    }
+
 
     // ============================================================
     // 🌐 EXPOSE PUBLIC API
@@ -886,7 +918,10 @@
         restartPlaceholderToggle: () => {
             stopPlaceholderToggle();
             startPlaceholderToggle();
-        }
+        },
+        // Tutorial helpers
+        setTargetWord,
+        triggerHint
     };
 
     // Initialize by loading words list
