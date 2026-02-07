@@ -880,7 +880,8 @@ body.dark-mode .leaderboard-empty {
   }
   .settings-panel #createCustomGame,
   .settings-panel #continueToGame,
-  .settings-panel #acceptSimilarWord {
+  .settings-panel #acceptSimilarWord,
+  .settings-panel #startAutomatedList {
     background-color: #538d4e;
     color: #ffffff;
     border: none;
@@ -905,7 +906,8 @@ body.dark-mode .leaderboard-empty {
   }
   .settings-panel #createCustomGame:hover,
   .settings-panel #continueToGame:hover,
-  .settings-panel #acceptSimilarWord:hover {
+  .settings-panel #acceptSimilarWord:hover,
+  .settings-panel #startAutomatedList:hover {
     background-color: #4a7a44;
   }
   .settings-panel #randomGame:hover,

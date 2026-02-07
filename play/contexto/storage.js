@@ -54,7 +54,9 @@ const STORAGE_KEYS = {
     // Display
     DARK_MODE: "contextoDarkMode",
     // Game integrations
-    HINT_GIFT_NAME: "contextoHintGiftName"
+    HINT_GIFT_NAME: "contextoHintGiftName",
+    // Automated word list
+    AUTOMATED_WORD_LIST: "automatedWordList"
 };
 
 // --- Generic helpers ---
@@ -201,3 +203,8 @@ function getDarkModeEnabled() { return getItem(STORAGE_KEYS.DARK_MODE, false); }
 // --- Game integrations ---
 function saveHintGiftName(value) { saveItem(STORAGE_KEYS.HINT_GIFT_NAME, String(value || "")); }
 function getHintGiftName() { return getItem(STORAGE_KEYS.HINT_GIFT_NAME, ""); }
+
+// --- Automated word list ---
+function saveAutomatedWordList(wordsArray) { saveItem(STORAGE_KEYS.AUTOMATED_WORD_LIST, wordsArray); }
+function getAutomatedWordList() { return getItem(STORAGE_KEYS.AUTOMATED_WORD_LIST, []); }
+function clearAutomatedWordList() { removeItem(STORAGE_KEYS.AUTOMATED_WORD_LIST); }

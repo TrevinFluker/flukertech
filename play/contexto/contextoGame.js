@@ -221,6 +221,144 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     }
 
     // ============================================================
+    // 🎯 AUTOMATED WORD LIST
+    // ============================================================
+    async function getNextAutomatedWord() {
+        try {
+            let wordList = typeof getAutomatedWordList === 'function' ? getAutomatedWordList() : [];
+            
+            if (!Array.isArray(wordList) || wordList.length === 0) {
+                return null;
+            }
+
+            // Get the first word from the list
+            const word = wordList[0].toLowerCase().trim();
+            
+            if (!word) {
+                // Remove empty word and try next
+                wordList.shift();
+                if (typeof saveAutomatedWordList === 'function') {
+                    saveAutomatedWordList(wordList);
+                }
+                return getNextAutomatedWord(); // Recursive call
+            }
+
+            // Validate the word with the API
+            try {
+                const response = await apiFetch(`/rank?word=${word}`);
+                const data = await response.json();
+
+                // Check for vocabulary error in response
+                if (data.error && data.error.toLowerCase().includes("not in vocabulary")) {
+                    console.log(`Word '${word}' not in vocabulary, skipping...`);
+                    // Remove invalid word and try next
+                    wordList.shift();
+                    if (typeof saveAutomatedWordList === 'function') {
+                        saveAutomatedWordList(wordList);
+                    }
+                    return getNextAutomatedWord(); // Recursive call
+                }
+
+                // Check if rank 1 lemma exists and matches
+                const rank1Word = data.results?.find((item) => parseInt(item.rank) === 1);
+                const actualLemma = rank1Word ? rank1Word.lemma : null;
+
+                if (!actualLemma) {
+                    console.log(`Word '${word}' has no rank 1 result, skipping...`);
+                    wordList.shift();
+                    if (typeof saveAutomatedWordList === 'function') {
+                        saveAutomatedWordList(wordList);
+                    }
+                    return getNextAutomatedWord(); // Recursive call
+                }
+
+                // Word is valid, remove it from the list and return both word and data
+                wordList.shift();
+                if (typeof saveAutomatedWordList === 'function') {
+                    saveAutomatedWordList(wordList);
+                }
+                
+                // Return object with lemma and pre-fetched data
+                return { 
+                    requestedWord: word, 
+                    actualLemma: actualLemma,
+                    gameData: data 
+                };
+
+            } catch (error) {
+                console.error(`Error validating word '${word}':`, error);
+                
+                // Check if it's a 404 or vocabulary error
+                if (error.message && (error.message.includes('404') || error.message.includes('not in vocabulary'))) {
+                    console.log(`Word '${word}' returned 404, skipping...`);
+                }
+                
+                // Remove problematic word and try next
+                wordList.shift();
+                if (typeof saveAutomatedWordList === 'function') {
+                    saveAutomatedWordList(wordList);
+                }
+                return getNextAutomatedWord(); // Recursive call
+            }
+
+        } catch (error) {
+            console.error("Error in getNextAutomatedWord:", error);
+            return null;
+        }
+    }
+
+    async function initNextRound() {
+        // Clear UI first (before showing loading)
+        guesses = [];
+        mostRecentGuessLemma = null;
+        allowHintsThisRound = true;
+        guessesContainer.innerHTML = "";
+        lastGuessContainer.style.display = "none";
+        loadingElement.style.display = "block";
+        errorMessageElement.style.display = "none";
+        
+        try {
+            const nextWordData = await getNextAutomatedWord();
+            
+            if (nextWordData) {
+                // Use word from automated list with pre-fetched data
+                console.log(`Starting automated game with word: ${nextWordData.requestedWord} (lemma: ${nextWordData.actualLemma})`);
+                
+                // Set game data
+                gameData = nextWordData.gameData;
+                targetWord = nextWordData.actualLemma; // Use actual lemma, not requested word
+                winnerDeclared = false;
+                
+                if (window.SettingsPanel) {
+                    window.SettingsPanel.setCurrentAnswer(nextWordData.actualLemma);
+                }
+                
+                loadingElement.style.display = "none";
+                updateGuessCount(0);
+                
+                // Update status UI
+                if (typeof window.updateAutomatedListStatus === 'function') {
+                    window.updateAutomatedListStatus();
+                }
+            } else {
+                // No words in list, use random game
+                console.log("No automated words, starting random game");
+                await contextoInitGame();
+                
+                // Update status UI
+                if (typeof window.updateAutomatedListStatus === 'function') {
+                    window.updateAutomatedListStatus();
+                }
+            }
+        } catch (error) {
+            console.error("Error in initNextRound:", error);
+            loadingElement.style.display = "none";
+            // Fallback to random game
+            await contextoInitGame();
+        }
+    }
+
+    // ============================================================
     // 🔤 GAME LOGIC
     // ============================================================
     function findWordRank(word) {
@@ -632,6 +770,8 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     window.Contexto = {
         initGame: contextoInitGame,
         initCustomGame,
+        initNextRound,
+        getNextAutomatedWord,
         submitWord,
         findWordRank,
         checkSpelling,

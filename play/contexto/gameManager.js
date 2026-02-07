@@ -73,7 +73,7 @@ function endRound(result, winners = [], answer = "") {
     setTimeout(() => {
         hideWinningModal();
         initGame();
-        if (window.Contexto?.initGame) window.Contexto.initGame();
+        if (window.Contexto?.initNextRound) window.Contexto.initNextRound();
     }, (getWinningModalDuration() || 5) * 1000);
 }
 
@@ -321,7 +321,7 @@ function handleRealGift(user) {
 document.addEventListener("DOMContentLoaded", () => {
     // Load persisted settings and start the first round if you want
     initGame();
-    if (window.Contexto?.initGame) window.Contexto.initGame();
+    if (window.Contexto?.initNextRound) window.Contexto.initNextRound();
     // Optionally: startRound();
 });
 

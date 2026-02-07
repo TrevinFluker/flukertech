@@ -303,6 +303,132 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     }
+
+    // ---------- Automated Word List ----------
+    const automatedWordListInput = document.getElementById("automatedWordListInput");
+    const startAutomatedListBtn = document.getElementById("startAutomatedList");
+    const editAutomatedListBtn = document.getElementById("editAutomatedList");
+    const clearAutomatedListBtn = document.getElementById("clearAutomatedList");
+    const automatedListStatus = document.getElementById("automatedListStatus");
+    const automatedListError = document.getElementById("automatedListError");
+
+    // Update status display and textarea
+    function updateAutomatedListStatus() {
+      if (!automatedListStatus || typeof getAutomatedWordList !== 'function') return;
+      
+      const wordList = getAutomatedWordList();
+      if (Array.isArray(wordList) && wordList.length > 0) {
+        // Update textarea with current list
+        if (automatedWordListInput) {
+          automatedWordListInput.value = wordList.join(', ');
+        }
+        
+        automatedListStatus.textContent = `${wordList.length} word${wordList.length !== 1 ? 's' : ''} remaining in list`;
+        automatedListStatus.style.display = "block";
+        
+        if (editAutomatedListBtn) editAutomatedListBtn.style.display = "none";
+        if (clearAutomatedListBtn) clearAutomatedListBtn.style.display = "inline-block";
+        if (startAutomatedListBtn) startAutomatedListBtn.textContent = "Update List";
+      } else {
+        // List is empty - clear textarea
+        if (automatedWordListInput) {
+          automatedWordListInput.value = "";
+        }
+        
+        automatedListStatus.style.display = "none";
+        
+        if (editAutomatedListBtn) editAutomatedListBtn.style.display = "none";
+        if (clearAutomatedListBtn) clearAutomatedListBtn.style.display = "none";
+        if (startAutomatedListBtn) startAutomatedListBtn.textContent = "Start Automated List";
+      }
+    }
+
+    // Make updateAutomatedListStatus globally available
+    window.updateAutomatedListStatus = updateAutomatedListStatus;
+
+    // Initialize status on load
+    updateAutomatedListStatus();
+
+    // Start/Update Automated List
+    if (startAutomatedListBtn && automatedWordListInput) {
+      startAutomatedListBtn.addEventListener("click", () => {
+        const input = automatedWordListInput.value.trim();
+        
+        if (!input) {
+          // Empty input = abandon the list
+          if (typeof clearAutomatedWordList === 'function') {
+            clearAutomatedWordList();
+          }
+          updateAutomatedListStatus();
+          if (automatedListError) automatedListError.style.display = "none";
+          return;
+        }
+
+        // Parse comma-separated words
+        const words = input.split(',')
+          .map(w => w.trim().toLowerCase())
+          .filter(w => w.length > 0);
+
+        if (words.length === 0) {
+          if (automatedListError) {
+            automatedListError.textContent = "Please enter valid words.";
+            automatedListError.style.display = "block";
+          }
+          return;
+        }
+
+        // Enforce 100 word limit
+        if (words.length > 100) {
+          if (automatedListError) {
+            automatedListError.textContent = `Maximum 100 words allowed. You entered ${words.length} words. Please reduce.`;
+            automatedListError.style.display = "block";
+          }
+          return;
+        }
+
+        // Save to storage
+        if (typeof saveAutomatedWordList === 'function') {
+          saveAutomatedWordList(words);
+        }
+
+        // Clear error
+        if (automatedListError) automatedListError.style.display = "none";
+
+        // Update UI
+        updateAutomatedListStatus();
+
+        // Close settings panel and start the first word
+        closeSettingsPanel();
+        if (window.Contexto?.initNextRound) {
+          window.Contexto.initNextRound();
+        }
+      });
+    }
+
+    // Clear List
+    if (clearAutomatedListBtn) {
+      clearAutomatedListBtn.addEventListener("click", () => {
+        const confirmed = window.confirm("Clear the automated word list? This cannot be undone.");
+        if (!confirmed) return;
+        
+        if (typeof clearAutomatedWordList === 'function') {
+          clearAutomatedWordList();
+        }
+        
+        if (automatedWordListInput) {
+          automatedWordListInput.value = "";
+        }
+        
+        updateAutomatedListStatus();
+      });
+    }
+
+    // Update status when settings panel opens
+    if (settingsToggle) {
+      settingsToggle.addEventListener("click", () => {
+        setTimeout(updateAutomatedListStatus, 100);
+      });
+    }
   });
   
   // ----------------------------
