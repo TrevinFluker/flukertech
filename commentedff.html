@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Figure Flow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 250px;
+            background-color: #34495e;
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        #sidebar h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        #main {
+            flex-grow: 1;
+            background-color: #ecf0f1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h2 {
+            margin-top: 20px;
+            margin-bottom:0px;
+            font-weight: normal;
+            font-size: 18px;
+        }
+
+        select, button, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #bdc3c7;
+            color: #2c3e50;
+            font-weight: 500;
+            box-sizing: border-box;
+        }
+
+        select:hover, button:hover, input[type="text"]:hover {
+            background-color: #95a5a6;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .square {
+            width: 40px;
+            height: 40px;
+            background-color: #e74c3c;
+            position: absolute;
+            transform: translate(-20px, -20px);
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .square.hit {
+            background-color: #2c3e50 !important;
+        }
+
+        .square:hover {
+            background-color: #c0392b;
+        }
+
+        .ball {
+            width: 15px;
+            height: 15px;
+            background-color: #2c3e50;
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        #leaderboard {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            max-height: 25%;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #f1c40f 0%, #e67e22 100%);
+            padding: 15px;
+            box-sizing: border-box;
+            border-bottom: 2px solid #d35400;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #leaderboard h2 {
+            margin: 0 0 15px 0;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .leaderboard-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .leaderboard-entry {
+            margin: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            padding: 5px;
+            box-sizing: border-box;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .leaderboard-entry:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .leaderboard-entry img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #ecf0f1;
+            margin-bottom: 5px;
+        }
+
+        .leaderboard-entry div {
+            font-size: 12px;
+            text-align: center;
+            color: #2c3e50;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .rank-label {
+            font-size: 12px;
+            color: #e74c3c;
+            font-weight: 700;
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .user-text-container {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            text-align: center;
+            pointer-events: none;
+            color: #2c3e50;
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .descriptiveText {
+            font-size: 12px;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-top: 10px;
+        }
+
+        .switch input { display: none; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        #themeLabel {
+            margin-left: 10px;
+            vertical-align: super;
+        }
+
+        /* Dark Mode Styles */
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode #sidebar {
+            background-color: #1e1e1e;
+        }
+
+        .dark-mode #main {
+            background-color: #121212;
+        }
+
+        .dark-mode select, .dark-mode button, .dark-mode input {
+            background-color: #424242;
+            color: #ffffff;
+        }
+
+        .dark-mode .square {
+            background-color: #e57373;
+        }
+
+        .dark-mode .square.hit {
+            background-color: #424242 !important;
+        }
+
+        .dark-mode .ball {
+            background-color: #ffffff;
+        }
+
+        .dark-mode #leaderboard {
+            background: linear-gradient(135deg, #757575 0%, #424242 100%);
+            border-bottom: 2px solid #616161;
+        }
+
+        .dark-mode #leaderboard h2 {
+            color: #ffffff;
+        }
+
+        .dark-mode .leaderboard-entry {
+            background-color: rgba(66, 66, 66, 0.9);
+        }
+
+        .dark-mode .leaderboard-entry div {
+            color: #ffffff;
+        }
+
+        .dark-mode .rank-label {
+            color: #ff8a65;
+        }
+
+        .dark-mode .user-text-container {
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .dark-mode #nextUp {
+            background-color: #1e1e1e;
+            border-top: 1px solid #424242;
+        }
+
+        .dark-mode #nextUp h2 {
+            color: white;
+        }
+
+        .dark-mode .queue-user img {
+            border: 2px solid #424242;
+        }
+
+        /* Next Up Styles */
+        #nextUp {
+            position: absolute;
+            top: 25%;
+            left: 0;
+            width: 100%;
+            max-height: 10%;
+            justify-content: center;
+            overflow: hidden; /* Removed scroll */
+            background-color: #f0f0f0;
+            padding: 10px;
+            box-sizing: border-box;
+            border-top: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+        }
+
+        #nextUp h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-right: 15px;
+        }
+
+        .queue-grid {
+            display: flex;
+            align-items: center;
+            /* Removed overflow-x */
+        }
+
+        .queue-user {
+            margin-right: 5px;
+            position: relative;
+        }
+
+        .queue-user img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #ecf0f1;
+        }
+
+        .queue-user .queue-count {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            background-color: #e74c3c;
+            color: #fff;
+            font-size: 12px;
+            padding: 2px 5px;
+            border-radius: 10px;
+        }
+
+        /* Plus Count Circle */
+        .plus-count-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-right: 5px;
+            background-color: transparent;
+        }
+
+        .dark-mode .plus-count-circle {
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        /* Shatter Pieces */
+        .shatter-piece {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            /* background-color is set dynamically */
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* Particle Styles */
+        .particle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 1s linear;
+        }
+
+        /* Notification Card Styles */
+        #notificationCard {
+            position: fixed;
+            bottom: 20px; /* Start off-screen */
+            left: 50%;
+            transform: translateX(-9%);
+            width: 300px;
+            background-color: #ffffff;
+            color: #2c3e50;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            transition: bottom 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            opacity: 0;
+        }
+
+        /* Dark Mode Adjustment */
+        .dark-mode #notificationCard {
+            background-color: #424242;
+            color: #ffffff;
+        }
+
+        /* Notification Card Visible State */
+        #notificationCard.show {
+            bottom: 50px; /* Slide up to visible position */
+            opacity: 1;
+        }
+
+        /* Notification Card Image */
+        #notificationCard img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        /* Sound Settings */
+        #soundUrls {
+            margin-top: 10px;
+        }
+
+        #soundUrls label {
+            display: block;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #ecf0f1;
+        }
+
+        #soundUrls input {
+            width: 100%;
+            padding: 5px;
+            margin-top: 2px;
+            border: none;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        /* Responsive adjustments for mobile viewing */
+        @media (max-width: 600px) {
+            #sidebar {
+                width: 200px;
+            }
+
+            select, button, input {
+                font-size: 14px;
+            }
+
+            .leaderboard-entry {
+                width: 60px;
+            }
+
+            .leaderboard-entry img {
+                width: 35px;
+                height: 35px;
+            }
+
+            .leaderboard-entry div {
+                font-size: 10px;
+            }
+
+            .rank-label {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h1>Figure Flow</h1>
+        <input type="text" id="tiktokUsername" placeholder="Enter tiktok username">
+        <button id="usernameSave">Save</button>
+        <h2>Theme</h2>
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider round"></span>
+        </label>
+        <span id="themeLabel">Dark Mode</span>
+        <h2>Select Shape</h2>
+        <select id="shapeSelector">
+            <option value="square">Diamond</option>
+            <option value="circle">Circle</option>
+            <option value="triangle">Triangle</option>
+            <option value="diamond">Square</option>
+            <option value="hexagon">Hexagon</option>
+            <option value="octagon">Octagon</option>
+            <option value="number8">Number 8</option>
+            <option value="infinity">Infinity</option>
+            <option value="quatrefoil">Quatrefoil</option>
+            <option value="curvilinearTriangle">Curvilinear Triangle</option>
+            <option value="spirograph">Spirograph</option>
+            <!-- New Shape -->
+            <option value="swirl">Swirl</option>
+            <option value="plusSign">Plus Sign</option>
+            <option value="heart">Heart</option>
+        </select>
+        <h2>Adjust Speed</h2>
+        <select id="speedSelector">
+            <option value="0.5">0.5x (Slow)</option>
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1x (Normal)</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x (Fast)</option>
+            <option value="2">2x (Faster)</option>
+        </select>
+        <h2>Fire shots</h2>
+        <button id="startButton">Start</button>
+        <button id="stopButton">Stop</button>
+        <h2>Shot Pause (seconds)</h2>
+        <select id="shotPauseSelector">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+        <h2>Shot Location</h2>
+        <select id="shotLocationSelector">
+            <option value="1" selected>1 - Bottom Center</option>
+            <option value="2">2 - Bottom Right</option>
+            <option value="3">3 - Middle Right</option>
+            <option value="4">4 - Top Right</option>
+            <option value="5">5 - Top Center</option>
+            <option value="6">6 - Top Left</option>
+            <option value="7">7 - Middle Left</option>
+            <option value="8">8 - Bottom Left</option>
+        </select>
+        <h2>Test Interactions</h2>
+        <button id="simulateGiftButton">Simulate Gift/Comment</button>
+        <h2>Sound Settings</h2>
+        <label for="soundMode">Mode:</label>
+        <select id="soundMode">
+            <option value="single">Single Sound</option>
+            <option value="random">Random</option>
+            <option value="sequential">Sequential</option>
+            <option value="none" selected>No Sound</option>
+        </select>
+        <div class="descriptiveText" id="soundModeDescription">No sound will be played on collisions</div>
+        <div id="soundUrls">
+            <label>Sound URL 1:</label>
+            <input type="text" id="soundUrl1" placeholder="Enter MP3 URL">
+            <label>Sound URL 2:</label>
+            <input type="text" id="soundUrl2" placeholder="Enter MP3 URL">
+            <label>Sound URL 3:</label>
+            <input type="text" id="soundUrl3" placeholder="Enter MP3 URL">
+            <label>Sound URL 4:</label>
+            <input type="text" id="soundUrl4" placeholder="Enter MP3 URL">
+        </div>
+        <h2>Milestone Sound</h2>
+        <label>
+            <input type="checkbox" id="milestoneSoundToggle">
+            Enable Sound
+        </label>
+        <input type="text" id="milestoneSoundUrl" placeholder="Enter MP3 URL">
+    </div>
+    <div id="main">
+        <!-- Next Up -->
+        <div id="nextUp">
+            <h2 id="nextHeader" style="display:none;">Playing Next:</h2>
+            <div class="queue-grid"></div>
+        </div>
+        <!-- Leaderboard -->
+        <div id="leaderboard">
+            <h2>Time Rankings</h2>
+            <div class="leaderboard-grid"></div>
+        </div>
+        <!-- Squares and balls will be generated here -->
+        <!-- Notification Card -->
+        <div id="notificationCard">
+            <img src="" alt="User Image">
+            <div id="notificationText"></div>
+        </div>
+    </div>
+    <script>
+        const numSquares = 15; // Number of squares
+        const squares = [];
+        const colors = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f1c40f'];
+        const main = document.getElementById('main');
+        let currentShape = 'square';
+        let startTime = null;
+        let lastTimestamp = null;
+        const duration = 10000; // Animation duration in milliseconds
+
+        // Speed variable
+        let currentSpeed = 1; // Default speed multiplier
+
+        // Shooting variables
+        let shotPause = 2000; // Default shot pause in milliseconds
+        let lastShotTime = 0;
+        const balls = [];
+        let shooting = false; // Shooting is initially off
+        let shotLocation = 1; // Default shot location
+
+        // Shatter pieces
+        const shatterPieces = [];
+
+        // Particles
+        const particles = [];
+
+        // Leaderboard entries
+        const leaderboardEntries = [];
+
+        // Queue for users when no squares are available
+        const queueUsers = [];
+
+        // Keep track of visible queue users
+        let visibleQueueUsers = [];
+
+        // Sound settings
+        const soundModeSelect = document.getElementById('soundMode');
+        const soundUrls = [];
+        let soundMode = 'none';
+        let sequentialIndex = 0;
+
+        for (let i = 1; i <= 4; i++) {
+            const input = document.getElementById('soundUrl' + i);
+            input.addEventListener('change', function() {
+                soundUrls[i - 1] = this.value;
+            });
+        }
+
+        // Function to save the username to localStorage
+        function saveUsername() {
+            const username = document.getElementById('tiktokUsername').value;
+            localStorage.setItem('shapeRunnerUsername', username);
+            alert('Username saved!');
+        }
+
+        // Function to retrieve the username from localStorage on page load
+        function loadUsername() {
+            const savedUsername = localStorage.getItem('shapeRunnerUsername');
+            if (savedUsername) {
+                document.getElementById('tiktokUsername').value = savedUsername;
+            }
+        }
+
+        // Set up event listeners on DOM content load
+        document.addEventListener('DOMContentLoaded', function () {
+            const defaultUrls = [
+                'https://www.runchatcapture.com/assets/sounds/meet.mp3',
+                'https://www.runchatcapture.com/assets/sounds/popup.mp3',
+                'https://www.runchatcapture.com/assets/sounds/tethys.mp3',
+                'https://www.runchatcapture.com/assets/sounds/crunching.mp3'
+            ];
+            const inputIds = ['soundUrl1', 'soundUrl2', 'soundUrl3', 'soundUrl4'];
+            // Get references to the dropdown and the description element
+            const description = document.getElementById('soundModeDescription');
+
+            // Object to map sound modes to their descriptions
+            const soundModeDescriptions = {
+                single: "Sound url 1 will be played on collsions",
+                random: "A random url will be played on collisions",
+                sequential: "Sound urls will be played in order repeatedly",
+                none: "No sound will be played on collisions"
+            };
+
+            // Event listener for dropdown change
+            soundModeSelect.addEventListener('change', function () {
+                soundMode = this.value;
+                const selectedValue = soundModeSelect.value;
+                localStorage.setItem("soundModeSelect", soundModeSelect.value);
+                // Update the description based on the selected value
+                if (selectedValue && soundModeDescriptions[selectedValue]) {
+                    description.innerText = soundModeDescriptions[selectedValue];
+                } else {
+                    description.innerText = "No sound will be played on collisions"; // Clear description if no valid selection
+                }
+            });
+
+            inputIds.forEach((id, index) => {
+                const input = document.getElementById(id);
+
+                // Retrieve URL from localStorage or set default
+                let url = localStorage.getItem(id);
+                if (!url) {
+                url = defaultUrls[index];
+                localStorage.setItem(id, url);
+                }
+
+                // Set the input value
+                input.value = url;
+                soundUrls[index] = url;
+
+                // Add event listener for changes
+                input.addEventListener('input', function() {
+                const newValue = input.value;
+                localStorage.setItem(id, newValue); // Update localStorage
+                soundUrls[index] = newValue;
+                });
+            });
+
+            let selectedSoundMode = localStorage.getItem("soundModeSelect");
+            if (!selectedSoundMode) {
+                soundModeSelect.value = "single"
+                soundModeSelect.dispatchEvent(new Event('change'));
+                localStorage.setItem("soundModeSelect", "single")
+            } else {
+                soundModeSelect.value = localStorage.getItem("soundModeSelect");
+                soundModeSelect.dispatchEvent(new Event('change'));
+            }
+
+            // Load username if it exists
+            loadUsername();
+
+            // Add event listener to the Save button
+            document.getElementById('usernameSave').addEventListener('click', saveUsername);
+        });
+
+        // Milestone Notification Variables
+        const notificationCard = document.getElementById('notificationCard');
+        const notificationText = document.getElementById('notificationText');
+        const notificationImage = notificationCard.querySelector('img');
+        let defaultMilestoneSoundUrl = "https://www.runchatcapture.com/assets/sounds/shape_minute.mp3";
+        let milestoneSoundEnabled = true;
+        let milestoneSoundUrl = '';
+
+        const milestoneSoundToggle = document.getElementById('milestoneSoundToggle');
+        const milestoneSoundUrlInput = document.getElementById('milestoneSoundUrl');
+
+        milestoneSoundToggle.addEventListener('change', function() {
+            milestoneSoundEnabled = this.checked;
+            localStorage.setItem("milestoneSoundEnabled", this.checked)
+        });
+
+        milestoneSoundUrlInput.addEventListener('change', function() {
+            milestoneSoundUrl = this.value;
+            localStorage.setItem('milestoneSoundUrl', this.value);
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            let milestoneSoundFromStorage = localStorage.getItem("milestoneSoundUrl");
+            if (!milestoneSoundFromStorage) {
+                milestoneSoundUrl = defaultMilestoneSoundUrl;
+                milestoneSoundUrlInput.value = defaultMilestoneSoundUrl
+                localStorage.setItem("milestoneSoundUrl", defaultMilestoneSoundUrl)
+            } else {
+                milestoneSoundUrlInput.value = milestoneSoundFromStorage;
+                milestoneSoundUrl = milestoneSoundFromStorage;
+            }
+
+            //check local storage to see if milestone sound is enabled
+            let milestoneSoundEnableFromStorage = localStorage.getItem("milestoneSoundEnabled");
+            if (milestoneSoundEnableFromStorage === null) {
+                milestoneSoundEnabled = true;
+                milestoneSoundToggle.checked = true;
+                localStorage.setItem("milestoneSoundEnabled", true)
+            } else {
+                milestoneSoundToggle.checked = JSON.parse(localStorage.getItem("milestoneSoundEnabled"));
+                milestoneSoundEnabled = localStorage.getItem("milestoneSoundEnabled");
+            }
+        });
+
+        // Notification Queue Variables
+        let notificationQueue = [];
+        let notificationInProgress = false;
+
+        // Create squares and add them to the main area
+        for (let i = 0; i < numSquares; i++) {
+            const squareElem = document.createElement('div');
+            squareElem.classList.add('square');
+            squareElem.style.backgroundColor = colors[i % colors.length];
+            main.appendChild(squareElem);
+            squares.push({
+                element: squareElem,
+                offset: i / numSquares, // To stagger the starting positions
+                x: 0,
+                y: 0,
+                assignedUser: null, // No user assigned initially
+                timeOnSquare: 0, // Time in milliseconds
+                lastMilestone: 0 // For milestone tracking
+            });
+        }
+
+        const shapeSelector = document.getElementById('shapeSelector');
+        shapeSelector.addEventListener('change', function() {
+            currentShape = this.value;
+            startTime = null; // Reset animation timing
+
+            // Reset speed to default (1x)
+            currentSpeed = 1;
+            speedSelector.value = '1'; // Reset the speed selector dropdown
+        });
+
+        const speedSelector = document.getElementById('speedSelector');
+        speedSelector.addEventListener('change', function() {
+            currentSpeed = parseFloat(this.value);
+        });
+
+        const shotPauseSelector = document.getElementById('shotPauseSelector');
+        shotPauseSelector.addEventListener('change', function() {
+            shotPause = parseInt(this.value) * 1000; // Convert seconds to milliseconds
+        });
+
+        const shotLocationSelector = document.getElementById('shotLocationSelector');
+        shotLocationSelector.addEventListener('change', function() {
+            shotLocation = parseInt(this.value);
+        });
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('change', function() {
+            console.log(this.value)
+            document.body.classList.toggle('dark-mode', this.checked);
+            localStorage.setItem("themeToggleValue", this.checked);
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            let themeToggleFromStorage = localStorage.getItem("themeToggleValue");
+            if (themeToggleFromStorage === null) {
+                console.log('no entry found')
+                themeToggle.checked = true;
+                themeToggle.dispatchEvent(new Event('change'));
+                localStorage.setItem("themeToggleValue", true);
+            } else {
+                console.log('entry found')
+                themeToggle.checked = JSON.parse(localStorage.getItem("themeToggleValue"));
+                themeToggle.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // Start and Stop buttons
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+
+        startButton.addEventListener('click', function() {
+            shooting = true;
+            lastShotTime = performance.now(); // Reset last shot time
+        });
+
+        stopButton.addEventListener('click', function() {
+            shooting = false;
+        });
+
+        // Simulate Gift Button
+        const simulateGiftButton = document.getElementById('simulateGiftButton');
+        simulateGiftButton.addEventListener('click', function() {
+            simulateGift();
+        });
+
+        function simulateGift() {
+            // Simulate a user gift
+            const randomNumber = Math.floor(Math.random() * 1000);
+            const user = {
+                username: 'user' + randomNumber,
+                photoUrl: 'https://picsum.photos/40?' + Math.random(),
+                gift_name: 'rose'
+            };
+
+            // Assign the user to an available square
+            assignUserToSquare(user);
+        }
+
+        window.addEventListener('assignUserEvent', function(event) {
+            const user = {
+                username: event.detail.username,
+                photoUrl: event.detail.photoUrl,
+                gift_name: 'rose'
+            };
+            assignUserToSquare(user);
+        });
+
+        function assignUserToSquare(user) {
+            // Find an available square (one that doesn't have an assignedUser)
+            const availableSquare = squares.find(sq => !sq.assignedUser);
+
+            if (availableSquare) {
+                // Assign the user to the square
+                assignUserToSpecificSquare(user, availableSquare);
+            } else {
+                // No available square, add user to queue
+                queueUsers.push(user);
+                updateQueueDisplay();
+                
+                // Trigger particle burst effect for the newly added user in the queue
+                const queueGrid = document.querySelector('.queue-grid');
+                const maxVisibleUsers = 5;
+                const index = Math.min(queueUsers.length - 1, maxVisibleUsers - 1);
+                const userDiv = queueGrid.children[index];
+                if (userDiv) {
+                    createParticleBurstForQueueUser(userDiv);
+                }
+            }
+        }
+
+        function assignUserToSpecificSquare(user, square) {
+            // Remove 'hit' class to reset color if the square is black
+            square.element.classList.remove('hit');
+
+            // Trigger particle burst effect
+            createParticleBurst(square);
+
+            // Assign the user to the square
+            square.assignedUser = user;
+            user.square = square; // Reference to the square
+            square.timeOnSquare = 0; // Start the timer
+            square.lastMilestone = 0; // Initialize lastMilestone
+
+            // Display the user's photo on the square
+            const img = document.createElement('img');
+            img.src = user.photoUrl;
+            img.classList.add('user-image');
+            square.element.appendChild(img);
+
+            square.userImage = img; // Keep reference to the image element for later removal
+
+            // Display username and time above the square
+            const textContainer = document.createElement('div');
+            textContainer.classList.add('user-text-container');
+
+            const nameText = document.createElement('div');
+            nameText.textContent = user.username;
+
+            const timeText = document.createElement('div');
+            timeText.textContent = '0s';
+
+            textContainer.appendChild(nameText);
+            textContainer.appendChild(timeText);
+
+            square.element.appendChild(textContainer);
+
+            square.userTextContainer = textContainer;
+            square.userTimeText = timeText;
+
+            // Add the user to the leaderboard
+            addUserToLeaderboard(user);
+        }
+
+        function updateQueueDisplay() {
+            if (queueUsers.length > 0) {
+                document.getElementById("nextHeader").style.display = "block";
+            } else {
+                document.getElementById("nextHeader").style.display = "none";
+            }
+
+            const queueGrid = document.querySelector('.queue-grid');
+            const previousVisibleUsers = visibleQueueUsers.slice();
+            visibleQueueUsers = []; // Reset the visible users list
+            queueGrid.innerHTML = ''; // Clear existing entries
+
+            // Display up to 10 users in the queue
+            const maxVisibleUsers = 5;
+            const visibleUsers = queueUsers.slice(0, maxVisibleUsers);
+
+            visibleUsers.forEach((user) => {
+                const userDiv = document.createElement('div');
+                userDiv.classList.add('queue-user');
+
+                const img = document.createElement('img');
+                img.src = user.photoUrl;
+
+                userDiv.appendChild(img);
+                queueGrid.appendChild(userDiv);
+
+                // Add to visible users list
+                visibleQueueUsers.push(user);
+
+                // If the user was not previously visible, trigger particle burst
+                if (!previousVisibleUsers.includes(user)) {
+                    createParticleBurstForQueueUser(userDiv);
+                }
+            });
+
+            // If there are more users than visible, add a "+{number}" indicator
+            if (queueUsers.length > maxVisibleUsers) {
+                const remainingCount = queueUsers.length - maxVisibleUsers;
+
+                const plusDiv = document.createElement('div');
+                plusDiv.classList.add('plus-count-circle');
+                plusDiv.textContent = '+' + remainingCount;
+
+                queueGrid.appendChild(plusDiv);
+            }
+        }
+
+        function assignNextUserFromQueue(square) {
+            if (queueUsers.length > 0) {
+                const nextUser = queueUsers.shift();
+                updateQueueDisplay();
+                assignUserToSpecificSquare(nextUser, square);
+            }
+        }
+
+        function addUserToLeaderboard(user) {
+            // Create a leaderboard entry
+            const entry = document.createElement('div');
+            entry.classList.add('leaderboard-entry');
+
+            // User's photo
+            const img = document.createElement('img');
+            img.src = user.photoUrl;
+            img.style.width = '40px';
+            img.style.height = '40px';
+            img.style.borderRadius = '50%';
+            img.style.pointerEvents = 'none';
+
+            // Username
+            const name = document.createElement('div');
+            name.textContent = user.username;
+            name.style.whiteSpace = 'nowrap';
+            name.style.textOverflow = 'clip';
+            name.style.width = "75px";
+            name.style.fontSize = "14px";
+
+            // Time existing
+            const time = document.createElement('div');
+            time.textContent = '0s';
+            time.style.fontSize = '15px';
+
+            // Rank label (to be updated)
+            const rankLabel = document.createElement('div');
+            rankLabel.textContent = ''; // Placeholder, will be updated
+            rankLabel.classList.add('rank-label');
+            rankLabel.style.fontWeight = "600";
+            rankLabel.style.fontSize = '14px';
+
+
+            entry.appendChild(img);
+            entry.appendChild(name);
+            entry.appendChild(time);
+            entry.appendChild(rankLabel); // Added rank label to entry
+
+            // Add the entry to the leaderboard
+            user.leaderboardEntry = entry;
+            user.leaderboardTime = time;
+            user.rankLabel = rankLabel;
+
+            // Add to leaderboardEntries array
+            leaderboardEntries.push(user);
+
+            updateLeaderboardRanks(); // Update ranks after adding a new user
+        }
+
+        function removeUserFromLeaderboard(user) {
+            // Remove the leaderboard entry
+            if (user.leaderboardEntry) {
+                user.leaderboardEntry.remove();
+            }
+
+            // Remove from leaderboardEntries array
+            const index = leaderboardEntries.indexOf(user);
+            if (index !== -1) {
+                leaderboardEntries.splice(index, 1);
+            }
+
+            updateLeaderboardRanks(); // Update ranks after removing a user
+        }
+
+        function updateLeaderboardRanks() {
+            // Sort leaderboard entries based on timeOnSquare in descending order
+            leaderboardEntries.sort((a, b) => {
+                const timeA = a.square ? a.square.timeOnSquare : 0;
+                const timeB = b.square ? b.square.timeOnSquare : 0;
+                return timeB - timeA;
+            });
+
+            // Update the leaderboard grid
+            const leaderboardGrid = document.querySelector('.leaderboard-grid');
+            leaderboardGrid.innerHTML = ''; // Clear existing entries
+
+            // Only show the top 6 entries
+            const topEntries = leaderboardEntries.slice(0, 5);
+
+            topEntries.forEach((user, index) => {
+                const entry = user.leaderboardEntry;
+
+                //'#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f1c40f'
+                // Update rank label
+                const rankLabel = user.rankLabel;
+                if (index === 0) {
+                    rankLabel.textContent = '1st';
+                    rankLabel.style.color = '#2ecc71'
+                } else if (index === 1) {
+                    rankLabel.textContent = '2nd';
+                    rankLabel.style.color = '#3498db';
+                } else if (index === 2) {
+                    rankLabel.textContent = '3rd';
+                } else {
+                    rankLabel.textContent = `${index + 1}th`;
+                }
+
+                leaderboardGrid.appendChild(entry);
+            });
+        }
+
+        function playSound() {
+            if (soundMode === 'none' || soundUrls.length === 0) return;
+
+            let soundUrl;
+
+            switch (soundMode) {
+                case 'single':
+                    soundUrl = soundUrls[0];
+                    break;
+                case 'random':
+                    const validUrls = soundUrls.filter(url => url);
+                    const randomIndex = Math.floor(Math.random() * validUrls.length);
+                    soundUrl = validUrls[randomIndex];
+                    break;
+                case 'sequential':
+                    soundUrl = soundUrls[sequentialIndex % soundUrls.length];
+                    sequentialIndex++;
+                    break;
+            }
+
+            if (soundUrl) {
+                const audio = new Audio(soundUrl);
+                audio.play().catch(error => {
+                    console.error('Error playing sound:', error);
+                });
+            }
+        }
+
+        function createShatterEffect(ball) {
+            const numPieces = 10;
+            const ballColor = getComputedStyle(ball.element).backgroundColor;
+            for (let i = 0; i < numPieces; i++) {
+                const piece = document.createElement('div');
+                piece.classList.add('shatter-piece');
+                piece.style.backgroundColor = ballColor; // Match ball color
+                main.appendChild(piece);
+
+                const angle = Math.random() * 2 * Math.PI;
+                const speed = Math.random() * 2 + 1;
+
+                const dx = Math.cos(angle) * speed;
+                const dy = Math.sin(angle) * speed;
+
+                const shatter = {
+                    element: piece,
+                    x: ball.x,
+                    y: ball.y,
+                    dx: dx,
+                    dy: dy,
+                    life: 1000, // milliseconds
+                    createdAt: performance.now()
+                };
+
+                shatterPieces.push(shatter);
+            }
+        }
+
+        function createParticleBurst(square) {
+            const numParticles = 15;
+            const squareRect = square.element.getBoundingClientRect();
+            const mainRect = main.getBoundingClientRect();
+            const centerX = squareRect.left + squareRect.width / 2 - mainRect.left;
+            const centerY = squareRect.top + squareRect.height / 2 - mainRect.top;
+
+            for (let i = 0; i < numParticles; i++) {
+                const particleElem = document.createElement('div');
+                particleElem.classList.add('particle');
+                particleElem.style.backgroundColor = square.element.style.backgroundColor;
+                main.appendChild(particleElem);
+
+                const angle = Math.random() * 2 * Math.PI;
+                const speed = Math.random() * 2 + 1;
+
+                const dx = Math.cos(angle) * speed;
+                const dy = Math.sin(angle) * speed;
+
+                const particle = {
+                    element: particleElem,
+                    x: centerX,
+                    y: centerY,
+                    dx: dx,
+                    dy: dy,
+                    life: 1000, // milliseconds
+                    createdAt: performance.now()
+                };
+
+                particleElem.style.left = particle.x + 'px';
+                particleElem.style.top = particle.y + 'px';
+
+                particles.push(particle);
+            }
+        }
+
+        function createParticleBurstForQueueUser(userDiv) {
+            const numParticles = 10;
+            const userRect = userDiv.getBoundingClientRect();
+            const mainRect = main.getBoundingClientRect();
+            const centerX = userRect.left + userRect.width / 2 - mainRect.left;
+            const centerY = userRect.top + userRect.height / 2 - mainRect.top;
+
+            for (let i = 0; i < numParticles; i++) {
+                const particleElem = document.createElement('div');
+                particleElem.classList.add('particle');
+                particleElem.style.backgroundColor = '#3498db'; // Color for queue particles
+                main.appendChild(particleElem);
+
+                const angle = Math.random() * 2 * Math.PI;
+                const speed = Math.random() * 2 + 1;
+
+                const dx = Math.cos(angle) * speed;
+                const dy = Math.sin(angle) * speed;
+
+                const particle = {
+                    element: particleElem,
+                    x: centerX,
+                    y: centerY,
+                    dx: dx,
+                    dy: dy,
+                    life: 1000, // milliseconds
+                    createdAt: performance.now()
+                };
+
+                particleElem.style.left = particle.x + 'px';
+                particleElem.style.top = particle.y + 'px';
+
+                particles.push(particle);
+            }
+        }
+
+        function removeUserFromSquare(square) {
+            // Remove photo if any
+            if (square.userImage) {
+                square.userImage.remove();
+                square.userImage = null;
+            }
+
+            // Remove username and time text
+            if (square.userTextContainer) {
+                square.userTextContainer.remove();
+                square.userTextContainer = null;
+            }
+
+            // Remove user from leaderboard
+            if (square.assignedUser) {
+                removeUserFromLeaderboard(square.assignedUser);
+                square.assignedUser = null;
+            }
+        }
+
+        function showNotification(user, minutes) {
+            // Create notification data
+            const notificationData = { user: user, minutes: minutes };
+
+            // Add to queue
+            notificationQueue.push(notificationData);
+
+            // If no notification is currently being displayed, start showing notifications
+            if (!notificationInProgress) {
+                displayNextNotification();
+            }
+        }
+
+        function displayNextNotification() {
+            if (notificationQueue.length === 0) {
+                notificationInProgress = false;
+                return;
+            }
+
+            notificationInProgress = true;
+
+            const notificationData = notificationQueue.shift();
+            const { user, minutes } = notificationData;
+
+            notificationImage.src = user.photoUrl;
+            notificationText.innerHTML = `<b>${user.username}</b> has reached <b>${minutes}</b> minute${minutes > 1 ? 's' : ''}!`;
+
+            notificationCard.classList.add('show');
+
+            // Play sound if enabled
+            if (milestoneSoundEnabled && milestoneSoundUrl) {
+                const audio = new Audio(milestoneSoundUrl);
+                audio.play().catch(error => {
+                    console.error('Error playing milestone sound:', error);
+                });
+            }
+
+            // Hide after 2 seconds, then display next notification
+            setTimeout(() => {
+                notificationCard.classList.remove('show');
+
+                // Wait for the slide-out animation to finish before showing the next notification
+                setTimeout(() => {
+                    notificationInProgress = false;
+                    displayNextNotification();
+                }, 500); // Adjust if your CSS transition duration is different
+            }, 2000);
+        }
+
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const deltaTime = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+            let progress = (timestamp - startTime);
+            let t = ((progress * currentSpeed) % duration) / duration; // Adjusted with currentSpeed
+
+            // Update squares
+            squares.forEach(function(sq) {
+                // Squares keep moving even if hit
+                let tOffset = (t + sq.offset) % 1; // Wrap around if greater than 1
+                let position = getPosition(currentShape, tOffset);
+                sq.x = position.x;
+                sq.y = position.y;
+                sq.element.style.left = position.x + 'px';
+                sq.element.style.top = position.y + 'px';
+
+                if (sq.assignedUser) {
+                    // Increase timeOnSquare
+                    sq.timeOnSquare += deltaTime; // deltaTime is in milliseconds
+
+                    // Calculate total time in seconds
+                    const totalTimeInSeconds = Math.floor(sq.timeOnSquare / 1000);
+
+                    // Update the time text above the square
+                    sq.userTimeText.textContent = totalTimeInSeconds + 's';
+
+                    // Update the leaderboard time display
+                    sq.assignedUser.leaderboardTime.textContent = totalTimeInSeconds + 's';
+
+                    // Check for minute milestones
+                    if (totalTimeInSeconds % 60 === 0 && totalTimeInSeconds !== 0 && sq.lastMilestone !== totalTimeInSeconds) {
+                        const minutes = totalTimeInSeconds / 60;
+                        showNotification(sq.assignedUser, minutes);
+                        sq.lastMilestone = totalTimeInSeconds; // To prevent multiple triggers
+                    }
+                }
+            });
+
+            updateLeaderboardRanks(); // Update ranks continuously
+
+            if (shooting) {
+                // Shoot balls at intervals
+                if (timestamp - lastShotTime > shotPause) {
+                    shootBall();
+                    lastShotTime = timestamp;
+                }
+
+                // Update balls
+                for (let i = balls.length - 1; i >= 0; i--) {
+                    const ball = balls[i];
+                    const ballSpeed = 5; // Pixels per frame
+
+                    ball.x += ball.dx * ballSpeed;
+                    ball.y += ball.dy * ballSpeed;
+                    ball.element.style.left = ball.x + 'px';
+                    ball.element.style.top = ball.y + 'px';
+
+                    // Check for collisions with squares
+                    for (let j = 0; j < squares.length; j++) {
+                        const sq = squares[j];
+
+                        if (isColliding(ball, sq)) {
+                            sq.element.classList.add('hit');
+
+                            // Play sound
+                            playSound();
+
+                            // Remove user from square
+                            removeUserFromSquare(sq);
+
+                            // Create shatter effect at the ball's position
+                            createShatterEffect(ball);
+
+                            ball.element.remove();
+                            balls.splice(i, 1);
+
+                            // Assign next user from queue if available
+                            assignNextUserFromQueue(sq);
+
+                            break; // Break out of squares loop
+                        }
+                    }
+
+                    // Remove ball if it goes off-screen
+                    const mainRect = main.getBoundingClientRect();
+                    if (ball.x < -15 || ball.x > mainRect.width || ball.y < -15 || ball.y > mainRect.height) {
+                        ball.element.remove();
+                        balls.splice(i, 1);
+                    }
+                }
+            }
+
+            // Update shatter pieces
+            for (let i = shatterPieces.length - 1; i >= 0; i--) {
+                const piece = shatterPieces[i];
+                const timeElapsed = timestamp - piece.createdAt;
+
+                if (timeElapsed > piece.life) {
+                    piece.element.remove();
+                    shatterPieces.splice(i, 1);
+                    continue;
+                }
+
+                piece.x += piece.dx;
+                piece.y += piece.dy;
+                piece.element.style.left = piece.x + 'px';
+                piece.element.style.top = piece.y + 'px';
+
+                // Fade out effect
+                const opacity = 1 - timeElapsed / piece.life;
+                piece.element.style.opacity = opacity;
+            }
+
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                const timeElapsed = timestamp - particle.createdAt;
+
+                if (timeElapsed > particle.life) {
+                    particle.element.remove();
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                particle.x += particle.dx;
+                particle.y += particle.dy;
+                particle.element.style.left = particle.x + 'px';
+                particle.element.style.top = particle.y + 'px';
+
+                // Fade out effect
+                const opacity = 1 - timeElapsed / particle.life;
+                particle.element.style.opacity = opacity;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function getPosition(shape, t) {
+            const width = main.clientWidth;
+            const height = main.clientHeight;
+
+            // Adjusted play area to be smaller and centered
+            const playArea = {
+                width: width * 0.5,
+                height: height * 0.5,
+                x: (width * 0.25) + 20,
+                y: (height * 0.25) + 100 //starting point
+            };
+
+            switch(shape) {
+                case 'square':
+                    return getPolygonPosition(4, t, playArea);
+                case 'diamond':
+                    return getPolygonPosition(4, t, playArea, Math.PI / 4);
+                case 'triangle':
+                    return getPolygonPosition(3, t, playArea, -Math.PI / 2);
+                case 'hexagon':
+                    return getPolygonPosition(6, t, playArea);
+                case 'octagon':
+                    return getPolygonPosition(8, t, playArea);
+                case 'circle':
+                    return getCirclePosition(t, playArea);
+                case 'number8':
+                    return getFigure8Position(t, playArea);
+                case 'infinity':
+                    return getInfinityPosition(t, playArea);
+                case 'quatrefoil':
+                    return getQuatrefoilPosition(t, playArea);
+                case 'curvilinearTriangle':
+                    return getCurvilinearTrianglePosition(t, playArea);
+                case 'spirograph':
+                    return getSpirographPosition(t, playArea);
+                case 'swirl':
+                    return getSwirlPosition(t, playArea);
+                case 'plusSign':
+                    return getPlusPosition(t, playArea);
+                case 'heart':
+                    return getHeartPosition(t, playArea);
+
+            }
+        }
+
+        function getPolygonPosition(sides, t, playArea, rotationAngle = 0) {
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+            const radius = Math.min(playArea.width, playArea.height) / 2;
+            const angleStep = (2 * Math.PI) / sides;
+
+            const totalLength = sides;
+            const currentLength = t * totalLength;
+            const sideIndex = Math.floor(currentLength);
+            const sideT = currentLength - sideIndex;
+
+            const angle1 = angleStep * sideIndex + rotationAngle;
+            const angle2 = angleStep * (sideIndex + 1) + rotationAngle;
+
+            const x1 = centerX + radius * Math.cos(angle1);
+            const y1 = centerY + radius * Math.sin(angle1);
+            const x2 = centerX + radius * Math.cos(angle2);
+            const y2 = centerY + radius * Math.sin(angle2);
+
+            return { x: x1 + (x2 - x1) * sideT - 20, y: y1 + (y2 - y1) * sideT - 20 };
+        }
+
+        function getCirclePosition(t, playArea) {
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+            const radius = Math.min(playArea.width, playArea.height) / 2;
+
+            const angle = 2 * Math.PI * t - Math.PI / 2;
+
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+
+            return { x: x - 20, y: y - 20 };
+        }
+
+        function getFigure8Position(t, playArea) {
+            const a = (Math.min(playArea.width, playArea.height) / 4) * 1.5; // 50% larger
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+
+            const angle = 2 * Math.PI * t;
+
+            const x = centerX + a * Math.sin(angle) * Math.cos(angle);
+            const y = centerY + a * Math.sin(angle);
+
+            return { x: x - 20, y: y - 20 };
+        }
+
+        function getInfinityPosition(t, playArea) {
+            const a = (Math.min(playArea.width, playArea.height) / 4) * 1.5; // 50% larger
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+
+            const angle = 2 * Math.PI * t - Math.PI / 2;
+
+            const denom = 1 + Math.cos(angle) * Math.cos(angle);
+
+            const x = centerX + (a * Math.sin(angle)) / denom;
+            const y = centerY + (a * Math.sin(angle) * Math.cos(angle)) / denom;
+
+            return { x: x - 20, y: y - 20 };
+        }
+
+        function getQuatrefoilPosition(t, playArea) {
+            const a = (Math.min(playArea.width, playArea.height) / 4) * 1.5;
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+
+            const angle = 2 * Math.PI * t;
+
+            const x = centerX + a * Math.cos(2 * angle) * Math.cos(angle);
+            const y = centerY + a * Math.cos(2 * angle) * Math.sin(angle);
+
+            return { x: x - 20, y: y - 20 };
+        }
+
+        function getCurvilinearTrianglePosition(t, playArea) {
+            const a = (Math.min(playArea.width, playArea.height) / 6) * 1.5; // Smaller size
+            const b = a / 2;
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+
+            const angle = 2 * Math.PI * t;
+
+            const x = centerX + a * Math.sin(angle) + b * Math.sin(3 * angle);
+            const y = centerY + a * Math.cos(angle) + b * Math.cos(3 * angle);
+
+            return { x: x - 20, y: y - 20 };
+        }
+
+        function getSpirographPosition(t, playArea) {
+            const R = 100;
+            const r = 30;
+            const d = 60;
+
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = (playArea.y + playArea.height / 2) - 100;
+
+            const angle = 2 * Math.PI * t * 0.5;
+
+            const x = centerX + (R + r) * Math.cos(angle) - d * Math.cos(((R + r) / r) * angle);
+            const y = centerY + (R + r) * Math.sin(angle) - d * Math.sin(((R + r) / r) * angle);
+
+            return { x: x - 20, y: y - 20 };
+        }
+
+        function getSwirlPosition(t, playArea) {
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+            const maxRadius = Math.min(playArea.width, playArea.height) / 2;
+
+            // Swirl parameters
+            const maxTurns = 2; // Number of turns in the swirl (adjust as desired)
+            const angle = maxTurns * 2 * Math.PI * t; // Angle from 0 to maxTurns * 2π
+            const radius = (maxRadius / (maxTurns * 2 * Math.PI)) * angle; // Linearly increasing radius
+
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+
+            return { x: x - 20, y: y - 20 };
+        }
+
+        function getPlusPosition(t, playArea) {
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+
+            // Previously: R = Math.min(playArea.width, playArea.height) / 4
+            // Increase R by ~40%
+            const R = (Math.min(playArea.width, playArea.height) / 4) * 1.4; 
+            const w = R / 3; // half-thickness of the plus arms
+
+            // Define vertices of the plus sign shape
+            const vertices = [
+                [centerX - w, centerY - R],
+                [centerX + w, centerY - R],
+                [centerX + w, centerY - w],
+                [centerX + R, centerY - w],
+                [centerX + R, centerY + w],
+                [centerX + w, centerY + w],
+                [centerX + w, centerY + R],
+                [centerX - w, centerY + R],
+                [centerX - w, centerY + w],
+                [centerX - R, centerY + w],
+                [centerX - R, centerY - w],
+                [centerX - w, centerY - w],
+            ];
+
+            // Calculate perimeter
+            let perimeter = 0;
+            for (let i = 0; i < vertices.length; i++) {
+                const j = (i + 1) % vertices.length;
+                const dx = vertices[j][0] - vertices[i][0];
+                const dy = vertices[j][1] - vertices[i][1];
+                perimeter += Math.sqrt(dx * dx + dy * dy);
+            }
+
+            // Find position along perimeter
+            const distance = t * perimeter;
+            let accumulated = 0;
+            for (let i = 0; i < vertices.length; i++) {
+                const j = (i + 1) % vertices.length;
+                const x1 = vertices[i][0];
+                const y1 = vertices[i][1];
+                const x2 = vertices[j][0];
+                const y2 = vertices[j][1];
+                const segLength = Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
+
+                if (accumulated + segLength >= distance) {
+                    const ratio = (distance - accumulated) / segLength;
+                    const x = x1 + (x2 - x1) * ratio;
+                    const y = y1 + (y2 - y1) * ratio;
+                    return { x: x - 20, y: y - 20 };
+                }
+                accumulated += segLength;
+            }
+
+            // Fallback
+            return { x: centerX - 20, y: centerY - 20 };
+        }
+
+        function getHeartPosition(t, playArea) {
+            const centerX = playArea.x + playArea.width / 2;
+            const centerY = playArea.y + playArea.height / 2;
+            // Reduced scale to roughly 0.9 for about 20% smaller than 1.12
+            const scale = (Math.min(playArea.width, playArea.height) / 30) * 0.9; 
+            const angle = 2 * Math.PI * t;
+
+            // Parametric heart shape
+            const x = centerX + scale * 16 * Math.pow(Math.sin(angle), 3);
+            const y = centerY - scale * (13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle));
+
+            return { x: x - 20, y: y - 60 };
+        }
+
+
+        function shootBall() {
+            const ballElem = document.createElement('div');
+            ballElem.classList.add('ball');
+            main.appendChild(ballElem);
+
+            const mainRect = main.getBoundingClientRect();
+            let startX, startY, dx, dy;
+
+            // Define shot locations and directions
+            switch (shotLocation) {
+                case 1: // Bottom Center
+                    startX = mainRect.width / 2 - 7.5;
+                    startY = mainRect.height - 20;
+                    dx = 0;
+                    dy = -1;
+                    break;
+                case 2: // Bottom Right
+                    startX = mainRect.width - 20;
+                    startY = mainRect.height - 20;
+                    dx = -1;
+                    dy = -1;
+                    break;
+                case 3: // Middle Right
+                    startX = mainRect.width - 20;
+                    startY = mainRect.height / 2 - 7.5;
+                    dx = -1;
+                    dy = 0;
+                    break;
+                case 4: // Top Right
+                    startX = mainRect.width - 20;
+                    startY = 5;
+                    dx = -1;
+                    dy = 1;
+                    break;
+                case 5: // Top Center
+                    startX = mainRect.width / 2 - 7.5;
+                    startY = 5;
+                    dx = 0;
+                    dy = 1;
+                    break;
+                case 6: // Top Left
+                    startX = 5;
+                    startY = 5;
+                    dx = 1;
+                    dy = 1;
+                    break;
+                case 7: // Middle Left
+                    startX = 5;
+                    startY = mainRect.height / 2 - 7.5;
+                    dx = 1;
+                    dy = 0;
+                    break;
+                case 8: // Bottom Left
+                    startX = 5;
+                    startY = mainRect.height - 20;
+                    dx = 1;
+                    dy = -1;
+                    break;
+            }
+
+            // Normalize direction vector
+            const length = Math.sqrt(dx * dx + dy * dy);
+            dx /= length;
+            dy /= length;
+
+            const ball = {
+                element: ballElem,
+                x: startX,
+                y: startY,
+                dx: dx,
+                dy: dy
+            };
+
+            ballElem.style.left = ball.x + 'px';
+            ballElem.style.top = ball.y + 'px';
+
+            balls.push(ball);
+        }
+
+        function isColliding(ball, square) {
+            const ballRect = {
+                x: ball.x,
+                y: ball.y,
+                width: 15,
+                height: 15
+            };
+
+            const squareRect = square.element.getBoundingClientRect();
+            const mainRect = main.getBoundingClientRect();
+
+            // Adjust squareRect to be relative to the main container
+            const adjustedSquareRect = {
+                x: squareRect.left - mainRect.left,
+                y: squareRect.top - mainRect.top,
+                width: squareRect.width,
+                height: squareRect.height
+            };
+
+            return !(
+                ballRect.x > adjustedSquareRect.x + adjustedSquareRect.width ||
+                ballRect.x + ballRect.width < adjustedSquareRect.x ||
+                ballRect.y > adjustedSquareRect.y + adjustedSquareRect.height ||
+                ballRect.y + ballRect.height < adjustedSquareRect.y
+            );
+        }
+
+        function setBackground() {
+            chrome.storage.local.get('background', function(result) {
+                if (result.background) {
+                    // Get the element with id 'root' and set the background
+                    var rootElement = document.getElementById('root');
+                    if (rootElement) {
+                        rootElement.style.backgroundImage = `url(${result.background})`;
+                        rootElement.style.backgroundPosition = "center";
+                        rootElement.style.backgroundSize = "cover"; 
+                        rootElement.style.backgroundAttachment = "fixed"
+                    }
+                }
+            });
+        }
+
+        // Initialize the animation
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

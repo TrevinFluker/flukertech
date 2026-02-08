@@ -446,6 +446,30 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             if (result.rank === 1) {
                 if (winnerDeclared) return;
                 winnerDeclared = true;
+                
+                // Send winner data to MongoDB (silent, non-blocking)
+                try {
+                    if (window.MongoDBService) {
+                        const guessCount = Number(document.getElementById("guessCount")?.textContent) || 0;
+                        const winnerData = {
+                            timestamp: new Date().toISOString(),
+                            answer: result.lemma,
+                            guessCount: guessCount,
+                            nickname: user.nickname || user.username || null,
+                            uniqueId: user.uniqueId || null,
+                            photoUrl: user.photoUrl || null,
+                            tikfinityUsername: user.tikfinityUsername || null,
+                            followStatus: user.followStatus || null,
+                            gameType: "contexto"
+                        };
+                        window.MongoDBService.sendWinnerToMongoDB(winnerData)
+                            .then(() => {}) // Silent success
+                            .catch(() => {}); // Silent failure
+                    }
+                } catch (e) {
+                    // Completely silent
+                }
+                
                 if (lastWord) lastWord.textContent = result.lemma;
                 if (window.GameManager) {
                     window.GameManager.endRound("win", [{ name: user.nickname, photo: user.photoUrl, uniqueId: user.uniqueId }], result.lemma);
