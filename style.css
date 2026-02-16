@@ -469,3 +469,65 @@ a {
 .aspirational h2, .aspirational p {
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
 }
+
+/* Global Leaderboard Banner */
+.global-leaderboard-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #6a3f8f 0%, #5568d3 100%);
+    color: white;
+    padding: 12px 20px;
+    text-decoration: none;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10001;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.global-leaderboard-banner:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+.banner-icon {
+    font-size: 20px;
+    animation: bounce 2s infinite;
+}
+
+.banner-text {
+    text-align: center;
+    flex: 1;
+}
+
+.banner-arrow {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@media (max-width: 600px) {
+    .global-leaderboard-banner {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+    
+    .banner-icon,
+    .banner-arrow {
+        font-size: 18px;
+    }
+}

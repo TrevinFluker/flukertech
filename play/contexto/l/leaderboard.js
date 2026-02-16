@@ -59,6 +59,12 @@ function initializeApp() {
   // Update UI to match current filters
   updateFilterButtons();
   
+  // Hide followers only section if in global mode
+  if (!currentFilters.streamer) {
+    const followersSection = document.getElementById('followersOnlyCheckbox').closest('.filter-section');
+    if (followersSection) followersSection.style.display = 'none';
+  }
+  
   // Fetch initial data
   fetchAndRender();
 }
@@ -190,6 +196,9 @@ function switchToGlobalMode() {
   currentFilters.streamer = null;
   currentFilters.page = 1;
   document.getElementById('streamerInputContainer').style.display = 'none';
+  // Hide followers only checkbox in global mode
+  const followersSection = document.getElementById('followersOnlyCheckbox').closest('.filter-section');
+  if (followersSection) followersSection.style.display = 'none';
   document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === 'global');
   });
@@ -198,6 +207,9 @@ function switchToGlobalMode() {
 
 function switchToStreamerMode() {
   document.getElementById('streamerInputContainer').style.display = 'flex';
+  // Show followers only checkbox in streamer mode
+  const followersSection = document.getElementById('followersOnlyCheckbox').closest('.filter-section');
+  if (followersSection) followersSection.style.display = 'block';
   document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === 'streamer');
   });

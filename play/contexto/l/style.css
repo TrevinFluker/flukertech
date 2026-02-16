@@ -135,6 +135,7 @@ body[data-has-bg-image="true"]::before {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
 .time-range-buttons {
@@ -224,6 +225,8 @@ body[data-has-bg-image="true"]::before {
   font-weight: 600;
   font-size: 14px;
   color: white;
+  margin: 0;
+  height: 100%;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -772,7 +775,7 @@ body[data-has-bg-image="true"]::before {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 500px) {
   .header-content {
     flex-direction: column;
     gap: 15px;
@@ -789,17 +792,75 @@ body[data-has-bg-image="true"]::before {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
 
+  .leaderboard-container {
+    width: 95%;
+    padding: 10px 5px;
+  }
+
   .leaderboard-row {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    padding: 5px 5px;
+    gap: 5px;
+  }
+
+  .rank-number {
+    font-size: 16px;
+    min-width: 30px;
+  }
+
+  .player-avatar {
+    width: 32px;
+    height: 32px;
   }
 
   .player-info {
     flex: 1;
-    min-width: 150px;
+    min-width: 0;
+    gap: 5px;
+  }
+
+  .player-text {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .player-nickname {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .player-id {
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .win-count {
-    width: 100%;
-    justify-content: flex-end;
+    font-size: 14px;
+    min-width: 50px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .filter-bar {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .filter-btn, .mode-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .leaderboard-title {
+    font-size: 18px;
+  }
+
+  .pagination-controls button {
+    padding: 6px 10px;
+    font-size: 12px;
   }
 }
