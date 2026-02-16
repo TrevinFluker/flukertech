@@ -9,6 +9,17 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Leaderboard Announcement Toast -->
+  <div id="leaderboardToast" class="leaderboard-toast">
+    <button class="toast-close" id="closeToast">✕</button>
+    <div class="toast-content">
+      <h3>🎉 New Feature!</h3>
+      <p>Check out the new contexto global leaderboard! Click ➡️ on the floating leaderboard on this page to be redirected.</p>
+      <p>Win tracking began February 8th.</p>
+      <p>Click "Streamer" and enter your username to see stats for your live only.</p>
+    </div>
+  </div>
+
   <!-- =============================== -->
   <!-- 🎮 CONTEXTO MAIN GAME -->
   <!-- =============================== -->
@@ -376,6 +387,7 @@ There are single player and group modes.</textarea>
         <button id="nextLeaderboardPage" class="leaderboard-nav-btn">›</button>
           <button id="toggleLeaderboardOpacity" class="leaderboard-nav-btn" title="Toggle Opacity">◐</button>
         <button id="toggleFloatingLeaderboard" class="floating-leaderboard-toggle">−</button>
+        <a href="http://www.runchatcapture.com/play/contexto/l/index.html?timeRange=today" target="_blank" class="leaderboard-nav-btn" title="View full leaderboard" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">➡️</a>
       </div>
     </div>
     <div class="floating-leaderboard-body" id="floatingLeaderboardBody">

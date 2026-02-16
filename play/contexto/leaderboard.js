@@ -219,3 +219,37 @@ if (toggleLeaderboardHeight && floatingLeaderboardBody) {
   window.updateFloatingLeaderboard = updateFloatingLeaderboard;
   window.Leaderboard = { getLeaderboard, updateLeaderboard, getTopLeaderboardUsers, clearLeaderboard };
   
+// Leaderboard announcement toast
+(function() {
+  const TOAST_STORAGE_KEY = 'contextoLeaderboardToastDismissed';
+  const toast = document.getElementById('leaderboardToast');
+  const closeBtn = document.getElementById('closeToast');
+  
+  if (!toast) return;
+  
+  // Check if user has already dismissed the toast
+  const wasDismissed = localStorage.getItem(TOAST_STORAGE_KEY);
+  
+  if (!wasDismissed) {
+    // Show toast after a short delay
+    setTimeout(() => {
+      toast.classList.add('show');
+    }, 1000);
+  }
+  
+  // Close button handler
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function() {
+      toast.classList.remove('show');
+      localStorage.setItem(TOAST_STORAGE_KEY, 'true');
+    });
+  }
+  
+  // Close on background click
+  toast.addEventListener('click', function(e) {
+    if (e.target === toast) {
+      toast.classList.remove('show');
+      localStorage.setItem(TOAST_STORAGE_KEY, 'true');
+    }
+  });
+})();

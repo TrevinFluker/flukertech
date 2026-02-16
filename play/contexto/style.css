@@ -950,7 +950,7 @@ body.dark-mode .leaderboard-empty {
   position: fixed;
   top: 20px;
   left: 20px;
-  width: 280px;
+  width: 320px;
   background: #2c2c2c;
   border: 1px solid #444;
   border-radius: 8px;
@@ -1008,7 +1008,7 @@ body.dark-mode .leaderboard-empty {
 .leaderboard-height-toggle {
   position: sticky;
   bottom: 4px;
-  left: 220px;
+  left: 270px;
   background: transparent;
   color: #fff;
   border: none;
@@ -1126,4 +1126,68 @@ body.dark-mode .leaderboard-empty {
   min-width: 24px;
   text-align: center;
   margin: 0 2px;
+}
+
+/* Leaderboard Announcement Toast */
+.leaderboard-toast {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  max-width: 450px;
+  width: auto;
+  font-family: 'Nunito', sans-serif;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-500px);
+  transition: all 0.4s ease;
+}
+
+.leaderboard-toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+.leaderboard-toast h3 {
+  margin: 0 0 15px 0;
+  font-size: 24px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.leaderboard-toast p {
+  margin: 10px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.toast-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.toast-close:hover {
+  background: rgba(255, 255, 255, 0.3);
 }

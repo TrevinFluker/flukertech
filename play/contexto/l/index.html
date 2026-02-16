@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contexto Leaderboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="leaderboard-page">
+    <!-- Header Section -->
+    <header class="leaderboard-header">
+      <div class="header-content">
+        <h1 class="leaderboard-title">🏆 CONTEXTO LEADERBOARD</h1>
+        <button class="settings-button" id="settingsButton" title="Settings & Export">+</button>
+      </div>
+    </header>
+
+    <!-- Filter Controls -->
+    <div class="filter-bar">
+      <div class="filter-section">
+        <div class="time-range-buttons">
+          <button class="filter-btn active" data-range="all">All Time</button>
+          <button class="filter-btn" data-range="today">Today</button>
+          <button class="filter-btn" data-range="week">Week</button>
+          <button class="filter-btn" data-range="month">Month</button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="streamer-mode-toggle">
+          <button class="mode-btn active" data-mode="global">🌐 Global</button>
+          <button class="mode-btn" data-mode="streamer">🎯 Streamer</button>
+        </div>
+        <div class="streamer-input-container" id="streamerInputContainer" style="display: none;">
+          <input 
+            type="text" 
+            id="streamerInput" 
+            class="streamer-input" 
+            placeholder="Enter streamer username"
+          />
+          <button class="apply-btn" id="applyStreamerBtn">Apply</button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <label class="checkbox-label">
+          <input type="checkbox" id="followersOnlyCheckbox" />
+          <span>Followers Only</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Current Filter Info -->
+    <div class="filter-info" id="filterInfo">
+      <span id="filterSummary">Showing: Global Leaderboard - All Time</span>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-container" id="loadingContainer" style="display: none;">
+      <div class="loading-spinner"></div>
+      <p>Loading leaderboard...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+    <!-- Leaderboard List -->
+    <div class="leaderboard-container" id="leaderboardContainer">
+      <div class="leaderboard-list" id="leaderboardList">
+        <!-- Rows will be dynamically inserted here -->
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <p>😔 No players found with current filters</p>
+      <p class="empty-state-hint">Try adjusting your filters or search terms</p>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-container" id="paginationContainer">
+      <div class="pagination-info" id="paginationInfo">
+        Showing 0-0 of 0 players
+      </div>
+      <div class="pagination-controls" id="paginationControls">
+        <!-- Pagination buttons will be dynamically inserted here -->
+      </div>
+    </div>
+
+    <!-- Settings Panel Modal -->
+    <div class="settings-overlay" id="settingsOverlay" style="display: none;">
+      <div class="settings-panel">
+        <div class="settings-header">
+          <h2>Settings & Export</h2>
+          <button class="close-settings-btn" id="closeSettingsBtn">×</button>
+        </div>
+
+        <div class="settings-content">
+          <!-- Background Selector -->
+          <div class="settings-section">
+            <h3>Background</h3>
+            <div class="background-grid" id="backgroundGrid">
+              <!-- Background options will be dynamically inserted -->
+            </div>
+          </div>
+
+          <!-- CSV Export -->
+          <div class="settings-section" id="exportSection">
+            <h3>Export Data</h3>
+            <p class="export-info" id="exportInfo">Export complete leaderboard to CSV</p>
+            <button class="export-btn" id="exportBtn">
+              📊 Export to CSV
+            </button>
+            <p class="export-hint" id="exportHint" style="display: none;">
+              CSV export is only available for single streamer view
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../img/backgrounds.js"></script>
+  <script src="leaderboard.js"></script>
+</body>
+</html>
