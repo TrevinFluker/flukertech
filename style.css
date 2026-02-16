@@ -9,6 +9,7 @@ body {
     color: #fff;
     background-color: #121212;
     overflow-x: hidden;
+    padding-top: 92px;
 }
 a {
     text-decoration: none;
@@ -483,11 +484,15 @@ a {
     font-family: 'Roboto', sans-serif;
     font-weight: 700;
     font-size: 16px;
-    position: sticky;
-    top: 0;
-    z-index: 10001;
+    position: fixed;
+    top: 44px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 999;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
+    margin: 0;
 }
 
 .global-leaderboard-banner:hover {
@@ -502,6 +507,7 @@ a {
 }
 
 .banner-text {
+    margin-top: 6px;
     text-align: center;
     flex: 1;
 }
