@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View recently active TikTok streamers hosting Interactive Contexto games. See who's live now and join the word guessing action.">
+  <title>Recently Active Hosts - Interactive Contexto / Chat Capture</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="active-page">
+    <!-- Header Section -->
+    <header class="active-header">
+      <div class="header-content">
+        <h1 class="active-title">
+          🎮
+          <img src="https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png" style="height:1em;vertical-align:-0.15em;">
+          RECENTLY ACTIVE HOSTS
+        </h1>
+      </div>
+    </header>
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+      <div class="info-content">
+        <span id="activeCount">Loading...</span>
+        <span class="divider">•</span>
+        <span id="lastUpdate">Just now</span>
+        <span class="divider">•</span>
+        <span class="click-to-join">👉 Click any host to join</span>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-container" id="loadingContainer" style="display: none;">
+      <div class="loading-spinner"></div>
+      <p>Loading active hosts...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+    <!-- Active Hosts Container -->
+    <div class="hosts-container" id="hostsContainer">
+      <div class="hosts-grid" id="hostsGrid">
+        <!-- Host cards will be dynamically inserted here -->
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <p>😴 No active hosts right now</p>
+      <p class="empty-state-hint">Check back soon for live Contexto games!</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <a href="../l/index.html?timeRange=today" class="footer-link">📊 View Leaderboard</a>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../img/backgrounds.js"></script>
+  <script src="active.js"></script>
+</body>
+</html>

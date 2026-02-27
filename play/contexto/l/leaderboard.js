@@ -186,6 +186,11 @@ function initializeEventListeners() {
   
   // Export button
   document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+  
+  // Live Hosts button
+  document.getElementById('liveHostsBtn').addEventListener('click', () => {
+    window.location.href = '../a/index.html';
+  });
 }
 
 // ========================================================

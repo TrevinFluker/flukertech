@@ -138,6 +138,10 @@ body[data-has-bg-image="true"]::before {
   justify-content: flex-start;
 }
 
+.filter-section:has(.streamer-mode-toggle) {
+  flex: 1;
+}
+
 .time-range-buttons {
   display: flex;
   gap: 8px;
@@ -167,9 +171,27 @@ body[data-has-bg-image="true"]::before {
   color: white;
 }
 
+.live-hosts-btn {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  animation: livePulse 2s ease-in-out infinite;
+  margin-left: auto;
+}
+
+.live-hosts-btn:hover {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
 .streamer-mode-toggle {
   display: flex;
   gap: 8px;
+  flex: 1;
 }
 
 .streamer-input-container {
@@ -737,10 +759,26 @@ body[data-has-bg-image="true"]::before {
     width: 100%;
   }
 
+  .filter-section:has(.streamer-mode-toggle) {
+    width: auto;
+    display: flex;
+    justify-content: flex-start;
+    flex: 1;
+  }
+
   .time-range-buttons {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .streamer-mode-toggle {
+    width: 100%;
+    flex: 1;
+  }
+
+  .live-hosts-btn {
+    margin-left: auto;
   }
 
   .streamer-input {
