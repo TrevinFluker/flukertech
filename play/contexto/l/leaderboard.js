@@ -107,6 +107,7 @@ function initializeEventListeners() {
   // Time range buttons
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (!btn.dataset.range) return; // skip buttons without a time range (e.g. live-hosts-btn)
       currentFilters.timeRange = btn.dataset.range;
       currentFilters.page = 1;
       updateFilterButtons();
