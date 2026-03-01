@@ -24,39 +24,41 @@
 
     <!-- Filter Controls -->
     <div class="filter-bar">
-      <div class="filter-section">
-        <div class="time-range-buttons">
-          <button class="filter-btn active" data-range="all">All Time</button>
-          <button class="filter-btn" data-range="today">Today</button>
-          <button class="filter-btn" data-range="week">Week</button>
-          <button class="filter-btn" data-range="month">Month</button>
-          
-        </div>
+
+      <!-- Always-visible top row -->
+      <div class="filter-row-main">
+        <select id="timeRangeSelect" class="time-range-select">
+          <option value="today">Today</option>
+          <option value="week">Week</option>
+          <option value="month">Month</option>
+          <option value="all">All Time</option>
+        </select>
+        <select id="modeSelect" class="mode-select">
+          <option value="global">🌐 Global</option>
+          <option value="streamer">🎯 Streamer</option>
+        </select>
+        <button class="filter-btn live-hosts-btn" id="liveHostsBtn">● Join a Live</button>
       </div>
 
-      <div class="filter-section">
-        <div class="streamer-mode-toggle">
-          <button class="mode-btn active" data-mode="global">🌐 Global</button>
-          <button class="mode-btn" data-mode="streamer">🎯 Streamer</button>
-          <button class="filter-btn live-hosts-btn" id="liveHostsBtn">● Join a Live</button>
-        </div>
-        <div class="streamer-input-container" id="streamerInputContainer" style="display: none;">
-          <input 
-            type="text" 
-            id="streamerInput" 
-            class="streamer-input" 
-            placeholder="Enter streamer username"
-          />
-          <button class="apply-btn" id="applyStreamerBtn">Apply</button>
-        </div>
+      <!-- Streamer input row - shown/hidden by JS -->
+      <div class="streamer-input-container" id="streamerInputContainer" style="display: none;">
+        <input 
+          type="text" 
+          id="streamerInput" 
+          class="streamer-input" 
+          placeholder="Enter streamer username"
+        />
+        <button class="apply-btn" id="applyStreamerBtn">Apply</button>
       </div>
 
-      <div class="filter-section">
+      <!-- Followers only row - shown/hidden by JS -->
+      <div class="followers-row" id="followersRow" style="display: none;">
         <label class="checkbox-label">
           <input type="checkbox" id="followersOnlyCheckbox" />
           <span>Followers Only</span>
         </label>
       </div>
+
     </div>
 
     <!-- Current Filter Info -->

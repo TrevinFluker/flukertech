@@ -8,7 +8,7 @@ const LOCAL_STORAGE_KEY = 'contextoLeaderboardBackground';
 
 // State Management
 let currentFilters = {
-  timeRange: 'all',
+  timeRange: 'today',
   streamer: null,
   followersOnly: false,
   page: 1,
@@ -56,13 +56,14 @@ function initializeApp() {
   // Initialize backgrounds
   initializeBackgrounds();
   
-  // Update UI to match current filters
-  updateFilterButtons();
+  // Update dropdowns to match current filters
+  document.getElementById('timeRangeSelect').value = currentFilters.timeRange;
+  document.getElementById('modeSelect').value = currentFilters.streamer ? 'streamer' : 'global';
   
   // Hide followers only section if in global mode
   if (!currentFilters.streamer) {
-    const followersSection = document.getElementById('followersOnlyCheckbox').closest('.filter-section');
-    if (followersSection) followersSection.style.display = 'none';
+    const followersRow = document.getElementById('followersRow');
+    if (followersRow) followersRow.style.display = 'none';
   }
   
   // Fetch initial data
@@ -77,7 +78,7 @@ function parseURLParams() {
   const params = new URLSearchParams(window.location.search);
   return {
     streamer: params.get('streamer') || null,
-    timeRange: params.get('timeRange') || 'all',
+    timeRange: params.get('timeRange') || 'today',
     followersOnly: params.get('followersOnly') === 'true'
   };
 }
@@ -88,7 +89,7 @@ function updateURL() {
   if (currentFilters.streamer) {
     params.set('streamer', currentFilters.streamer);
   }
-  if (currentFilters.timeRange !== 'all') {
+  if (currentFilters.timeRange !== 'today') {
     params.set('timeRange', currentFilters.timeRange);
   }
   if (currentFilters.followersOnly) {
@@ -104,26 +105,20 @@ function updateURL() {
 // ========================================================
 
 function initializeEventListeners() {
-  // Time range buttons
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (!btn.dataset.range) return; // skip buttons without a time range (e.g. live-hosts-btn)
-      currentFilters.timeRange = btn.dataset.range;
-      currentFilters.page = 1;
-      updateFilterButtons();
-      fetchAndRender();
-    });
+  // Time range dropdown
+  document.getElementById('timeRangeSelect').addEventListener('change', (e) => {
+    currentFilters.timeRange = e.target.value;
+    currentFilters.page = 1;
+    fetchAndRender();
   });
   
-  // Streamer mode toggle
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (btn.dataset.mode === 'global') {
-        switchToGlobalMode();
-      } else {
-        switchToStreamerMode();
-      }
-    });
+  // Mode dropdown (Global/Streamer)
+  document.getElementById('modeSelect').addEventListener('change', (e) => {
+    if (e.target.value === 'global') {
+      switchToGlobalMode();
+    } else {
+      switchToStreamerMode();
+    }
   });
   
   // Apply streamer button
@@ -202,34 +197,23 @@ function switchToGlobalMode() {
   currentFilters.streamer = null;
   currentFilters.page = 1;
   document.getElementById('streamerInputContainer').style.display = 'none';
-  // Hide followers only checkbox in global mode
-  const followersSection = document.getElementById('followersOnlyCheckbox').closest('.filter-section');
-  if (followersSection) followersSection.style.display = 'none';
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === 'global');
-  });
+  // Hide followers only row in global mode
+  const followersRow = document.getElementById('followersRow');
+  if (followersRow) followersRow.style.display = 'none';
+  document.getElementById('modeSelect').value = 'global';
   fetchAndRender();
 }
 
 function switchToStreamerMode() {
   document.getElementById('streamerInputContainer').style.display = 'flex';
-  // Show followers only checkbox in streamer mode
-  const followersSection = document.getElementById('followersOnlyCheckbox').closest('.filter-section');
-  if (followersSection) followersSection.style.display = 'block';
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === 'streamer');
-  });
+  // Show followers only row in streamer mode
+  const followersRow = document.getElementById('followersRow');
+  if (followersRow) followersRow.style.display = 'flex';
+  document.getElementById('modeSelect').value = 'streamer';
   // Only fetch if streamer is already set
   if (currentFilters.streamer) {
     fetchAndRender();
   }
-}
-
-function updateFilterButtons() {
-  // Update time range buttons
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.range === currentFilters.timeRange);
-  });
 }
 
 // ========================================================
