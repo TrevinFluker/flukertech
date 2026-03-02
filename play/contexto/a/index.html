@@ -1,77 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page Under Construction</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #fff;
-        }
-
-        .container {
-            text-align: center;
-            padding: 2rem;
-            max-width: 600px;
-        }
-
-        .icon {
-            font-size: 5rem;
-            margin-bottom: 1rem;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        p {
-            font-size: 1.2rem;
-            line-height: 1.6;
-            opacity: 0.9;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-20px);
-            }
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2rem;
-            }
-            p {
-                font-size: 1rem;
-            }
-            .icon {
-                font-size: 4rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View recently active TikTok streamers hosting Interactive Contexto games. See who's live now and join the word guessing action.">
+  <title>Recently Active Hosts - Interactive Contexto / Chat Capture</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="icon">🚧</div>
-        <h1>Page Under Construction</h1>
-        <p>We're working hard to bring you something amazing. Please check back soon!</p>
+  <div class="active-page">
+    <!-- Header Section -->
+    <header class="active-header">
+      <div class="header-content">
+        <h1 class="active-title">
+          🎮
+          <img src="https://www.runchatcapture.com/assets/imgs/interactive_contexto_logo.png" style="height:1em;vertical-align:-0.15em;">
+          RECENTLY ACTIVE HOSTS
+        </h1>
+      </div>
+    </header>
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+      <div class="info-content">
+        <span id="activeCount">Loading...</span>
+        <span class="divider">•</span>
+        <span id="lastUpdate">Just now</span>
+        <span class="divider">•</span>
+        <span class="click-to-join">👉 Click any host to join</span>
+      </div>
     </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-container" id="loadingContainer" style="display: none;">
+      <div class="loading-spinner"></div>
+      <p>Loading active hosts...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+    <!-- Active Hosts Container -->
+    <div class="hosts-container" id="hostsContainer">
+      <div class="hosts-grid" id="hostsGrid">
+        <!-- Host cards will be dynamically inserted here -->
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <p>😴 No active hosts right now</p>
+      <p class="empty-state-hint">Check back soon for live Contexto games!</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <a href="../l/index.html?timeRange=today" class="footer-link">📊 View Leaderboard</a>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../img/backgrounds.js"></script>
+  <script src="active.js"></script>
 </body>
 </html>
