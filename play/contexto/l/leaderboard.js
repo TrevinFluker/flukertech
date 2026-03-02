@@ -373,7 +373,6 @@ function isSafeImageUrl(url) {
 function createLeaderboardRow(entry) {
   const row = document.createElement('div');
   row.className = 'leaderboard-row';
-  row.dataset.userData = JSON.stringify(entry);
   row.dataset.uniqueId = entry.uniqueId || '';
   row.dataset.nickname = (entry.nickname || '').toLowerCase();
 
@@ -652,14 +651,14 @@ function createBackgroundOption(name, url) {
     option.style.background = 'linear-gradient(135deg, #15202b 0%, #1e2433 100%)';
   }
   
-  option.addEventListener('click', () => {
-    selectBackground(url);
+  option.addEventListener('click', (e) => {
+    selectBackground(url, e);
   });
   
   return option;
 }
 
-function selectBackground(url) {
+function selectBackground(url, event) {
   if (url) {
     document.body.style.backgroundImage = `url('${url}')`;
     document.body.setAttribute('data-has-bg-image', 'true');
@@ -678,13 +677,24 @@ function selectBackground(url) {
   event.target.classList.add('selected');
 }
 
+function isSafeBackgroundUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const p = new URL(url);
+    return p.protocol === 'https:' && p.hostname === 'i.pinimg.com';
+  } catch { return false; }
+}
+
 function loadSavedBackground() {
   const savedBg = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (savedBg) {
+  if (savedBg && isSafeBackgroundUrl(savedBg)) {
     document.body.style.backgroundImage = `url('${savedBg}')`;
     document.body.setAttribute('data-has-bg-image', 'true');
+  } else if (savedBg) {
+    // Stored URL didn't pass validation — clear the poisoned key
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
   }
-  // If no saved background, use the default GIF from CSS
+  // If no saved background, the default GIF from CSS applies
 }
 
 // ========================================================
