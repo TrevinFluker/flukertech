@@ -101,33 +101,66 @@ function renderHosts(hosts) {
   
   hosts.filter(host => host.username != null).forEach(host => {
     const card = createHostCard(host);
-    container.appendChild(card);
+    if (card) container.appendChild(card);
   });
 }
 
+// TikTok usernames: letters, numbers, underscores, dots only
+function isSafeUsername(username) {
+  return typeof username === 'string' && /^[a-zA-Z0-9._]{1,50}$/.test(username);
+}
+
 function createHostCard(host) {
+  // Reject cards with invalid usernames entirely
+  if (!isSafeUsername(host.username)) {
+    console.warn('Skipping host card with invalid username:', host.username);
+    return null;
+  }
+
   const card = document.createElement('a');
   card.className = 'host-card';
+  // Build URL from validated username only - never interpolate raw API data into href
   card.href = `https://www.tiktok.com/@${host.username}/live`;
   card.target = '_blank';
   card.rel = 'noopener noreferrer';
-  
+
   const timeAgo = getTimeAgo(host.lastActive);
   const timeBadgeClass = getTimeBadgeClass(timeAgo.minutes);
-  
-  card.innerHTML = `
-    <div class="host-card-header">
-      <span class="live-indicator">● LIVE</span>
-    </div>
-    <div class="host-username">@${escapeHtml(host.username)}</div>
-    <div class="host-info">
-      <div class="host-time">
-        <span>⏱️ Last active:</span>
-        <span class="time-badge ${timeBadgeClass}">${timeAgo.text}</span>
-      </div>
-    </div>
-  `;
-  
+
+  // Header
+  const cardHeader = document.createElement('div');
+  cardHeader.className = 'host-card-header';
+  const liveIndicator = document.createElement('span');
+  liveIndicator.className = 'live-indicator';
+  liveIndicator.textContent = '● LIVE';
+  cardHeader.appendChild(liveIndicator);
+
+  // Username
+  const usernameDiv = document.createElement('div');
+  usernameDiv.className = 'host-username';
+  usernameDiv.textContent = `@${host.username}`;  // textContent = safe
+
+  // Time info
+  const hostInfo = document.createElement('div');
+  hostInfo.className = 'host-info';
+  const hostTime = document.createElement('div');
+  hostTime.className = 'host-time';
+
+  const timeLabel = document.createElement('span');
+  timeLabel.textContent = '⏱️ Last active:';
+
+  const timeBadge = document.createElement('span');
+  timeBadge.className = `time-badge ${timeBadgeClass}`;
+  timeBadge.textContent = timeAgo.text;  // textContent = safe
+
+  hostTime.appendChild(timeLabel);
+  hostTime.appendChild(timeBadge);
+  hostInfo.appendChild(hostTime);
+
+  card.appendChild(cardHeader);
+  card.appendChild(usernameDiv);
+  card.appendChild(hostInfo);
+
   return card;
 }
 

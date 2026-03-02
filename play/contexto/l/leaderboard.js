@@ -328,36 +328,103 @@ function renderLeaderboard(data) {
   */
 }
 
+// Allowlist of trusted image hostnames (based on actual DB audit)
+const TRUSTED_IMAGE_HOSTS = [
+  // TikTok CDN - US
+  'p16-sign-sg.tiktokcdn.com',
+  'p16-common-sign.tiktokcdn-us.com',
+  'p19-common-sign.tiktokcdn-us.com',
+  'p16-sign-va.tiktokcdn.com',
+  'p77-sign-va.tiktokcdn.com',
+  'p77-sign-va-lite.tiktokcdn.com',
+  'p58-sign-va.tiktokcdn.com',
+  'p9-sign-sg.tiktokcdn.com',
+  'p77-sign-sg.tiktokcdn.com',
+  'p77-sign-sg-lite.tiktokcdn.com',
+  // TikTok CDN - EU
+  'p16-common-sign.tiktokcdn-eu.com',
+  'p19-common-sign.tiktokcdn-eu.com',
+  'p19-pu-sign-no.tiktokcdn-eu.com',
+  'p16-pu-sign-no.tiktokcdn-eu.com',
+  'p19-common-sign-useastred.tiktokcdn-eu.com',
+  'p16-common-sign-useastred.tiktokcdn-eu.com',
+  // ByteDance infrastructure
+  'sf16-passport-va.ibytedtos.com',
+  // App assets
+  'static.vecteezy.com',
+  'www.runchatcapture.com'
+];
+
+const DEFAULT_AVATAR = 'https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg';
+
+function isSafeImageUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === 'https:' &&
+      TRUSTED_IMAGE_HOSTS.some(host => parsed.hostname === host || parsed.hostname.endsWith('.' + host))
+    );
+  } catch {
+    return false;
+  }
+}
+
 function createLeaderboardRow(entry) {
   const row = document.createElement('div');
   row.className = 'leaderboard-row';
   row.dataset.userData = JSON.stringify(entry);
-  row.dataset.uniqueId = entry.uniqueId;
+  row.dataset.uniqueId = entry.uniqueId || '';
   row.dataset.nickname = (entry.nickname || '').toLowerCase();
-  
-  // Rank styling
+
+  // Rank
+  const rankDiv = document.createElement('div');
   let rankClass = 'rank-number';
   if (entry.rank === 1) rankClass += ' top1';
   else if (entry.rank === 2) rankClass += ' top2';
   else if (entry.rank === 3) rankClass += ' top3';
-  
-  // Avatar with fallback to default profile icon
-  const avatarSrc = entry.photoUrl || 'https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg';
-  
-  row.innerHTML = `
-    <div class="${rankClass}">#${entry.rank}</div>
-    <div class="player-info">
-      <img src="${avatarSrc}" alt="${entry.nickname}" class="player-avatar" onerror="this.src='https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg'">
-      <div class="player-text">
-        <div class="player-nickname">${escapeHtml(entry.nickname || 'Anonymous')}</div>
-        <div class="player-id">@${escapeHtml(entry.uniqueId || 'unknown')}</div>
-      </div>
-    </div>
-    <div class="win-count">
-      <span>🏆 ${entry.winCount}</span>
-    </div>
-  `;
-  
+  rankDiv.className = rankClass;
+  rankDiv.textContent = `#${entry.rank}`;
+
+  // Player info wrapper
+  const playerInfo = document.createElement('div');
+  playerInfo.className = 'player-info';
+
+  // Avatar - only use URL if it passes the allowlist check
+  const img = document.createElement('img');
+  img.src = isSafeImageUrl(entry.photoUrl) ? entry.photoUrl : DEFAULT_AVATAR;
+  img.alt = '';  // don't put user-supplied text into alt
+  img.className = 'player-avatar';
+  img.addEventListener('error', () => { img.src = DEFAULT_AVATAR; });
+
+  // Player text
+  const playerText = document.createElement('div');
+  playerText.className = 'player-text';
+
+  const nicknameDiv = document.createElement('div');
+  nicknameDiv.className = 'player-nickname';
+  nicknameDiv.textContent = entry.nickname || 'Anonymous';  // textContent = safe
+
+  const idDiv = document.createElement('div');
+  idDiv.className = 'player-id';
+  idDiv.textContent = `@${entry.uniqueId || 'unknown'}`;  // textContent = safe
+
+  playerText.appendChild(nicknameDiv);
+  playerText.appendChild(idDiv);
+  playerInfo.appendChild(img);
+  playerInfo.appendChild(playerText);
+
+  // Win count
+  const winCount = document.createElement('div');
+  winCount.className = 'win-count';
+  const winSpan = document.createElement('span');
+  winSpan.textContent = `🏆 ${entry.winCount}`;
+  winCount.appendChild(winSpan);
+
+  row.appendChild(rankDiv);
+  row.appendChild(playerInfo);
+  row.appendChild(winCount);
+
   return row;
 }
 

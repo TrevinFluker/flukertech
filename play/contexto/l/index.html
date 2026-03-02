@@ -4,6 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="View the global TikTok Interactive Contexto leaderboard. Track top players, filter by streamer, and see win rankings from Chat Capture's interactive word guessing game.">
+  <!-- Security: restrict what can run/load on this page -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src https://fonts.gstatic.com;
+    img-src 'self' data:
+      https://*.tiktokcdn-us.com
+      https://*.tiktokcdn.com
+      https://*.tiktokcdn-eu.com
+      https://static.vecteezy.com
+      https://www.runchatcapture.com
+      https://i.pinimg.com;
+    connect-src 'self' https://cc-contexto-d01a6bbfa039.herokuapp.com;
+    frame-src 'none';
+    object-src 'none';
+    base-uri 'self';
+  ">
   <title>Interative Contexto Leaderboard - Global TikTok Rankings / Chat Capture</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
