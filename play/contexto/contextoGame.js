@@ -20,18 +20,55 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     const API_BASE_URL = "https://ccbackend2.com";
     const API_BASE_BACKUP_URL = "https://ccbackend.com";
     const FALLBACK_WORDS = [
-        "motorcycle", "pharmacist", "dictionary", "cherry", "foam", "cleaver", "perjury", "scallop",
-        "basement", "flu", "atlas", "vampire", "cobbler", "garage", "disinfectant", "mill", "raisin",
-        "flame", "beetle", "airbag", "pony", "lever", "pool", "marshmallow", "wool", "cabin",
-        "waterfall", "cage", "oyster", "spool", "florist", "sphere", "plum", "geometry", "fury",
-        "porcelain", "yam", "treadmill", "laboratory", "notebook", "tadpole", "acid", "lie", "omelet",
-        "dust", "igloo", "nun", "toaster", "dessert", "pill", "screwdriver", "literature", "porridge",
-        "raccoon", "bucket", "lighthouse", "alley", "protractor", "lighter", "lentil", "envy",
-        "seagull", "bride", "oven", "bamboo", "shoelace", "receipt", "faucet", "shelf", "limousine",
-        "charger", "tray", "bookstore", "rope", "registry", "bungalow", "umbrella", "costume",
-        "lawyer", "cucumber", "enemy", "tongue", "makeup", "hose", "cliff", "ice", "rocket", "butter",
-        "mayor", "pink", "boot", "waiter", "shale", "myth", "reptile", "joystick", "villain",
-        "fishbowl", "knee", "lollipop", "pianist"
+        "acid", "advertisement", "air", "airbag", "aisle", "allergy", "alley", "alloy", "almond",
+        "ambassador", "anchorman", "anthem", "anvil", "apron", "artichoke", "ash", "ashtray", "athlete",
+        "atlas", "atoll", "bagel", "bait", "bamboo", "bangle", "barbecue", "bartender", "basement",
+        "beetle", "beret", "biology", "blackberry", "boardwalk", "bone", "booklet", "bookstore", "boot",
+        "bracelet", "braille", "brake", "breakfast", "bride", "bronze", "broom", "bucket", "bull",
+        "bungalow", "burlap", "butter", "button", "cab", "cabin", "cactus", "cage", "calendar", "camel",
+        "campaign", "cane", "canteen", "cartilage", "casino", "ceiling", "centimeter", "charger", "charity",
+        "cheeseburger", "chef", "chemistry", "cherry", "chess", "cider", "circus", "clam", "clay",
+        "cleaver", "clef", "cliff", "cloak", "clown", "club", "clue", "coast", "cobbler", "cobweb",
+        "coconut", "code", "coin", "commodity", "compass", "confetti", "coral", "costume", "cough",
+        "creek", "crest", "crochet", "crop", "cube", "cucumber", "cufflink", "cumin", "cup", "cylinder",
+        "daisy", "debut", "deed", "deity", "denim", "deodorant", "desert", "dessert", "detective",
+        "dictionary", "diesel", "diner", "dinosaur", "disinfectant", "display", "doll", "dragon", "drill",
+        "drop", "drugstore", "drupe", "dust", "eclipse", "eel", "eggplant", "electricity", "emblem",
+        "emu", "enemy", "envy", "era", "estate", "eyebrow", "eyepatch", "fan", "faucet", "fauna",
+        "feline", "fern", "ferret", "fever", "fiber", "fig", "fight", "file", "filter", "fin", "fine",
+        "fireplace", "firework", "fishbowl", "fisherman", "flake", "flame", "flamingo", "flask", "flora",
+        "florist", "flu", "foam", "folder", "fountain", "frame", "fringe", "funnel", "fury", "garage",
+        "garbage", "garment", "gear", "gene", "geology", "geometry", "gerbil", "gland", "goose", "gown",
+        "grandmother", "granite", "gratuity", "gravity", "grease", "guava", "gymnastic", "halo",
+        "hammock", "harmonica", "harpoon", "hobby", "honesty", "honeydew", "hook", "hoop", "horoscope",
+        "hose", "hourglass", "hyena", "hygiene", "ice", "icing", "igloo", "incense", "injustice",
+        "insight", "instant", "ivory", "jerky", "jewelry", "joystick", "kayak", "kite", "knee", "labor",
+        "laboratory", "ladle", "laundry", "lava", "lavender", "lawyer", "lentil", "lever", "lid", "lie",
+        "lighter", "lighthouse", "lime", "limousine", "linen", "literature", "lollipop", "magician",
+        "makeup", "marina", "maroon", "marsh", "marshmallow", "mayor", "maze", "mercury", "microwave",
+        "mill", "miracle", "modem", "monster", "morning", "motorcycle", "mustache", "mystery", "myth",
+        "napkin", "nation", "niece", "nightmare", "nostril", "notebook", "notepad", "nun", "nurse",
+        "nursery", "nutmeg", "oath", "oatmeal", "ointment", "okra", "omelet", "opal", "orchard",
+        "outlet", "oven", "oyster", "packaging", "pact", "painter", "pancake", "panda", "paperweight",
+        "parcel", "parsnip", "party", "password", "patience", "pattern", "pavement", "pebble", "pedal",
+        "pelican", "penguin", "period", "perjury", "perk", "persimmon", "petal", "pew", "pharmacist",
+        "physic", "pianist", "pickle", "pier", "pill", "pin", "pink", "platypus", "plum", "poet",
+        "pollen", "pomegranate", "pony", "pool", "popcorn", "porcelain", "porridge", "poverty", "powder",
+        "prescription", "pretzel", "priest", "princess", "prism", "project", "protractor", "pub",
+        "quarry", "quilt", "raccoon", "radiation", "raisin", "ramp", "raven", "receipt", "reef",
+        "registry", "rent", "rhombus", "rocket", "roof", "rope", "roundabout", "routine", "rubber",
+        "ruler", "saliva", "salt", "sand", "sapphire", "saucer", "scallop", "scientist", "scone",
+        "screwdriver", "seagull", "secret", "sequoia", "shale", "shelf", "sheriff", "shoelace",
+        "shuttlecock", "sight", "silo", "skateboard", "skillet", "skirt", "slug", "smile", "spam",
+        "spearmint", "speed", "sphere", "sponge", "spool", "spray", "squad", "squeegee", "staff",
+        "stage", "stain", "stationery", "steam", "sunset", "tadpole", "talon", "tango", "tar", "target",
+        "tattoo", "tent", "thimble", "thread", "thyme", "tiara", "ticket", "toaster", "tongue", "tool",
+        "tortoise", "towel", "tower", "traffic", "trap", "tray", "treadmill", "trench", "truffle",
+        "trunk", "tube", "tuna", "tunic", "twin", "typewriter", "ukulele", "umbrella", "vampire", "van",
+        "veal", "veil", "vein", "velvet", "venison", "verse", "vessel", "veteran", "vial", "villain",
+        "voucher", "waiter", "waitress", "walnut", "walrus", "wasp", "waterfall", "wax", "wealth",
+        "wednesday", "werewolf", "whip", "whisper", "wing", "wizard", "wool", "wren", "wrist", "yam",
+        "yarn", "year", "yellow", "yoga", "zipper", "zoo"
     ];
 
     // Centralized API fetch with failover to backup base URL
@@ -149,15 +186,23 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         loadingElement.style.display = "block";
         errorMessageElement.style.display = "none";
 
-        if (gameIndex === null) {
-            gameIndex = Math.floor(Math.random() * (numberOfGames + 1));
-        }
-
         try {
-            const response = await apiFetch(`/game?index=${gameIndex}`);
-            
-            if (!response.ok) {
-                throw new Error("Failed to fetch game data from game endpoint");
+            let response;
+
+            if (gameIndex === null) {
+                // No specific game requested — use a random word from the fallback list
+                const randomWord = FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)];
+                const fallbackUrl = `https://www.runchatcapture.com/scripts/contexto_results/contexto-${randomWord}.json`;
+                console.log(`Starting random game from fallback list: ${fallbackUrl}`);
+                response = await fetch(fallbackUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch fallback game data: ${response.status}`);
+                }
+            } else {
+                response = await apiFetch(`/game?index=${gameIndex}`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch game data from game endpoint");
+                }
             }
 
             gameData = await response.json();
