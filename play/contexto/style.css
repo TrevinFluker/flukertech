@@ -658,7 +658,7 @@ body.dark-mode .leaderboard-empty {
 
 .settings-section-header:not(.collapsed) + .settings-section-content {
   padding: 15px 20px;
-  max-height: 800px;
+  max-height: 1200px;
 }
 
 .settings-toggle {

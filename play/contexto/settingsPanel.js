@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const languageSelect = document.getElementById("language-select");
   const hintGiftInput = document.getElementById("hint-gift-input");
   const clearLeaderboardBtn = document.getElementById("clear-leaderboard");
+  const blockedWordsInput = document.getElementById("blocked-words-input");
   
     // Simulate
     const simulateGuesses = document.getElementById("simulate-guesses");
@@ -71,6 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // ---------- Populate from storage on load ----------
   if (languageSelect) languageSelect.value = getLanguage();
   if (hintGiftInput && typeof getHintGiftName === 'function') hintGiftInput.value = getHintGiftName();
+  if (blockedWordsInput && typeof getBlockedWords === 'function') {
+    const blocked = getBlockedWords();
+    blockedWordsInput.value = Array.isArray(blocked) ? blocked.join(', ') : '';
+  }
     if (simulateGuesses) simulateGuesses.checked = !!getSimulateGuesses();
   
     if (winningSoundUrl) winningSoundUrl.value = getWinningSoundUrl() || winningSoundUrl.value || "";
@@ -123,6 +128,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   if (hintGiftInput && typeof saveHintGiftName === 'function') {
     hintGiftInput.addEventListener('input', () => saveHintGiftName(hintGiftInput.value));
+  }
+  if (blockedWordsInput && typeof saveBlockedWords === 'function') {
+    blockedWordsInput.addEventListener('input', () => {
+      const words = blockedWordsInput.value
+        .split(',')
+        .map(w => w.trim().toLowerCase())
+        .filter(w => w.length > 0);
+      saveBlockedWords(words);
+    });
   }
   
     if (simulateGuesses) {

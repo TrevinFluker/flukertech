@@ -56,7 +56,9 @@ const STORAGE_KEYS = {
     // Game integrations
     HINT_GIFT_NAME: "contextoHintGiftName",
     // Automated word list
-    AUTOMATED_WORD_LIST: "automatedWordList"
+    AUTOMATED_WORD_LIST: "automatedWordList",
+    // Blocked words
+    BLOCKED_WORDS: "contextoBlockedWords"
 };
 
 // --- Generic helpers ---
@@ -208,3 +210,7 @@ function getHintGiftName() { return getItem(STORAGE_KEYS.HINT_GIFT_NAME, ""); }
 function saveAutomatedWordList(wordsArray) { saveItem(STORAGE_KEYS.AUTOMATED_WORD_LIST, wordsArray); }
 function getAutomatedWordList() { return getItem(STORAGE_KEYS.AUTOMATED_WORD_LIST, []); }
 function clearAutomatedWordList() { removeItem(STORAGE_KEYS.AUTOMATED_WORD_LIST); }
+
+// --- Blocked words ---
+function saveBlockedWords(wordsArray) { saveItem(STORAGE_KEYS.BLOCKED_WORDS, wordsArray); }
+function getBlockedWords() { return getItem(STORAGE_KEYS.BLOCKED_WORDS, []); }

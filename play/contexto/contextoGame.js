@@ -70,6 +70,22 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         "wednesday", "werewolf", "whip", "whisper", "wing", "wizard", "wool", "wren", "wrist", "yam",
         "yarn", "year", "yellow", "yoga", "zipper", "zoo"
     ];
+    console.log("FALLBACK_WORDS:", FALLBACK_WORDS);
+    // Filter blocked words from FALLBACK_WORDS on page load
+    (function applyBlockedWords() {
+        const blocked = typeof getBlockedWords === 'function'
+            ? new Set(getBlockedWords().map(w => w.toLowerCase().trim()))
+            : new Set();
+        console.log("blocked:", blocked);
+        if (blocked.size > 0) {
+            for (let i = FALLBACK_WORDS.length - 1; i >= 0; i--) {
+                if (blocked.has(FALLBACK_WORDS[i].toLowerCase())) {
+                    FALLBACK_WORDS.splice(i, 1);
+                }
+            }
+        }
+    })();
+    console.log("FALLBACK_WORDS:", FALLBACK_WORDS);
 
     // Centralized API fetch with failover to backup base URL
     // The primary request is limited to 5 seconds; on timeout (or other failure)
