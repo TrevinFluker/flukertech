@@ -36,28 +36,28 @@
       </div>
 
       <div class="game-info">
-        <span class="label" style="font-size: 14px;">GUESSES:</span> <span id="guessCount">0</span>
-        <span class="label" style="font-size: 14px;">LAST WORD:</span> <span id="lastWord"></span>
+        <span class="label" style="font-size: 14px;" data-i18n="guesses">GUESSES:</span> <span id="guessCount">0</span>
+        <span class="label" style="font-size: 14px;" data-i18n="lastWord">LAST WORD:</span> <span id="lastWord"></span>
         <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" id="spellcheckToggle" class="spellcheck-toggle" alt="Toggle Spellcheck">
         <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" id="dupesToggle" class="spellcheck-toggle" alt="Toggle Duplicate Guesses">
       </div>
 
       <div class="input-container">
-        <input type="text" class="word-input" id="wordInput" placeholder="type a word">
+        <input type="text" class="word-input" id="wordInput" data-i18n-placeholder="typeAWord" placeholder="type a word">
       </div>
 
       <div class="error" id="errorMessage"></div>
       <div class="last-guess" id="lastGuess"></div>
-      <div id="loading">Loading game data...</div>
+      <div id="loading" data-i18n="loading">Loading game data...</div>
       <div class="guesses-container" id="guessesContainer"></div>
     </div>
 
     <!-- CONTEXTO MENU OVERLAY -->
     <div class="contexto-overlay" id="menuOverlay">
       <div class="contexto-modal">
-        <div class="menu-option" id="howToPlay"><i>?</i> How to play</div>
-        <div class="menu-option" id="hintOption"><i>💡</i> Hint</div>
-        <div class="menu-option" id="giveUp"><i>🏳️</i> Give up</div>
+        <div class="menu-option" id="howToPlay"><i>?</i> <span data-i18n="howToPlay">How to play</span></div>
+        <div class="menu-option" id="hintOption"><i>💡</i> <span data-i18n="hint">Hint</span></div>
+        <div class="menu-option" id="giveUp"><i>🏳️</i> <span data-i18n="giveUp">Give up</span></div>
         <!-- <div class="menu-option" id="settings"><i>⚙️</i> Settings</div>
         <div class="menu-option" id="faq"><i>❓</i> FAQ</div> -->
       </div>
@@ -68,33 +68,14 @@
       <div class="contexto-modal">
         <button class="close-modal" id="closeHowToPlay">✕</button>
         <div class="how-to-play-content">
-          <p><strong>Find the secret word. You have unlimited guesses.</strong></p>
+          <p><strong data-i18n="howToPlayP1">Find the secret word. You have unlimited guesses.</strong></p>
         </br>
-          <p><strong>The words were sorted by an artificial intelligence algorithm according to how similar they were to the secret word.</strong></p>
+          <p><strong data-i18n="howToPlayP2">The words were sorted by an artificial intelligence algorithm according to how similar they were to the secret word.</strong></p>
         </br>
-          <p><strong>After submitting a word, you will see its position. The secret word is number 1.</strong></p>
+          <p><strong data-i18n="howToPlayP3">After submitting a word, you will see its position. The secret word is number 1.</strong></p>
         </br>
-          <p><strong>The algorithm analyzed thousands of texts. It uses the context in which words are used to calculate the similarity between them.</strong></p>
+          <p><strong data-i18n="howToPlayP4">The algorithm analyzed thousands of texts. It uses the context in which words are used to calculate the similarity between them.</strong></p>
         </br>
-          <!-- <div class="icon-key">
-            <h3>Icon Key</h3>
-            <div class="icon-item">
-              <img src="https://www.runchatcapture.com/assets/imgs/spellcheck.png" alt="Spellcheck On">
-              <p>Spellcheck is enabled - words will be checked against a dictionary</p>
-            </div>
-            <div class="icon-item">
-              <img src="https://www.runchatcapture.com/assets/imgs/nospellcheck.png" alt="Spellcheck Off">
-              <p>Spellcheck is disabled - any word will be accepted</p>
-            </div>
-            <div class="icon-item">
-              <img src="https://www.runchatcapture.com/assets/imgs/acceptdupes.png" alt="Accept Duplicates">
-              <p>Duplicate guesses are allowed</p>
-            </div>
-            <div class="icon-item">
-              <img src="https://www.runchatcapture.com/assets/imgs/blockdupes.png" alt="Block Duplicates">
-              <p>Duplicate guesses are blocked</p>
-            </div>
-          </div> -->
         </div>
       </div>
     </div>
@@ -103,11 +84,11 @@
     <div class="contexto-overlay" id="congratsOverlay">
       <div class="contexto-modal">
         <div class="congrats-content">
-          <p><strong>Congrats!</strong></p>
-          <p>You got the word <strong id="winningWordText"></strong> in <strong id="finalGuessCount"></strong> guesses.</p>
-          <p class="promo-text">Automate this game for <br/>TikTok and Twitch at:</p>
+          <p><strong data-i18n="congrats">Congrats!</strong></p>
+          <p><span data-i18n="youGotTheWord">You got the word</span> <strong id="winningWordText"></strong> <span data-i18n="inGuesses">in</span> <strong id="finalGuessCount"></strong> <span data-i18n="guessesWord">guesses.</span></p>
+          <p class="promo-text" data-i18n="promoText">Automate this game for <br/>TikTok and Twitch at:</p>
           <p><span class="website-link">RunChatCapture.com</span></p>
-          <p><strong id="playAgain">Play again</strong></p>
+          <p><strong id="playAgain" data-i18n="playAgain">Play again</strong></p>
         </div>
       </div>
     </div>
@@ -142,104 +123,107 @@
   <!-- Settings Panel -->
   <div id="settings-panel" class="settings-panel">
     <div class="settings-header">
-      <h2>Settings</h2>
+      <h2 data-i18n="settingsHeader">Settings</h2>
       <button id="close-settings" class="close-btn">×</button>
     </div>
 
     <div id="game-settings-section" class="settings-section">
       <div id="game-settings-header" class="settings-section-header">
-        <h3>Game Settings</h3>
+        <h3 data-i18n="gameSettingsHeader">Game Settings</h3>
         <span class="arrow">▼</span>
       </div>
       <div id="game-settings-content" class="settings-section-content">
+
+        <!-- Language selector — moved to top -->
         <div class="setting-item">
-          <label for="contextoDarkToggle">Dark Mode:</label>
+          <label for="language-select" data-i18n="language">Language:</label>
+          <select id="language-select" class="setting-select">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+
+        <div class="setting-item">
+          <label for="contextoDarkToggle" data-i18n="darkMode">Dark Mode:</label>
           <input type="checkbox" id="contextoDarkToggle" class="setting-checkbox">
         </div>
         <!-- Custom Game Creator (moved from modal) -->
         <div class="setting-item" id="gameCreationUI">
-          <div class="select-game-header">Create custom game or select randomly:</div>
+          <div class="select-game-header" data-i18n="customGameHeader">Create custom game or select randomly:</div>
           <div class="custom-game-input">
             <div class="password-input-container">
-              <input type="text" id="customWordInput" placeholder="Enter a secret word">
+              <input type="text" id="customWordInput" data-i18n-placeholder="enterSecretWord" placeholder="Enter a secret word">
             </div>
-            <button id="createCustomGame">Create Game</button>
-            <button id="randomGame" class="random-button">Generate Random Game</button>
+            <button id="createCustomGame" data-i18n="createCustomGame">Create Game</button>
+            <button id="randomGame" class="random-button" data-i18n="randomGame">Generate Random Game</button>
           </div>
           <div class="loading-text" id="loadingGame" style="display: none;">
-            <span class="spinner"></span> Creating your game...
+            <span class="spinner"></span> <span data-i18n="creatingGame">Creating your game...</span>
           </div>
           <div id="customGameError" class="error-text" style="display: none;"></div>
         </div>
         <div id="wordCheckUI" class="word-check-container" style="display: none;">
-          <p>This word is not within the vocabulary.</p>
-          <p>Closest similar secret word: <strong id="suggestedWordDisplay"></strong></p>
-          <p>Would you like to accept this similar word?</p>
+          <p data-i18n="wordNotInVocab">This word is not within the vocabulary.</p>
+          <p><span data-i18n="closestWord">Closest similar secret word:</span> <strong id="suggestedWordDisplay"></strong></p>
+          <p data-i18n="acceptSimilarQuestion">Would you like to accept this similar word?</p>
           <div class="word-check-buttons">
-            <button id="backToInput" class="back-btn">Back</button>
-            <button id="acceptSimilarWord" class="continue-btn">Continue</button>
+            <button id="backToInput" class="back-btn" data-i18n="back">Back</button>
+            <button id="acceptSimilarWord" class="continue-btn" data-i18n="continue">Continue</button>
           </div>
         </div>
         <div id="successMessageUI" class="success-message" style="display: none;">
-          <p>Your game has been created!</p>
-          <button id="continueToGame" class="continue-btn">Continue</button>
+          <p data-i18n="gameCreated">Your game has been created!</p>
+          <button id="continueToGame" class="continue-btn" data-i18n="continueToGame">Continue</button>
         </div>
 
         <!-- Automated Word List -->
         <div class="setting-item" id="automatedListUI" style="display: block; margin-top: 20px;">
-          <div class="select-game-header">Enter Automated List of Words:</div>
+          <div class="select-game-header" data-i18n="automatedListHeader">Enter Automated List of Words:</div>
           <div style="font-size: 12px; color: #b6b6b6; margin-bottom: 8px;">
-            The game will automatically choose from this list until it finishes. <b style="color: #f2c4c4;">(Max: 100 words)</b><br>
-            Words will be removed as they're completed. Clear the input to abandon the list.<br>
-            Invalid words are replaced automatically.
+            <span data-i18n="automatedListDesc">The game will automatically choose from this list until it finishes.</span> <b style="color: #f2c4c4;" data-i18n="maxWords">(Max: 100 words)</b><br>
+            <span data-i18n="automatedListDesc2">Words will be removed as they're completed. Clear the input to abandon the list.</span><br>
+            <span data-i18n="automatedListDesc3">Invalid words are replaced automatically.</span>
           </div>
-          <textarea id="automatedWordListInput" class="setting-textarea" rows="4" placeholder="Enter words separated by commas (e.g., apple, peach, cherry)"></textarea>
+          <textarea id="automatedWordListInput" class="setting-textarea" rows="4" data-i18n-placeholder="automatedListPlaceholder" placeholder="Enter words separated by commas (e.g., apple, peach, cherry)"></textarea>
           <div style="margin-top: 8px;">
-            <button id="startAutomatedList">Start Automated List</button>
+            <button id="startAutomatedList" data-i18n="startAutomatedList">Start Automated List</button>
             <button id="clearAutomatedList" class="back-btn" 
-            style="display: none; background-color: #f2c4c4; color: #803333; border: none; border-radius: 4px;">Clear List</button>
+            style="display: none; background-color: #f2c4c4; color: #803333; border: none; border-radius: 4px;" data-i18n="clearList">Clear List</button>
           </div>
           <div id="automatedListStatus" style="margin-top: 8px; font-weight: bold; color: #4CAF50; display: none;"></div>
           <div id="automatedListError" class="error-text" style="display: none;"></div>
         </div>
 
         <div class="setting-item">
-          <label>➤ Current Answer:</label>
+          <label data-i18n="currentAnswer">➤ Current Answer:</label>
           <div id="current-answer-display" style="font-weight: bold; color: #4CAF50; font-size: 18px; letter-spacing: 2px; text-transform: uppercase;">Loading...</div>
         </div>
         <div class="setting-item">
-          <label for="hint-gift-input">Hint Gift (Must match gift gallery name):</label>
+          <label for="hint-gift-input" data-i18n="hintGift">Hint Gift (Must match gift gallery name):</label>
           <input type="text" id="hint-gift-input" class="setting-input-wide" placeholder="e.g., Rose" />
         </div>
         <div class="setting-item">
-          <button id="clear-leaderboard" class="test-btn">Clear Leaderboard</button>
-        </div>
-        <div class="setting-item">
-          <label for="language-select">Language:</label>
-          <select id="language-select" class="setting-select">
-            <option value="en" selected>English</option>
-            <!-- <option value="es">Español</option> -->
-          </select>
+          <button id="clear-leaderboard" class="test-btn" data-i18n="clearLeaderboard">Clear Leaderboard</button>
         </div>
         <div class="setting-item" style="flex-direction: column; align-items: flex-start;">
-          <label for="blocked-words-input">Blocked Words: <br>(Browser refresh required)</label>
-          <div style="font-size: 12px; color: #b6b6b6; margin-bottom: 6px;">
+          <label for="blocked-words-input" data-i18n="blockedWords">Blocked Words: <br>(Browser refresh required)</label>
+          <div style="font-size: 12px; color: #b6b6b6; margin-bottom: 6px;" data-i18n="blockedWordsDesc">
             Comma-separated words to exclude from random games.
           </div>
           <textarea id="blocked-words-input" class="setting-textarea" rows="3"
-            placeholder="Enter words separated by commas (e.g., cucumber, frog, donkey)"></textarea>
+            data-i18n-placeholder="blockedWordsPlaceholder" placeholder="Enter words separated by commas (e.g., cucumber, frog, donkey)"></textarea>
         </div>
       </div>
     </div>
 
     <div class="settings-section" style="display: none;">
       <div class="settings-section-header">
-        <h3>Simulate Activity</h3>
+        <h3 data-i18n="simulateHeader">Simulate Activity</h3>
         <span class="arrow">▼</span>
       </div>
       <div class="settings-section-content">
         <div class="setting-item">
-          <label for="simulate-guesses">Simulate Audience Guesses:</label>
+          <label for="simulate-guesses" data-i18n="simulateGuesses">Simulate Audience Guesses:</label>
           <input type="checkbox" id="simulate-guesses" class="setting-checkbox">
         </div>
       </div>
@@ -247,16 +231,16 @@
 
     <div class="settings-section">
       <div class="settings-section-header">
-        <h3>Winning Popup Settings</h3>
+        <h3 data-i18n="winningPopupHeader">Winning Popup Settings</h3>
         <span class="arrow">▼</span>
       </div>
       <div class="settings-section-content">
         <div class="setting-item">
-          <label for="winning-sound-url">Winning Sound URL:</label>
+          <label for="winning-sound-url" data-i18n="winningSoundUrl">Winning Sound URL:</label>
           <input type="url" id="winning-sound-url" class="setting-input-wide" placeholder="https://example.com/sound.mp3" value="https://www.myinstants.com/media/sounds/applepay.mp3">
         </div>
         <div class="setting-item">
-          <label for="winning-modal-duration">Modal Duration (seconds):</label>
+          <label for="winning-modal-duration" data-i18n="modalDuration">Modal Duration (seconds):</label>
           <div class="number-input-container">
             <button class="number-input-btn" id="decrease-duration">-</button>
             <input type="number" id="winning-modal-duration" class="setting-input" value="2" min="1" max="5">
@@ -264,23 +248,23 @@
           </div>
         </div>
         <div class="setting-item">
-          <button id="test-winning-sound" class="test-btn">Test Sound</button>
+          <button id="test-winning-sound" class="test-btn" data-i18n="testSound">Test Sound</button>
         </div>
       </div>
     </div>
 
     <div class="settings-section">
       <div class="settings-section-header">
-        <h3>Instruction Popup Settings</h3>
+        <h3 data-i18n="instructionPopupHeader">Instruction Popup Settings</h3>
         <span class="arrow">▼</span>
       </div>
       <div class="settings-section-content">
         <div class="setting-item">
-          <label for="instruction-popup-active">Show at Round Start:</label>
+          <label for="instruction-popup-active" data-i18n="showAtRoundStart">Show at Round Start:</label>
           <input type="checkbox" id="instruction-popup-active" class="setting-checkbox">
         </div>
         <div class="setting-item">
-          <label for="instruction-popup-duration">Display Duration (seconds):</label>
+          <label for="instruction-popup-duration" data-i18n="displayDuration">Display Duration (seconds):</label>
           <div class="number-input-container">
             <button class="number-input-btn" id="decrease-instruction-duration">-</button>
             <input type="number" id="instruction-popup-duration" class="setting-input" value="3" min="1" max="10">
@@ -288,39 +272,39 @@
           </div>
         </div>
         <div class="setting-item">
-          <label for="instruction-popup-text">Instruction Text:</label>
+          <label for="instruction-popup-text" data-i18n="instructionText">Instruction Text:</label>
           <textarea id="instruction-popup-text" class="setting-textarea" rows="3">Guess the word to win!
 This is wordle with endless guesses.
 There are single player and group modes.</textarea>
         </div>
         <div class="setting-item">
-          <label for="instruction-popup-gif">GIF URL (optional):</label>
+          <label for="instruction-popup-gif" data-i18n="gifUrl">GIF URL (optional):</label>
           <input type="url" id="instruction-popup-gif" class="setting-input-wide" placeholder="https://example.com/instruction.gif" value="https://media0.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif">
         </div>
         <div class="setting-item">
-          <button id="test-instruction-popup" class="test-btn">Test Popup</button>
+          <button id="test-instruction-popup" class="test-btn" data-i18n="testPopup">Test Popup</button>
         </div>
       </div>
     </div>
 
     <div class="settings-section">
       <div class="settings-section-header">
-        <h3>Text-to-Speech Settings</h3>
+        <h3 data-i18n="ttsHeader">Text-to-Speech Settings</h3>
         <span class="arrow">▼</span>
       </div>
       <div class="settings-section-content">
         <div class="setting-item">
-          <label for="tts-enabled">Enable Text-to-Speech:</label>
+          <label for="tts-enabled" data-i18n="enableTts">Enable Text-to-Speech:</label>
           <input type="checkbox" id="tts-enabled" class="setting-checkbox">
         </div>
         <div class="setting-item">
-          <label for="tts-voice">Voice:</label>
+          <label for="tts-voice" data-i18n="ttsVoice">Voice:</label>
           <select id="tts-voice" class="setting-select">
-            <option value="">Default Voice</option>
+            <option value="" data-i18n="defaultVoice">Default Voice</option>
           </select>
         </div>
         <div class="setting-item">
-          <label for="tts-volume">Volume:</label>
+          <label for="tts-volume" data-i18n="ttsVolume">Volume:</label>
           <div class="number-input-container">
             <button class="number-input-btn" id="decrease-tts-volume">-</button>
             <input type="number" id="tts-volume" class="setting-input" value="50" min="0" max="100" step="10">
@@ -328,7 +312,7 @@ There are single player and group modes.</textarea>
           </div>
         </div>
         <div class="setting-item">
-          <label for="tts-rate">Speech Rate:</label>
+          <label for="tts-rate" data-i18n="ttsRate">Speech Rate:</label>
           <div class="number-input-container">
             <button class="number-input-btn" id="decrease-tts-rate">-</button>
             <input type="number" id="tts-rate" class="setting-input" value="10" min="5" max="12" step="1">
@@ -336,31 +320,31 @@ There are single player and group modes.</textarea>
           </div>
         </div>
         <div class="setting-item">
-          <label for="tts-read-words">Read Every Word Entered:</label>
+          <label for="tts-read-words" data-i18n="readEveryWord">Read Every Word Entered:</label>
           <input type="checkbox" id="tts-read-words" class="setting-checkbox">
         </div>
         <div class="setting-item">
-          <label for="tts-round-start-enabled">Round Start Announcements:</label>
+          <label for="tts-round-start-enabled" data-i18n="roundStartAnnouncements">Round Start Announcements:</label>
           <input type="checkbox" id="tts-round-start-enabled" class="setting-checkbox">
         </div>
         <div class="setting-item">
-          <label for="tts-round-start-texts">Round Start Messages (separate with ;):</label>
+          <label for="tts-round-start-texts" data-i18n="roundStartMessages">Round Start Messages (separate with ;):</label>
           <textarea id="tts-round-start-texts" class="setting-textarea" rows="3">Welcome to Wordle! Let's begin.; New round starting! Good luck!; Time to guess the word!</textarea>
         </div>
         <div class="setting-item">
-          <label for="tts-game-won-enabled">Victory Announcements:</label>
+          <label for="tts-game-won-enabled" data-i18n="victoryAnnouncements">Victory Announcements:</label>
           <input type="checkbox" id="tts-game-won-enabled" class="setting-checkbox">
         </div>
         <div class="setting-item">
-          <label for="tts-game-won-texts">Victory Messages (separate with ;):</label>
+          <label for="tts-game-won-texts" data-i18n="victoryMessages">Victory Messages (separate with ;):</label>
           <textarea id="tts-game-won-texts" class="setting-textarea" rows="3">Congratulations! You won!; Excellent work! Victory achieved!; Well done! You guessed it!</textarea>
         </div>
         <div class="setting-item">
-          <label for="tts-gameplay-enabled">Gameplay Announcements:</label>
+          <label for="tts-gameplay-enabled" data-i18n="gameplayAnnouncements">Gameplay Announcements:</label>
           <input type="checkbox" id="tts-gameplay-enabled" class="setting-checkbox">
         </div>
         <div class="setting-item">
-          <label for="tts-gameplay-interval">Announcement Interval (seconds):</label>
+          <label for="tts-gameplay-interval" data-i18n="announcementInterval">Announcement Interval (seconds):</label>
           <div class="number-input-container">
             <button class="number-input-btn" id="decrease-tts-interval">-</button>
             <input type="number" id="tts-gameplay-interval" class="setting-input" value="30" min="10" max="300" step="10">
@@ -368,11 +352,11 @@ There are single player and group modes.</textarea>
           </div>
         </div>
         <div class="setting-item">
-          <label for="tts-gameplay-texts">Gameplay Messages (separate with ;):</label>
+          <label for="tts-gameplay-texts" data-i18n="gameplayMessages">Gameplay Messages (separate with ;):</label>
           <textarea id="tts-gameplay-texts" class="setting-textarea" rows="3">Keep going! You can do it!; Think carefully about your next guess.; You're doing great!</textarea>
         </div>
         <div class="setting-item">
-          <button id="test-tts" class="test-btn">Test TTS</button>
+          <button id="test-tts" class="test-btn" data-i18n="testTts">Test TTS</button>
         </div>
       </div>
     </div>
@@ -388,7 +372,7 @@ There are single player and group modes.</textarea>
   <!-- Floating Leaderboard -->
   <div id="floatingLeaderboard" class="floating-leaderboard">
     <div class="floating-leaderboard-header" id="leaderboardHeader">
-      <span>🏆 Leaderboard</span>
+      <span>🏆 <span data-i18n="leaderboard">Leaderboard</span></span>
       <div class="leaderboard-controls">
         <button id="prevLeaderboardPage" class="leaderboard-nav-btn">‹</button>
         <span id="leaderboardPageInfo" class="leaderboard-page-info">1/1</span>

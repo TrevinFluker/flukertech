@@ -106,11 +106,16 @@ function showWinningModal(winners, word) {
     if (!overlay) return;
 
     if (titleEl) {
+        const lang = typeof getLanguage === 'function' ? getLanguage() : 'en';
         if (winners && winners.length > 0) {
             const name = winners[0].name || "Player";
-            titleEl.innerText = `🏆 '${name}' won with '${word}'`;
+            titleEl.innerText = lang === 'es'
+                ? `🏆 '${name}' ganó con '${word}'`
+                : `🏆 '${name}' won with '${word}'`;
         } else {
-            titleEl.innerText = `🏆 Winner with ${word}`;
+            titleEl.innerText = lang === 'es'
+                ? `🏆 Ganador con ${word}`
+                : `🏆 Winner with ${word}`;
         }
     }
 

@@ -124,7 +124,24 @@ document.addEventListener("DOMContentLoaded", () => {
   
     // ---------- Persist on change ----------
     if (languageSelect) {
-      languageSelect.addEventListener("change", () => saveLanguage(languageSelect.value));
+      languageSelect.addEventListener("change", () => {
+        const lang = languageSelect.value;
+        saveLanguage(lang);
+
+        // 1. Translate UI
+        if (typeof window.applyTranslations === 'function') {
+          window.applyTranslations(lang);
+        }
+
+        // 2. Show/hide Spanish-incompatible UI elements
+        applySpanishUiVisibility(lang);
+
+        // 3. Close settings and immediately start a new game in the new language
+        closeSettingsPanel();
+        if (window.Contexto?.initNextRound) {
+          window.Contexto.initNextRound();
+        }
+      });
     }
   if (hintGiftInput && typeof saveHintGiftName === 'function') {
     hintGiftInput.addEventListener('input', () => saveHintGiftName(hintGiftInput.value));
@@ -443,8 +460,33 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(updateAutomatedListStatus, 100);
       });
     }
+
+    // ---------- Apply saved language state on page load ----------
+    const savedLang = typeof getLanguage === 'function' ? getLanguage() : 'en';
+    if (typeof window.applyTranslations === 'function') {
+      window.applyTranslations(savedLang);
+    }
+    applySpanishUiVisibility(savedLang);
   });
   
+  // ----------------------------
+  // 🔹 Spanish UI visibility helper
+  // ----------------------------
+  function applySpanishUiVisibility(lang) {
+    const isEs = lang === 'es';
+
+    // Hide the custom word input section in Spanish mode
+    const customGameInput = document.querySelector('#gameCreationUI .custom-game-input');
+    if (customGameInput) customGameInput.style.display = isEs ? 'none' : '';
+
+    // Hide the automated word list section in Spanish mode
+    const automatedListUI = document.getElementById('automatedListUI');
+    if (automatedListUI) automatedListUI.style.display = isEs ? 'none' : 'block';
+  }
+
+  // Make it available inside DOMContentLoaded (called before it's defined there)
+  window._applySpanishUiVisibility = applySpanishUiVisibility;
+
   // ----------------------------
   // 🔹 Exposed API (programmatic open/close)
   // ----------------------------

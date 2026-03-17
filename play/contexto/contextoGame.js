@@ -71,6 +71,22 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         "yarn", "year", "yellow", "yoga", "zipper", "zoo"
     ];
     console.log("FALLBACK_WORDS:", FALLBACK_WORDS);
+
+    // ============================================================
+    // 🇪🇸 SPANISH WORD LIST
+    // ============================================================
+    let spanishWordList = [];
+    async function loadSpanishWordList() {
+        try {
+            const res = await fetch("https://ccbackend.com/preloaded/es");
+            const data = await res.json();
+            spanishWordList = Array.isArray(data.words) ? data.words : [];
+            console.log(`Loaded ${spanishWordList.length} Spanish words`);
+        } catch (e) {
+            console.warn("Failed to load Spanish word list:", e);
+        }
+    }
+
     // Filter blocked words from FALLBACK_WORDS on page load
     (function applyBlockedWords() {
         const blocked = typeof getBlockedWords === 'function'
@@ -205,7 +221,17 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         try {
             let response;
 
-            if (gameIndex === null) {
+            if (typeof getLanguage === 'function' && getLanguage() === 'es') {
+                // Spanish mode — pick a random word from the pre-loaded Spanish list
+                if (spanishWordList.length === 0) {
+                    // Retry loading if empty (e.g. first load race)
+                    await loadSpanishWordList();
+                }
+                const randomWord = spanishWordList[Math.floor(Math.random() * spanishWordList.length)];
+                console.log(`Starting Spanish game with word: ${randomWord}`);
+                response = await fetch(`https://ccbackend.com/preloaded/es/${encodeURIComponent(randomWord)}`);
+                if (!response.ok) throw new Error(`Failed to fetch Spanish game data: ${response.status}`);
+            } else if (gameIndex === null) {
                 // No specific game requested — use a random word from the fallback list
                 const randomWord = FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)];
                 const fallbackUrl = `https://www.runchatcapture.com/scripts/contexto_results/contexto-${randomWord}.json`;
@@ -461,7 +487,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         if (!word || word.trim() === "" || !gameData) return;
 
         word = word.toLowerCase().trim().split(" ")[0];
-        word = word.replace(/[^a-zA-Z]/g, "");
+        word = word.replace(/[^\p{L}]/gu, ""); // allow all Unicode letters (incl. Spanish á é í ó ú ñ ü)
 
         try {
             // const isValidWord = await checkSpelling(word);
@@ -871,6 +897,180 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     };
 
     initDictionary();
+    loadSpanishWordList();
+
+    // ============================================================
+    // 🌐 TRANSLATIONS
+    // ============================================================
+    const TRANSLATIONS = {
+        en: {
+            guesses: "GUESSES:",
+            lastWord: "LAST WORD:",
+            typeAWord: "type a word",
+            loading: "Loading game data...",
+            howToPlay: "How to play",
+            hint: "Hint",
+            giveUp: "Give up",
+            congrats: "Congrats!",
+            youGotTheWord: "You got the word",
+            inGuesses: "in",
+            guessesWord: "guesses.",
+            promoText: "Automate this game for TikTok and Twitch at:",
+            playAgain: "Play again",
+            settingsHeader: "Settings",
+            gameSettingsHeader: "Game Settings",
+            language: "Language:",
+            darkMode: "Dark Mode:",
+            customGameHeader: "Create custom game or select randomly:",
+            enterSecretWord: "Enter a secret word",
+            createCustomGame: "Create Game",
+            randomGame: "Generate Random Game",
+            creatingGame: "Creating your game...",
+            wordNotInVocab: "This word is not within the vocabulary.",
+            closestWord: "Closest similar secret word:",
+            acceptSimilarQuestion: "Would you like to accept this similar word?",
+            back: "Back",
+            continue: "Continue",
+            gameCreated: "Your game has been created!",
+            continueToGame: "Continue",
+            automatedListHeader: "Enter Automated List of Words:",
+            automatedListDesc: "The game will automatically choose from this list until it finishes.",
+            maxWords: "(Max: 100 words)",
+            automatedListDesc2: "Words will be removed as they're completed. Clear the input to abandon the list.",
+            automatedListDesc3: "Invalid words are replaced automatically.",
+            automatedListPlaceholder: "Enter words separated by commas (e.g., apple, peach, cherry)",
+            startAutomatedList: "Start Automated List",
+            clearList: "Clear List",
+            currentAnswer: "➤ Current Answer:",
+            hintGift: "Hint Gift (Must match gift gallery name):",
+            clearLeaderboard: "Clear Leaderboard",
+            blockedWords: "Blocked Words: \n(Browser refresh required)",
+            blockedWordsDesc: "Comma-separated words to exclude from random games.",
+            blockedWordsPlaceholder: "Enter words separated by commas (e.g., cucumber, frog, donkey)",
+            simulateHeader: "Simulate Activity",
+            simulateGuesses: "Simulate Audience Guesses:",
+            winningPopupHeader: "Winning Popup Settings",
+            winningSoundUrl: "Winning Sound URL:",
+            modalDuration: "Modal Duration (seconds):",
+            testSound: "Test Sound",
+            instructionPopupHeader: "Instruction Popup Settings",
+            showAtRoundStart: "Show at Round Start:",
+            displayDuration: "Display Duration (seconds):",
+            instructionText: "Instruction Text:",
+            gifUrl: "GIF URL (optional):",
+            testPopup: "Test Popup",
+            ttsHeader: "Text-to-Speech Settings",
+            enableTts: "Enable Text-to-Speech:",
+            ttsVoice: "Voice:",
+            defaultVoice: "Default Voice",
+            ttsVolume: "Volume:",
+            ttsRate: "Speech Rate:",
+            readEveryWord: "Read Every Word Entered:",
+            roundStartAnnouncements: "Round Start Announcements:",
+            roundStartMessages: "Round Start Messages (separate with ;):",
+            victoryAnnouncements: "Victory Announcements:",
+            victoryMessages: "Victory Messages (separate with ;):",
+            gameplayAnnouncements: "Gameplay Announcements:",
+            announcementInterval: "Announcement Interval (seconds):",
+            gameplayMessages: "Gameplay Messages (separate with ;):",
+            testTts: "Test TTS",
+            howToPlayP1: "Find the secret word. You have unlimited guesses.",
+            howToPlayP2: "The words were sorted by an artificial intelligence algorithm according to how similar they were to the secret word.",
+            howToPlayP3: "After submitting a word, you will see its position. The secret word is number 1.",
+            howToPlayP4: "The algorithm analyzed thousands of texts. It uses the context in which words are used to calculate the similarity between them.",
+            leaderboard: "Leaderboard"
+        },
+        es: {
+            guesses: "INTENTOS:",
+            lastWord: "ÚLTIMA PALABRA:",
+            typeAWord: "escribe una palabra",
+            loading: "Cargando datos del juego...",
+            howToPlay: "Cómo jugar",
+            hint: "Pista",
+            giveUp: "Rendirse",
+            congrats: "¡Felicidades!",
+            youGotTheWord: "Adivinaste la palabra",
+            inGuesses: "en",
+            guessesWord: "intentos.",
+            promoText: "Automatiza este juego para TikTok y Twitch en:",
+            playAgain: "Jugar de nuevo",
+            settingsHeader: "Configuración",
+            gameSettingsHeader: "Configuración del juego",
+            language: "Idioma:",
+            darkMode: "Modo oscuro:",
+            customGameHeader: "Crear juego personalizado o elegir aleatoriamente:",
+            enterSecretWord: "Introduce una palabra secreta",
+            createCustomGame: "Crear juego",
+            randomGame: "Generar juego aleatorio",
+            creatingGame: "Creando tu juego...",
+            wordNotInVocab: "Esta palabra no está en el vocabulario.",
+            closestWord: "Palabra secreta similar más cercana:",
+            acceptSimilarQuestion: "¿Aceptas esta palabra similar?",
+            back: "Volver",
+            continue: "Continuar",
+            gameCreated: "¡Tu juego ha sido creado!",
+            continueToGame: "Continuar",
+            automatedListHeader: "Introduce una lista automática de palabras:",
+            automatedListDesc: "El juego elegirá automáticamente de esta lista hasta terminar.",
+            maxWords: "(Máx: 100 palabras)",
+            automatedListDesc2: "Las palabras se eliminan al completarse. Borra el campo para abandonar la lista.",
+            automatedListDesc3: "Las palabras inválidas se reemplazan automáticamente.",
+            automatedListPlaceholder: "Palabras separadas por comas (ej: manzana, pera, cereza)",
+            startAutomatedList: "Iniciar lista automática",
+            clearList: "Borrar lista",
+            currentAnswer: "➤ Respuesta actual:",
+            hintGift: "Regalo pista (debe coincidir con el nombre del regalo):",
+            clearLeaderboard: "Limpiar marcador",
+            blockedWords: "Palabras bloqueadas: \n(Requiere recargar el navegador)",
+            blockedWordsDesc: "Palabras separadas por comas para excluir de los juegos aleatorios.",
+            blockedWordsPlaceholder: "Palabras separadas por comas (ej: pepino, rana, burro)",
+            simulateHeader: "Simular actividad",
+            simulateGuesses: "Simular suposiciones del público:",
+            winningPopupHeader: "Configuración de victoria",
+            winningSoundUrl: "URL del sonido de victoria:",
+            modalDuration: "Duración del modal (segundos):",
+            testSound: "Probar sonido",
+            instructionPopupHeader: "Configuración de instrucciones",
+            showAtRoundStart: "Mostrar al iniciar ronda:",
+            displayDuration: "Duración de visualización (segundos):",
+            instructionText: "Texto de instrucción:",
+            gifUrl: "URL del GIF (opcional):",
+            testPopup: "Probar ventana emergente",
+            ttsHeader: "Configuración de voz",
+            enableTts: "Activar texto a voz:",
+            ttsVoice: "Voz:",
+            defaultVoice: "Voz predeterminada",
+            ttsVolume: "Volumen:",
+            ttsRate: "Velocidad de habla:",
+            readEveryWord: "Leer cada palabra ingresada:",
+            roundStartAnnouncements: "Anuncios al inicio de ronda:",
+            roundStartMessages: "Mensajes de inicio de ronda (separar con ;):",
+            victoryAnnouncements: "Anuncios de victoria:",
+            victoryMessages: "Mensajes de victoria (separar con ;):",
+            gameplayAnnouncements: "Anuncios durante el juego:",
+            announcementInterval: "Intervalo de anuncios (segundos):",
+            gameplayMessages: "Mensajes durante el juego (separar con ;):",
+            testTts: "Probar voz",
+            howToPlayP1: "Encuentra la palabra secreta. Tienes intentos ilimitados.",
+            howToPlayP2: "Las palabras fueron ordenadas por un algoritmo de inteligencia artificial según su similitud con la palabra secreta.",
+            howToPlayP3: "Al enviar una palabra, verás su posición. La palabra secreta es el número 1.",
+            howToPlayP4: "El algoritmo analizó miles de textos. Usa el contexto en que se usan las palabras para calcular su similitud.",
+            leaderboard: "Marcador"
+        }
+    };
+
+    function applyTranslations(lang) {
+        const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key] !== undefined) el.textContent = t[key];
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (t[key] !== undefined) el.placeholder = t[key];
+        });
+    }
+    window.applyTranslations = applyTranslations;
 })();
 
 // Helper: find the first rank between startRank and maxRank (inclusive)
