@@ -1,9 +1,10 @@
 // tiktokEvents.js
 // Handles incoming TikTok events from Chrome extension and routes them to GameManager
+// All user-supplied fields are sanitized via sanitize.js before entering the game pipeline.
 
 // Comment event listener
 window.addEventListener("handleRealCommentEvent", function(event) {
-    const user = {
+    const user = sanitizeUser({
       username: event.detail.username,
       nickname: event.detail.nickname,
       uniqueId: event.detail.uniqueId,
@@ -13,15 +14,15 @@ window.addEventListener("handleRealCommentEvent", function(event) {
       comment: event.detail.comment,
       eventType: event.detail.eventType,
       tikfinityUsername: event.detail.tikfinityUsername || null
-    };
+    });
     
-    // Pass the guess/comment to GameManager
+    // Pass the sanitized guess/comment to GameManager
     GameManager.handleRealComment(user);
   });
   
   // Gift event listener
   window.addEventListener("handleRealGiftEvent", function(event) {
-    const user = {
+    const user = sanitizeUser({
       username: event.detail.username,
       nickname: event.detail.nickname,
       uniqueId: event.detail.uniqueId,
@@ -31,9 +32,9 @@ window.addEventListener("handleRealCommentEvent", function(event) {
       giftCount: event.detail.giftCount,
       comment: event.detail.comment || "",
       eventType: event.detail.eventType
-    };
+    });
   
-    // Pass the gift to GameManager
+    // Pass the sanitized gift to GameManager
     GameManager.handleRealGift(user);
   });
   
