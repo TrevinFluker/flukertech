@@ -16,6 +16,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     let allowDuplicates = true;
     let suggestedWord = "";
     let winnerDeclared = false; // prevent multiple winners per round
+    let recentlyUsedWords = []; // track randomly generated games to avoid repeats (max 800)
     const numberOfGames = 1100;
     const API_BASE_URL = "https://ccbackend2.com";
     const API_BASE_BACKUP_URL = "https://ccbackend.com";
@@ -82,9 +83,59 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             const data = await res.json();
             spanishWordList = Array.isArray(data.words) ? data.words : [];
             console.log(`Loaded ${spanishWordList.length} Spanish words`);
+            
+            // Populate the dropdown if it exists
+            populateSpanishWordDropdown(spanishWordList);
         } catch (e) {
             console.warn("Failed to load Spanish word list:", e);
         }
+    }
+
+    function populateSpanishWordDropdown(words) {
+        const dropdown = document.getElementById("spanishWordDropdown");
+        if (!dropdown) return;
+        
+        dropdown.innerHTML = "";
+        words.forEach(word => {
+            const option = document.createElement("option");
+            option.value = word;
+            option.textContent = word;
+            dropdown.appendChild(option);
+        });
+    }
+
+    // Helper function to add word to recently used list
+    function addToRecentlyUsed(word) {
+        if (!word) return;
+        const normalizedWord = word.toLowerCase().trim();
+        
+        // Add to the array
+        recentlyUsedWords.push(normalizedWord);
+        
+        // If we've reached 800 words, clear the array
+        if (recentlyUsedWords.length >= 800) {
+            console.log("Recently used words limit reached (800). Clearing history.");
+            recentlyUsedWords = [];
+        }
+    }
+
+    // Helper function to pick a random word avoiding recently used ones
+    function pickRandomWordFromList(wordList) {
+        if (!Array.isArray(wordList) || wordList.length === 0) return null;
+        
+        // Create a set of recently used words for fast lookup
+        const recentSet = new Set(recentlyUsedWords.map(w => w.toLowerCase().trim()));
+        
+        // Filter out recently used words
+        const availableWords = wordList.filter(word => 
+            !recentSet.has(word.toLowerCase().trim())
+        );
+        
+        // If all words have been used, fall back to full list (shouldn't happen with 800 limit)
+        const finalList = availableWords.length > 0 ? availableWords : wordList;
+        
+        // Pick random word
+        return finalList[Math.floor(Math.random() * finalList.length)];
     }
 
     // Filter blocked words from FALLBACK_WORDS on page load
@@ -227,15 +278,17 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
                     // Retry loading if empty (e.g. first load race)
                     await loadSpanishWordList();
                 }
-                const randomWord = spanishWordList[Math.floor(Math.random() * spanishWordList.length)];
+                const randomWord = pickRandomWordFromList(spanishWordList);
                 console.log(`Starting Spanish game with word: ${randomWord}`);
+                addToRecentlyUsed(randomWord);
                 response = await fetch(`https://ccbackend.com/preloaded/es/${encodeURIComponent(randomWord)}`);
                 if (!response.ok) throw new Error(`Failed to fetch Spanish game data: ${response.status}`);
             } else if (gameIndex === null) {
                 // No specific game requested — use a random word from the fallback list
-                const randomWord = FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)];
+                const randomWord = pickRandomWordFromList(FALLBACK_WORDS);
                 const fallbackUrl = `https://www.runchatcapture.com/scripts/contexto_results/contexto-${randomWord}.json`;
                 console.log(`Starting random game from fallback list: ${fallbackUrl}`);
+                addToRecentlyUsed(randomWord);
                 response = await fetch(fallbackUrl);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch fallback game data: ${response.status}`);
@@ -410,6 +463,9 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             if (nextWordData) {
                 // Use word from automated list with pre-fetched data
                 console.log(`Starting automated game with word: ${nextWordData.requestedWord} (lemma: ${nextWordData.actualLemma})`);
+                
+                // Track this word as used
+                addToRecentlyUsed(nextWordData.actualLemma);
                 
                 // Set game data
                 gameData = nextWordData.gameData;
@@ -678,8 +734,8 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     document.getElementById("randomGame").addEventListener("click", () => {
         const overlay = document.getElementById("selectGameOverlay");
         if (overlay) overlay.style.display = "none";
-        const newRandomIndex = Math.floor(Math.random() * (numberOfGames + 1));
-        contextoInitGame(newRandomIndex);
+        // Pass null to trigger random word selection with deduplication
+        contextoInitGame(null);
     });
 
     // removed eye toggle
@@ -875,6 +931,75 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         }
     } 
 
+    // Spanish word search filter
+    const spanishWordSearch = document.getElementById("spanishWordSearch");
+    if (spanishWordSearch) {
+        spanishWordSearch.addEventListener("input", (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredWords = spanishWordList.filter(word => 
+                word.toLowerCase().startsWith(searchTerm)
+            );
+            populateSpanishWordDropdown(filteredWords);
+        });
+    }
+
+    // Play selected Spanish word
+    const playSelectedBtn = document.getElementById("playSelectedSpanishWord");
+    const spanishDropdown = document.getElementById("spanishWordDropdown");
+
+    if (playSelectedBtn && spanishDropdown) {
+        playSelectedBtn.addEventListener("click", async () => {
+            const selectedWord = spanishDropdown.value;
+            
+            if (!selectedWord) {
+                const panelError = document.getElementById("customGameError");
+                if (panelError) {
+                    panelError.textContent = "Please select a word from the dropdown.";
+                    panelError.style.display = "block";
+                }
+                return;
+            }
+            
+            // Fetch and start game with selected Spanish word
+            try {
+                loadingElement.style.display = "block";
+                errorMessageElement.style.display = "none";
+                
+                const response = await fetch(`https://ccbackend.com/preloaded/es/${encodeURIComponent(selectedWord)}`);
+                if (!response.ok) throw new Error("Failed to fetch Spanish game data");
+                
+                gameData = await response.json();
+                targetWord = selectedWord;
+                winnerDeclared = false;
+                guesses = [];
+                mostRecentGuessLemma = null;
+                guessesContainer.innerHTML = "";
+                lastGuessContainer.style.display = "none";
+                
+                if (window.SettingsPanel) window.SettingsPanel.setCurrentAnswer(selectedWord);
+                
+                // Track this word to avoid repeating it in random games
+                addToRecentlyUsed(selectedWord);
+                
+                loadingElement.style.display = "none";
+                updateGuessCount(0);
+                
+                // Close settings panel
+                if (window.SettingsPanel?.closeSettingsPanel) {
+                    window.SettingsPanel.closeSettingsPanel();
+                }
+            } catch (error) {
+                console.error("Error loading selected Spanish word:", error);
+                loadingElement.style.display = "none";
+                const panelError = document.getElementById("customGameError");
+                if (panelError) {
+                    panelError.textContent = "Failed to load selected word. Please try again.";
+                    panelError.style.display = "block";
+                }
+            }
+        });
+    }
+
     // ============================================================
     // 🌐 EXPOSE PUBLIC API
     // ============================================================
@@ -925,6 +1050,9 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             enterSecretWord: "Enter a secret word",
             createCustomGame: "Create Game",
             randomGame: "Generate Random Game",
+            selectSpanishWord: "Select a word:",
+            searchSpanishWords: "Type to search...",
+            playSelectedWord: "Play Selected Word",
             creatingGame: "Creating your game...",
             wordNotInVocab: "This word is not within the vocabulary.",
             closestWord: "Closest similar secret word:",
@@ -998,10 +1126,13 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             gameSettingsHeader: "Configuración del juego",
             language: "Idioma:",
             darkMode: "Modo oscuro:",
-            customGameHeader: "Crear juego personalizado o elegir aleatoriamente:",
+            customGameHeader: "Elegir juego aleatorio:",
             enterSecretWord: "Introduce una palabra secreta",
             createCustomGame: "Crear juego",
             randomGame: "Generar juego aleatorio",
+            selectSpanishWord: "Selecciona una palabra:",
+            searchSpanishWords: "Escribe para buscar...",
+            playSelectedWord: "Jugar palabra seleccionada",
             creatingGame: "Creando tu juego...",
             wordNotInVocab: "Esta palabra no está en el vocabulario.",
             closestWord: "Palabra secreta similar más cercana:",

@@ -849,6 +849,21 @@ body.dark-mode .leaderboard-empty {
   border-color: #538d4e;
 }
 
+/* Spanish Word Selector */
+#spanishWordDropdown {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#spanishWordDropdown option {
+  padding: 8px;
+  cursor: pointer;
+}
+
+#spanishWordDropdown option:hover {
+  background-color: #4a4a4c;
+}
+
   /* Settings Panel — Custom Game Creator overrides */
   .settings-panel .select-game-header {
     color: #ffffff;
@@ -881,7 +896,8 @@ body.dark-mode .leaderboard-empty {
   .settings-panel #createCustomGame,
   .settings-panel #continueToGame,
   .settings-panel #acceptSimilarWord,
-  .settings-panel #startAutomatedList {
+  .settings-panel #startAutomatedList,
+  .settings-panel #playSelectedSpanishWord {
     background-color: #538d4e;
     color: #ffffff;
     border: none;
@@ -907,7 +923,8 @@ body.dark-mode .leaderboard-empty {
   .settings-panel #createCustomGame:hover,
   .settings-panel #continueToGame:hover,
   .settings-panel #acceptSimilarWord:hover,
-  .settings-panel #startAutomatedList:hover {
+  .settings-panel #startAutomatedList:hover,
+  .settings-panel #playSelectedSpanishWord:hover {
     background-color: #4a7a44;
   }
   .settings-panel #randomGame:hover,

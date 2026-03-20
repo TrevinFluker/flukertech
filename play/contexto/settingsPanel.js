@@ -475,9 +475,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function applySpanishUiVisibility(lang) {
     const isEs = lang === 'es';
 
-    // Hide the custom word input section in Spanish mode
-    const customGameInput = document.querySelector('#gameCreationUI .custom-game-input');
-    if (customGameInput) customGameInput.style.display = isEs ? 'none' : '';
+    // Show/hide Spanish word selector
+    const spanishSelector = document.getElementById('spanishWordSelector');
+    if (spanishSelector) spanishSelector.style.display = isEs ? 'block' : 'none';
+
+    // Hide the custom word input and create button in Spanish mode, but keep random button visible
+    const passwordInputContainer = document.querySelector('#gameCreationUI .password-input-container');
+    if (passwordInputContainer) passwordInputContainer.style.display = isEs ? 'none' : '';
+    
+    const createCustomGameBtn = document.getElementById('createCustomGame');
+    if (createCustomGameBtn) createCustomGameBtn.style.display = isEs ? 'none' : '';
 
     // Hide the automated word list section in Spanish mode
     const automatedListUI = document.getElementById('automatedListUI');

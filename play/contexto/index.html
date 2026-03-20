@@ -150,6 +150,28 @@
         <!-- Custom Game Creator (moved from modal) -->
         <div class="setting-item" id="gameCreationUI">
           <div class="select-game-header" data-i18n="customGameHeader">Create custom game or select randomly:</div>
+          
+          <!-- Spanish Word Selector (visible only in Spanish mode) -->
+          <div id="spanishWordSelector" style="display: none; margin-bottom: 10px;">
+            <label for="spanishWordDropdown" style="font-size: 14px; color: #ffffff; display: block; margin-bottom: 5px;">
+              <span data-i18n="selectSpanishWord">Select a Spanish word:</span>
+            </label>
+            <input 
+              type="text" 
+              id="spanishWordSearch" 
+              class="setting-input-wide" 
+              data-i18n-placeholder="searchSpanishWords"
+              placeholder="Type to search..."
+              style="margin-bottom: 5px;"
+            >
+            <select id="spanishWordDropdown" class="setting-select" size="8" style="width: 100%; font-size: 14px;">
+              <option value="" disabled selected>Loading Spanish words...</option>
+            </select>
+            <button id="playSelectedSpanishWord" data-i18n="playSelectedWord" style="margin-top: 5px; width: 100%;">
+              Play Selected Word
+            </button>
+          </div>
+          
           <div class="custom-game-input">
             <div class="password-input-container">
               <input type="text" id="customWordInput" data-i18n-placeholder="enterSecretWord" placeholder="Enter a secret word">
