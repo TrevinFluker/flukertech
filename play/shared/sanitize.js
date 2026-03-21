@@ -1,10 +1,10 @@
-// sanitize.js
-// Input sanitization utilities for Contexto.
-// Cleans all incoming TikTok user data before it enters the game pipeline.
+// sanitize.js (shared)
+// Input sanitization utilities shared across all RCC games.
+// Cleans all incoming TikTok user data before it enters each game's pipeline.
+// Load this script before any game scripts and before tiktokEvents.js.
 
 // ---------------------------------------------------------------------------
-// Image URL allowlist — copied from l/leaderboard.js (keep in sync)
-// Covers all TikTok CDN hostnames observed in production.
+// Image URL allowlist — covers all TikTok CDN hostnames observed in production.
 // ---------------------------------------------------------------------------
 const TRUSTED_IMAGE_HOSTS = [
   // TikTok CDN - US
@@ -77,7 +77,8 @@ function escapeHtml(str) {
 /**
  * Returns a new user object with all text fields HTML-encoded and photoUrl
  * validated against the CDN allowlist (replaced with DEFAULT_AVATAR on failure).
- * Pass-through fields (followStatus, eventType) carry no HTML rendering risk.
+ * Pass-through fields (followStatus, eventType, giftName, giftCount, diamondCount)
+ * carry no HTML rendering risk.
  */
 function sanitizeUser(user) {
   if (!user || typeof user !== 'object') return {};

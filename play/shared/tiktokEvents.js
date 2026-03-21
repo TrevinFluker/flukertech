@@ -1,0 +1,40 @@
+// tiktokEvents.js (shared)
+// Handles incoming TikTok events from Chrome extension and routes them to GameManager.
+// Shared across all RCC games — requires ../shared/sanitize.js to be loaded first.
+// All user-supplied fields are sanitized via sanitize.js before entering the game pipeline.
+
+// Comment event listener
+window.addEventListener("handleRealCommentEvent", function(event) {
+    const user = sanitizeUser({
+      username:          event.detail.username,
+      nickname:          event.detail.nickname,
+      uniqueId:          event.detail.uniqueId,
+      photoUrl:          event.detail.photoUrl,
+      followStatus:      event.detail.followStatus,
+      gift_name:         event.detail.gift_name || "",
+      comment:           event.detail.comment,
+      eventType:         event.detail.eventType,
+      tikfinityUsername: event.detail.tikfinityUsername || null
+    });
+
+    // Pass the sanitized guess/comment to GameManager
+    GameManager.handleRealComment(user);
+  });
+
+  // Gift event listener
+  window.addEventListener("handleRealGiftEvent", function(event) {
+    const user = sanitizeUser({
+      username:     event.detail.username,
+      nickname:     event.detail.nickname,
+      uniqueId:     event.detail.uniqueId,
+      photoUrl:     event.detail.photoUrl,
+      giftName:     event.detail.giftName,
+      diamondCount: event.detail.diamondCount,
+      giftCount:    event.detail.giftCount,
+      comment:      event.detail.comment || "",
+      eventType:    event.detail.eventType
+    });
+
+    // Pass the sanitized gift to GameManager
+    GameManager.handleRealGift(user);
+  });
