@@ -88,6 +88,9 @@ function sanitizeUser(user) {
     photoUrl:          isSafeImageUrl(user.photoUrl) ? user.photoUrl : DEFAULT_AVATAR,
     followStatus:      user.followStatus,
     gift_name:         escapeHtml(user.gift_name),
+    giftName:          user.giftName,
+    giftCount:         user.giftCount,
+    diamondCount:      user.diamondCount,
     comment:           escapeHtml(user.comment),
     eventType:         user.eventType,
     tikfinityUsername: user.tikfinityUsername ? escapeHtml(user.tikfinityUsername) : null
