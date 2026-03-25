@@ -16,8 +16,19 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     let allowDuplicates = true;
     let suggestedWord = "";
     let winnerDeclared = false; // prevent multiple winners per round
-    let recentlyUsedWords = []; // track randomly generated games to avoid repeats (max 800)
+    let recentlyUsedWords = []; // track randomly generated games to avoid repeats (no limit)
     const numberOfGames = 1100;
+    
+    // Load recently used words from localStorage on startup
+    try {
+        const savedWords = localStorage.getItem('recentlyUsedWords_es');
+        if (savedWords) {
+            recentlyUsedWords = JSON.parse(savedWords);
+            console.log(`Loaded ${recentlyUsedWords.length} recently used Spanish words from localStorage`);
+        }
+    } catch (e) {
+        console.warn('Failed to load recently used words from localStorage:', e);
+    }
     const API_BASE_URL = "https://ccbackend2.com";
     const API_BASE_BACKUP_URL = "https://ccbackend.com";
     const FALLBACK_WORDS = [
@@ -82,12 +93,23 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             const res = await fetch("https://ccbackend.com/preloaded/es");
             const data = await res.json();
             spanishWordList = Array.isArray(data.words) ? data.words : [];
-            console.log(`Loaded ${spanishWordList.length} Spanish words`);
+            
+            // Enhanced logging to diagnose word list issues
+            const uniqueWords = new Set(spanishWordList);
+            console.log(`✓ Loaded ${spanishWordList.length} Spanish words (${uniqueWords.size} unique)`);
+            
+            if (spanishWordList.length !== uniqueWords.size) {
+                console.warn(`⚠ WARNING: ${spanishWordList.length - uniqueWords.size} duplicate(s) in Spanish word list!`);
+            }
+            
+            if (spanishWordList.length < 1000) {
+                console.warn(`⚠ WARNING: Expected ~1,037 words, but only got ${spanishWordList.length}. API may be limited!`);
+            }
             
             // Populate the dropdown if it exists
             populateSpanishWordDropdown(spanishWordList);
         } catch (e) {
-            console.warn("Failed to load Spanish word list:", e);
+            console.error("Failed to load Spanish word list:", e);
         }
     }
 
@@ -109,13 +131,18 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         if (!word) return;
         const normalizedWord = word.toLowerCase().trim();
         
-        // Add to the array
+        // Add to the array (no limit - we want to track all words)
         recentlyUsedWords.push(normalizedWord);
         
-        // If we've reached 800 words, clear the array
-        if (recentlyUsedWords.length >= 800) {
-            console.log("Recently used words limit reached (800). Clearing history.");
-            recentlyUsedWords = [];
+        // Save to localStorage for persistence across page refreshes
+        try {
+            localStorage.setItem('recentlyUsedWords_es', JSON.stringify(recentlyUsedWords));
+        } catch (e) {
+            console.warn('Failed to save recently used words to localStorage:', e);
+            // If localStorage is full or unavailable, keep only the last 2000 words in memory
+            if (recentlyUsedWords.length > 2000) {
+                recentlyUsedWords = recentlyUsedWords.slice(-2000);
+            }
         }
     }
 
@@ -131,7 +158,19 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             !recentSet.has(word.toLowerCase().trim())
         );
         
-        // If all words have been used, fall back to full list (shouldn't happen with 800 limit)
+        // Enhanced logging for diagnostics
+        console.log(`Word selection: ${availableWords.length}/${wordList.length} available (${recentlyUsedWords.length} used)`);
+        
+        // If all words have been used, clear history and start fresh
+        if (availableWords.length === 0) {
+            console.log("🔄 All Spanish words have been used! Clearing history to start fresh.");
+            recentlyUsedWords = [];
+            try {
+                localStorage.setItem('recentlyUsedWords_es', JSON.stringify(recentlyUsedWords));
+            } catch (e) {
+                console.warn('Failed to clear recently used words in localStorage:', e);
+            }
+        }
         const finalList = availableWords.length > 0 ? availableWords : wordList;
         
         // Pick random word
