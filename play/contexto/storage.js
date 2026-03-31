@@ -58,7 +58,17 @@ const STORAGE_KEYS = {
     // Automated word list
     AUTOMATED_WORD_LIST: "automatedWordList",
     // Blocked words
-    BLOCKED_WORDS: "contextoBlockedWords"
+    BLOCKED_WORDS: "contextoBlockedWords",
+    // Color settings - dark mode
+    COLOR_DARK_CLOSE: "contextoColorDarkClose",
+    COLOR_DARK_MEDIUM: "contextoColorDarkMedium",
+    COLOR_DARK_FAR: "contextoColorDarkFar",
+    COLOR_DARK_BG: "contextoColorDarkBg",
+    // Color settings - light mode
+    COLOR_LIGHT_CLOSE: "contextoColorLightClose",
+    COLOR_LIGHT_MEDIUM: "contextoColorLightMedium",
+    COLOR_LIGHT_FAR: "contextoColorLightFar",
+    COLOR_LIGHT_BG: "contextoColorLightBg"
 };
 
 // --- Generic helpers ---
@@ -214,3 +224,28 @@ function clearAutomatedWordList() { removeItem(STORAGE_KEYS.AUTOMATED_WORD_LIST)
 // --- Blocked words ---
 function saveBlockedWords(wordsArray) { saveItem(STORAGE_KEYS.BLOCKED_WORDS, wordsArray); }
 function getBlockedWords() { return getItem(STORAGE_KEYS.BLOCKED_WORDS, []); }
+
+// --- Color settings ---
+function saveColorDarkClose(val)  { saveItem(STORAGE_KEYS.COLOR_DARK_CLOSE, val); }
+function getColorDarkClose()      { return getItem(STORAGE_KEYS.COLOR_DARK_CLOSE, "#00ba7c"); }
+
+function saveColorDarkMedium(val) { saveItem(STORAGE_KEYS.COLOR_DARK_MEDIUM, val); }
+function getColorDarkMedium()     { return getItem(STORAGE_KEYS.COLOR_DARK_MEDIUM, "#ef7d31"); }
+
+function saveColorDarkFar(val)    { saveItem(STORAGE_KEYS.COLOR_DARK_FAR, val); }
+function getColorDarkFar()        { return getItem(STORAGE_KEYS.COLOR_DARK_FAR, "#f91880"); }
+
+function saveColorDarkBg(val)     { saveItem(STORAGE_KEYS.COLOR_DARK_BG, val); }
+function getColorDarkBg()         { return getItem(STORAGE_KEYS.COLOR_DARK_BG, "#15202b"); }
+
+function saveColorLightClose(val)  { saveItem(STORAGE_KEYS.COLOR_LIGHT_CLOSE, val); }
+function getColorLightClose()      { return getItem(STORAGE_KEYS.COLOR_LIGHT_CLOSE, "#b6e0d8"); }
+
+function saveColorLightMedium(val) { saveItem(STORAGE_KEYS.COLOR_LIGHT_MEDIUM, val); }
+function getColorLightMedium()     { return getItem(STORAGE_KEYS.COLOR_LIGHT_MEDIUM, "#f6e4a1"); }
+
+function saveColorLightFar(val)    { saveItem(STORAGE_KEYS.COLOR_LIGHT_FAR, val); }
+function getColorLightFar()        { return getItem(STORAGE_KEYS.COLOR_LIGHT_FAR, "#f2c4c4"); }
+
+function saveColorLightBg(val)     { saveItem(STORAGE_KEYS.COLOR_LIGHT_BG, val); }
+function getColorLightBg()         { return getItem(STORAGE_KEYS.COLOR_LIGHT_BG, "#f8f4ed"); }

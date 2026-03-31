@@ -48,6 +48,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const instructionGif = document.getElementById("instruction-popup-gif");
     const testInstructionPopup = document.getElementById("test-instruction-popup");
   
+    // Color settings
+    const colorDarkClose  = document.getElementById("color-dark-close");
+    const colorDarkMedium = document.getElementById("color-dark-medium");
+    const colorDarkFar    = document.getElementById("color-dark-far");
+    const colorDarkBg     = document.getElementById("color-dark-bg");
+    const colorLightClose  = document.getElementById("color-light-close");
+    const colorLightMedium = document.getElementById("color-light-medium");
+    const colorLightFar    = document.getElementById("color-light-far");
+    const colorLightBg     = document.getElementById("color-light-bg");
+    const resetColorsBtn   = document.getElementById("reset-colors");
+
     // TTS
     const ttsEnabled = document.getElementById("tts-enabled");
     const ttsVoice = document.getElementById("tts-voice");
@@ -102,6 +113,19 @@ document.addEventListener("DOMContentLoaded", () => {
       let state = window.Contexto.getState()
       currentAnswerEl.textContent = state.targetWord || "Not loaded..."
     }
+
+    // Populate color pickers from storage
+    if (colorDarkClose)  colorDarkClose.value  = getColorDarkClose();
+    if (colorDarkMedium) colorDarkMedium.value = getColorDarkMedium();
+    if (colorDarkFar)    colorDarkFar.value    = getColorDarkFar();
+    if (colorDarkBg)     colorDarkBg.value     = getColorDarkBg();
+    if (colorLightClose)  colorLightClose.value  = getColorLightClose();
+    if (colorLightMedium) colorLightMedium.value = getColorLightMedium();
+    if (colorLightFar)    colorLightFar.value    = getColorLightFar();
+    if (colorLightBg)     colorLightBg.value     = getColorLightBg();
+
+    // Apply saved colors immediately on page load
+    applyColorSettings();
   
     // Populate voices
     function populateVoices() {
@@ -156,6 +180,35 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   
+    // Color pickers – save and re-apply on every change
+    if (colorDarkClose)  colorDarkClose.addEventListener("input",  () => { saveColorDarkClose(colorDarkClose.value);   applyColorSettings(); });
+    if (colorDarkMedium) colorDarkMedium.addEventListener("input", () => { saveColorDarkMedium(colorDarkMedium.value); applyColorSettings(); });
+    if (colorDarkFar)    colorDarkFar.addEventListener("input",    () => { saveColorDarkFar(colorDarkFar.value);       applyColorSettings(); });
+    if (colorDarkBg)     colorDarkBg.addEventListener("input",     () => { saveColorDarkBg(colorDarkBg.value);         applyColorSettings(); });
+    if (colorLightClose)  colorLightClose.addEventListener("input",  () => { saveColorLightClose(colorLightClose.value);   applyColorSettings(); });
+    if (colorLightMedium) colorLightMedium.addEventListener("input", () => { saveColorLightMedium(colorLightMedium.value); applyColorSettings(); });
+    if (colorLightFar)    colorLightFar.addEventListener("input",    () => { saveColorLightFar(colorLightFar.value);       applyColorSettings(); });
+    if (colorLightBg)     colorLightBg.addEventListener("input",     () => { saveColorLightBg(colorLightBg.value);         applyColorSettings(); });
+
+    // Reset colors to defaults
+    if (resetColorsBtn) {
+      resetColorsBtn.addEventListener("click", () => {
+        const defaults = {
+          darkClose: "#00ba7c", darkMedium: "#ef7d31", darkFar: "#f91880", darkBg: "#15202b",
+          lightClose: "#b6e0d8", lightMedium: "#f6e4a1", lightFar: "#f2c4c4", lightBg: "#f8f4ed"
+        };
+        if (colorDarkClose)  { colorDarkClose.value  = defaults.darkClose;   saveColorDarkClose(defaults.darkClose); }
+        if (colorDarkMedium) { colorDarkMedium.value = defaults.darkMedium;  saveColorDarkMedium(defaults.darkMedium); }
+        if (colorDarkFar)    { colorDarkFar.value    = defaults.darkFar;     saveColorDarkFar(defaults.darkFar); }
+        if (colorDarkBg)     { colorDarkBg.value     = defaults.darkBg;      saveColorDarkBg(defaults.darkBg); }
+        if (colorLightClose)  { colorLightClose.value  = defaults.lightClose;  saveColorLightClose(defaults.lightClose); }
+        if (colorLightMedium) { colorLightMedium.value = defaults.lightMedium; saveColorLightMedium(defaults.lightMedium); }
+        if (colorLightFar)    { colorLightFar.value    = defaults.lightFar;    saveColorLightFar(defaults.lightFar); }
+        if (colorLightBg)     { colorLightBg.value     = defaults.lightBg;     saveColorLightBg(defaults.lightBg); }
+        applyColorSettings();
+      });
+    }
+
     if (simulateGuesses) {
       simulateGuesses.addEventListener("change", () => saveSimulateGuesses(simulateGuesses.checked));
     }
@@ -493,6 +546,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Make it available inside DOMContentLoaded (called before it's defined there)
   window._applySpanishUiVisibility = applySpanishUiVisibility;
+
+  // ----------------------------
+  // 🔹 Color settings – dynamic style injection
+  // ----------------------------
+  function applyColorSettings() {
+    const darkClose  = getColorDarkClose();
+    const darkMedium = getColorDarkMedium();
+    const darkFar    = getColorDarkFar();
+    const darkBg     = getColorDarkBg();
+    const lightClose  = getColorLightClose();
+    const lightMedium = getColorLightMedium();
+    const lightFar    = getColorLightFar();
+    const lightBg     = getColorLightBg();
+
+    const css = `
+      .contexto .blue-bg .progress-bar   { background-color: ${lightClose}  !important; }
+      .contexto .yellow-bg .progress-bar { background-color: ${lightMedium} !important; }
+      .contexto .red-bg .progress-bar    { background-color: ${lightFar}    !important; }
+      .contexto                          { background-color: ${lightBg}     !important; }
+      .contexto-dark .blue-bg .progress-bar   { background-color: ${darkClose}  !important; }
+      .contexto-dark .yellow-bg .progress-bar { background-color: ${darkMedium} !important; }
+      .contexto-dark .red-bg .progress-bar    { background-color: ${darkFar}    !important; }
+      .contexto-dark                          { background-color: ${darkBg}     !important; }
+    `;
+
+    let styleEl = document.getElementById("contexto-color-overrides");
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = "contexto-color-overrides";
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = css;
+  }
+
+  // Expose so external code can call it if needed
+  window.applyColorSettings = applyColorSettings;
 
   // ----------------------------
   // 🔹 Exposed API (programmatic open/close)

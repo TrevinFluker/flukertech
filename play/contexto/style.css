@@ -826,6 +826,20 @@ body.dark-mode .leaderboard-empty {
   transform: scale(1.1);
 }
 
+.setting-color {
+  width: 44px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #3a3a3c;
+  border-radius: 4px;
+  background-color: #2a2a2c;
+  cursor: pointer;
+}
+
+.setting-color:hover {
+  border-color: #4a4a4c;
+}
+
 .setting-textarea {
   background-color: #2a2a2c;
   color: #ffffff;

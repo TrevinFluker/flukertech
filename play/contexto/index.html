@@ -238,6 +238,57 @@
       </div>
     </div>
 
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <h3>Color Settings</h3>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="settings-section-content">
+
+        <!-- Dark Mode Colors -->
+        <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #b6b6b6; margin-bottom: 6px; margin-top: 4px;">Dark Mode</div>
+        <div class="setting-item">
+          <label for="color-dark-close">Close Bar:</label>
+          <input type="color" id="color-dark-close" class="setting-color" value="#00ba7c">
+        </div>
+        <div class="setting-item">
+          <label for="color-dark-medium">Medium Bar:</label>
+          <input type="color" id="color-dark-medium" class="setting-color" value="#ef7d31">
+        </div>
+        <div class="setting-item">
+          <label for="color-dark-far">Far Bar:</label>
+          <input type="color" id="color-dark-far" class="setting-color" value="#f91880">
+        </div>
+        <div class="setting-item">
+          <label for="color-dark-bg">Background:</label>
+          <input type="color" id="color-dark-bg" class="setting-color" value="#15202b">
+        </div>
+
+        <!-- Light Mode Colors -->
+        <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #b6b6b6; margin-bottom: 6px; margin-top: 14px;">Light Mode</div>
+        <div class="setting-item">
+          <label for="color-light-close">Close Bar:</label>
+          <input type="color" id="color-light-close" class="setting-color" value="#b6e0d8">
+        </div>
+        <div class="setting-item">
+          <label for="color-light-medium">Medium Bar:</label>
+          <input type="color" id="color-light-medium" class="setting-color" value="#f6e4a1">
+        </div>
+        <div class="setting-item">
+          <label for="color-light-far">Far Bar:</label>
+          <input type="color" id="color-light-far" class="setting-color" value="#f2c4c4">
+        </div>
+        <div class="setting-item">
+          <label for="color-light-bg">Background:</label>
+          <input type="color" id="color-light-bg" class="setting-color" value="#f8f4ed">
+        </div>
+
+        <div class="setting-item" style="margin-top: 8px;">
+          <button id="reset-colors" class="back-btn">Reset to Defaults</button>
+        </div>
+      </div>
+    </div>
+
     <div class="settings-section" style="display: none;">
       <div class="settings-section-header">
         <h3 data-i18n="simulateHeader">Simulate Activity</h3>
