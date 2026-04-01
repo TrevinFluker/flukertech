@@ -159,15 +159,16 @@ function updateCurrentAnswerDisplay() {
     }
 }
 
-// Show or hide Polish-specific keyboard row based on current language
+// Show or hide language-specific keyboard rows based on current language
 function updateKeyboardLayoutForLanguage() {
     const polishRow = document.querySelector('.keyboard-row-polish');
-    if (!polishRow) return;
-    
-    if (currentLanguage === 'pl') {
-        polishRow.style.display = 'flex';
-    } else {
-        polishRow.style.display = 'none';
+    const spanishRow = document.querySelector('.keyboard-row-spanish');
+
+    if (polishRow) {
+        polishRow.style.display = currentLanguage === 'pl' ? 'flex' : 'none';
+    }
+    if (spanishRow) {
+        spanishRow.style.display = currentLanguage === 'es' ? 'flex' : 'none';
     }
 }
 
@@ -2045,9 +2046,11 @@ function handleRealComment(user) {
     const comment = user.comment.trim();
     let firstWord = comment.split(' ')[0];
     
-    // Remove all non-letter characters
-    if (currentLanguage !== 'pl') {
+    // Remove all non-letter characters (preserve special chars for Polish and Spanish)
+    if (currentLanguage !== 'pl' && currentLanguage !== 'es') {
         firstWord = firstWord.replace(/[^a-zA-Z]/g, '');
+    } else if (currentLanguage === 'es') {
+        firstWord = firstWord.replace(/[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]/g, '');
     }
 
     if (firstWord.length < wordLength) return;
@@ -2697,6 +2700,11 @@ function isLetterKeyAllowed(key) {
     if (currentLanguage === 'pl') {
         // English letters plus full Polish alphabet
         return /^[a-ząćęłńóśźż]$/.test(lower);
+    }
+    
+    if (currentLanguage === 'es') {
+        // English letters plus Spanish special characters
+        return /^[a-záéíóúüñ]$/.test(lower);
     }
     
     // Default: basic Latin letters
