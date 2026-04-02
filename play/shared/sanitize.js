@@ -18,6 +18,9 @@ const TRUSTED_IMAGE_HOSTS = [
   'p9-sign-sg.tiktokcdn.com',
   'p77-sign-sg.tiktokcdn.com',
   'p77-sign-sg-lite.tiktokcdn.com',
+  // TikTok CDN - Asia / Global
+  'p16-common-sign.tiktokcdn.com',
+  'p19-common-sign.tiktokcdn.com',
   // TikTok CDN - EU
   'p16-common-sign.tiktokcdn-eu.com',
   'p19-common-sign.tiktokcdn-eu.com',
