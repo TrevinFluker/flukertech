@@ -16,18 +16,36 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     let allowDuplicates = true;
     let suggestedWord = "";
     let winnerDeclared = false; // prevent multiple winners per round
-    let recentlyUsedWords = []; // track randomly generated games to avoid repeats (no limit)
     const numberOfGames = 1100;
-    
-    // Load recently used words from localStorage on startup
+
+    // Per-language recently used word lists (separate tracking so ES and PT don't pollute each other)
+    let recentlyUsedWordsEs = [];
+    let recentlyUsedWordsPt = [];
+
+    // Load on startup from separate localStorage keys
     try {
-        const savedWords = localStorage.getItem('recentlyUsedWords_es');
-        if (savedWords) {
-            recentlyUsedWords = JSON.parse(savedWords);
-            console.log(`Loaded ${recentlyUsedWords.length} recently used Spanish words from localStorage`);
+        const savedEs = localStorage.getItem('recentlyUsedWords_es');
+        if (savedEs) {
+            recentlyUsedWordsEs = JSON.parse(savedEs);
+            console.log(`Loaded ${recentlyUsedWordsEs.length} recently used Spanish words from localStorage`);
         }
     } catch (e) {
-        console.warn('Failed to load recently used words from localStorage:', e);
+        console.warn('Failed to load recently used Spanish words from localStorage:', e);
+    }
+    try {
+        const savedPt = localStorage.getItem('recentlyUsedWords_pt');
+        if (savedPt) {
+            recentlyUsedWordsPt = JSON.parse(savedPt);
+            console.log(`Loaded ${recentlyUsedWordsPt.length} recently used Portuguese words from localStorage`);
+        }
+    } catch (e) {
+        console.warn('Failed to load recently used Portuguese words from localStorage:', e);
+    }
+
+    function getRecentlyUsedForLang(lang) {
+        if (lang === 'es') return recentlyUsedWordsEs;
+        if (lang === 'pt') return recentlyUsedWordsPt;
+        return [];
     }
     const API_BASE_URL = "https://ccbackend2.com";
     const API_BASE_BACKUP_URL = "https://ccbackend.com";
@@ -126,53 +144,105 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         });
     }
 
-    // Helper function to add word to recently used list
-    function addToRecentlyUsed(word) {
-        if (!word) return;
-        const normalizedWord = word.toLowerCase().trim();
-        
-        // Add to the array (no limit - we want to track all words)
-        recentlyUsedWords.push(normalizedWord);
-        
-        // Save to localStorage for persistence across page refreshes
+    // ============================================================
+    // 🇧🇷 PORTUGUESE WORD LIST
+    // ============================================================
+    let portugueseWordList = [];
+    async function loadPortugueseWordList() {
         try {
-            localStorage.setItem('recentlyUsedWords_es', JSON.stringify(recentlyUsedWords));
-        } catch (e) {
-            console.warn('Failed to save recently used words to localStorage:', e);
-            // If localStorage is full or unavailable, keep only the last 2000 words in memory
-            if (recentlyUsedWords.length > 2000) {
-                recentlyUsedWords = recentlyUsedWords.slice(-2000);
+            const res = await fetch("https://ccbackend.com/preloaded/pt");
+            const data = await res.json();
+            portugueseWordList = Array.isArray(data.words) ? data.words : [];
+
+            const uniqueWords = new Set(portugueseWordList);
+            console.log(`✓ Loaded ${portugueseWordList.length} Portuguese words (${uniqueWords.size} unique)`);
+
+            if (portugueseWordList.length !== uniqueWords.size) {
+                console.warn(`⚠ WARNING: ${portugueseWordList.length - uniqueWords.size} duplicate(s) in Portuguese word list!`);
             }
+
+            populatePortugueseWordDropdown(portugueseWordList);
+        } catch (e) {
+            console.error("Failed to load Portuguese word list:", e);
         }
     }
 
-    // Helper function to pick a random word avoiding recently used ones
-    function pickRandomWordFromList(wordList) {
-        if (!Array.isArray(wordList) || wordList.length === 0) return null;
-        
-        // Create a set of recently used words for fast lookup
-        const recentSet = new Set(recentlyUsedWords.map(w => w.toLowerCase().trim()));
-        
-        // Filter out recently used words
-        const availableWords = wordList.filter(word => 
-            !recentSet.has(word.toLowerCase().trim())
-        );
-        
-        // Enhanced logging for diagnostics
-        console.log(`Word selection: ${availableWords.length}/${wordList.length} available (${recentlyUsedWords.length} used)`);
-        
-        // If all words have been used, clear history and start fresh
-        if (availableWords.length === 0) {
-            console.log("🔄 All Spanish words have been used! Clearing history to start fresh.");
-            recentlyUsedWords = [];
+    function populatePortugueseWordDropdown(words) {
+        const dropdown = document.getElementById("portugueseWordDropdown");
+        if (!dropdown) return;
+
+        dropdown.innerHTML = "";
+        words.forEach(word => {
+            const option = document.createElement("option");
+            option.value = word;
+            option.textContent = word;
+            dropdown.appendChild(option);
+        });
+    }
+
+    // Helper function to add word to recently used list (per-language)
+    function addToRecentlyUsed(word) {
+        if (!word) return;
+        const normalizedWord = word.toLowerCase().trim();
+        const lang = typeof getLanguage === 'function' ? getLanguage() : 'en';
+
+        if (lang === 'es') {
+            recentlyUsedWordsEs.push(normalizedWord);
             try {
-                localStorage.setItem('recentlyUsedWords_es', JSON.stringify(recentlyUsedWords));
+                localStorage.setItem('recentlyUsedWords_es', JSON.stringify(recentlyUsedWordsEs));
             } catch (e) {
-                console.warn('Failed to clear recently used words in localStorage:', e);
+                console.warn('Failed to save recently used Spanish words to localStorage:', e);
+                if (recentlyUsedWordsEs.length > 2000) recentlyUsedWordsEs = recentlyUsedWordsEs.slice(-2000);
+            }
+        } else if (lang === 'pt') {
+            recentlyUsedWordsPt.push(normalizedWord);
+            try {
+                localStorage.setItem('recentlyUsedWords_pt', JSON.stringify(recentlyUsedWordsPt));
+            } catch (e) {
+                console.warn('Failed to save recently used Portuguese words to localStorage:', e);
+                if (recentlyUsedWordsPt.length > 2000) recentlyUsedWordsPt = recentlyUsedWordsPt.slice(-2000);
             }
         }
+        // English uses static FALLBACK_WORDS — no persistence needed
+    }
+
+    // Helper function to pick a random word avoiding recently used ones (per-language)
+    function pickRandomWordFromList(wordList) {
+        if (!Array.isArray(wordList) || wordList.length === 0) return null;
+
+        const lang = typeof getLanguage === 'function' ? getLanguage() : 'en';
+        const recentlyUsed = getRecentlyUsedForLang(lang);
+
+        // Create a set of recently used words for fast lookup
+        const recentSet = new Set(recentlyUsed.map(w => w.toLowerCase().trim()));
+
+        // Filter out recently used words
+        const availableWords = wordList.filter(word =>
+            !recentSet.has(word.toLowerCase().trim())
+        );
+
+        // Enhanced logging for diagnostics
+        console.log(`Word selection: ${availableWords.length}/${wordList.length} available (${recentlyUsed.length} used)`);
+
+        // If all words have been used, clear history and start fresh
+        if (availableWords.length === 0) {
+            const langName = lang === 'pt' ? 'Portuguese' : lang === 'es' ? 'Spanish' : 'English';
+            console.log(`🔄 All ${langName} words have been used! Clearing history to start fresh.`);
+            if (lang === 'es') {
+                recentlyUsedWordsEs = [];
+                try { localStorage.setItem('recentlyUsedWords_es', JSON.stringify([])); } catch (e) {
+                    console.warn('Failed to clear recently used Spanish words in localStorage:', e);
+                }
+            } else if (lang === 'pt') {
+                recentlyUsedWordsPt = [];
+                try { localStorage.setItem('recentlyUsedWords_pt', JSON.stringify([])); } catch (e) {
+                    console.warn('Failed to clear recently used Portuguese words in localStorage:', e);
+                }
+            }
+        }
+
         const finalList = availableWords.length > 0 ? availableWords : wordList;
-        
+
         // Pick random word
         return finalList[Math.floor(Math.random() * finalList.length)];
     }
@@ -322,6 +392,16 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
                 addToRecentlyUsed(randomWord);
                 response = await fetch(`https://ccbackend.com/preloaded/es/${encodeURIComponent(randomWord)}`);
                 if (!response.ok) throw new Error(`Failed to fetch Spanish game data: ${response.status}`);
+            } else if (typeof getLanguage === 'function' && getLanguage() === 'pt') {
+                // Portuguese mode — pick a random word from the pre-loaded Portuguese list
+                if (portugueseWordList.length === 0) {
+                    await loadPortugueseWordList();
+                }
+                const randomWord = pickRandomWordFromList(portugueseWordList);
+                console.log(`Starting Portuguese game with word: ${randomWord}`);
+                addToRecentlyUsed(randomWord);
+                response = await fetch(`https://ccbackend.com/preloaded/pt/${encodeURIComponent(randomWord)}`);
+                if (!response.ok) throw new Error(`Failed to fetch Portuguese game data: ${response.status}`);
             } else if (gameIndex === null) {
                 // No specific game requested — use a random word from the fallback list
                 const randomWord = pickRandomWordFromList(FALLBACK_WORDS);
@@ -1039,6 +1119,73 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         });
     }
 
+    // Portuguese word search filter
+    const portugueseWordSearch = document.getElementById("portugueseWordSearch");
+    if (portugueseWordSearch) {
+        portugueseWordSearch.addEventListener("input", (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredWords = portugueseWordList.filter(word =>
+                word.toLowerCase().startsWith(searchTerm)
+            );
+            populatePortugueseWordDropdown(filteredWords);
+        });
+    }
+
+    // Play selected Portuguese word
+    const playSelectedPortugueseBtn = document.getElementById("playSelectedPortugueseWord");
+    const portugueseDropdown = document.getElementById("portugueseWordDropdown");
+
+    if (playSelectedPortugueseBtn && portugueseDropdown) {
+        playSelectedPortugueseBtn.addEventListener("click", async () => {
+            const selectedWord = portugueseDropdown.value;
+
+            if (!selectedWord) {
+                const panelError = document.getElementById("customGameError");
+                if (panelError) {
+                    panelError.textContent = "Please select a word from the dropdown.";
+                    panelError.style.display = "block";
+                }
+                return;
+            }
+
+            // Fetch and start game with selected Portuguese word
+            try {
+                loadingElement.style.display = "block";
+                errorMessageElement.style.display = "none";
+
+                const response = await fetch(`https://ccbackend.com/preloaded/pt/${encodeURIComponent(selectedWord)}`);
+                if (!response.ok) throw new Error("Failed to fetch Portuguese game data");
+
+                gameData = await response.json();
+                targetWord = selectedWord;
+                winnerDeclared = false;
+                guesses = [];
+                mostRecentGuessLemma = null;
+                guessesContainer.innerHTML = "";
+                lastGuessContainer.style.display = "none";
+
+                if (window.SettingsPanel) window.SettingsPanel.setCurrentAnswer(selectedWord);
+
+                addToRecentlyUsed(selectedWord);
+
+                loadingElement.style.display = "none";
+                updateGuessCount(0);
+
+                if (window.SettingsPanel?.closeSettingsPanel) {
+                    window.SettingsPanel.closeSettingsPanel();
+                }
+            } catch (error) {
+                console.error("Error loading selected Portuguese word:", error);
+                loadingElement.style.display = "none";
+                const panelError = document.getElementById("customGameError");
+                if (panelError) {
+                    panelError.textContent = "Failed to load selected word. Please try again.";
+                    panelError.style.display = "block";
+                }
+            }
+        });
+    }
+
     // ============================================================
     // 🌐 EXPOSE PUBLIC API
     // ============================================================
@@ -1062,6 +1209,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
 
     initDictionary();
     loadSpanishWordList();
+    loadPortugueseWordList();
 
     // ============================================================
     // 🌐 TRANSLATIONS
@@ -1226,6 +1374,86 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             howToPlayP3: "Al enviar una palabra, verás su posición. La palabra secreta es el número 1.",
             howToPlayP4: "El algoritmo analizó miles de textos. Usa el contexto en que se usan las palabras para calcular su similitud.",
             leaderboard: "Marcador"
+        },
+        pt: {
+            guesses: "TENTATIVAS:",
+            lastWord: "ÚLTIMA PALAVRA:",
+            typeAWord: "digite uma palavra",
+            loading: "Carregando dados do jogo...",
+            howToPlay: "Como jogar",
+            hint: "Dica",
+            giveUp: "Desistir",
+            congrats: "Parabéns!",
+            youGotTheWord: "Você acertou a palavra",
+            inGuesses: "em",
+            guessesWord: "tentativas.",
+            promoText: "Automatize este jogo para TikTok e Twitch em:",
+            playAgain: "Jogar novamente",
+            settingsHeader: "Configurações",
+            gameSettingsHeader: "Configurações do jogo",
+            language: "Idioma:",
+            darkMode: "Modo escuro:",
+            customGameHeader: "Escolher jogo aleatório:",
+            enterSecretWord: "Digite uma palavra secreta",
+            createCustomGame: "Criar jogo",
+            randomGame: "Gerar jogo aleatório",
+            selectSpanishWord: "Selecione uma palavra:",
+            searchSpanishWords: "Digite para pesquisar...",
+            playSelectedWord: "Jogar palavra selecionada",
+            creatingGame: "Criando seu jogo...",
+            wordNotInVocab: "Esta palavra não está no vocabulário.",
+            closestWord: "Palavra secreta similar mais próxima:",
+            acceptSimilarQuestion: "Você aceita esta palavra similar?",
+            back: "Voltar",
+            continue: "Continuar",
+            gameCreated: "Seu jogo foi criado!",
+            continueToGame: "Continuar",
+            automatedListHeader: "Inserir lista automática de palavras:",
+            automatedListDesc: "O jogo escolherá automaticamente desta lista até terminar.",
+            maxWords: "(Máx: 100 palavras)",
+            automatedListDesc2: "As palavras são removidas ao serem concluídas. Limpe o campo para abandonar a lista.",
+            automatedListDesc3: "Palavras inválidas são substituídas automaticamente.",
+            automatedListPlaceholder: "Palavras separadas por vírgulas (ex: maçã, pêssego, cereja)",
+            startAutomatedList: "Iniciar lista automática",
+            clearList: "Limpar lista",
+            currentAnswer: "➤ Resposta atual:",
+            hintGift: "Presente de dica (deve coincidir com o nome do presente):",
+            clearLeaderboard: "Limpar placar",
+            blockedWords: "Palavras bloqueadas: \n(Requer recarregar o navegador)",
+            blockedWordsDesc: "Palavras separadas por vírgulas para excluir dos jogos aleatórios.",
+            blockedWordsPlaceholder: "Palavras separadas por vírgulas (ex: pepino, sapo, burro)",
+            simulateHeader: "Simular atividade",
+            simulateGuesses: "Simular suposições do público:",
+            winningPopupHeader: "Configurações de vitória",
+            winningSoundUrl: "URL do som de vitória:",
+            modalDuration: "Duração do modal (segundos):",
+            testSound: "Testar som",
+            instructionPopupHeader: "Configurações de instruções",
+            showAtRoundStart: "Mostrar ao iniciar rodada:",
+            displayDuration: "Duração de exibição (segundos):",
+            instructionText: "Texto de instrução:",
+            gifUrl: "URL do GIF (opcional):",
+            testPopup: "Testar popup",
+            ttsHeader: "Configurações de voz",
+            enableTts: "Ativar texto para voz:",
+            ttsVoice: "Voz:",
+            defaultVoice: "Voz padrão",
+            ttsVolume: "Volume:",
+            ttsRate: "Velocidade de fala:",
+            readEveryWord: "Ler cada palavra digitada:",
+            roundStartAnnouncements: "Anúncios no início da rodada:",
+            roundStartMessages: "Mensagens de início de rodada (separar com ;):",
+            victoryAnnouncements: "Anúncios de vitória:",
+            victoryMessages: "Mensagens de vitória (separar com ;):",
+            gameplayAnnouncements: "Anúncios durante o jogo:",
+            announcementInterval: "Intervalo de anúncios (segundos):",
+            gameplayMessages: "Mensagens durante o jogo (separar com ;):",
+            testTts: "Testar voz",
+            howToPlayP1: "Encontre a palavra secreta. Você tem tentativas ilimitadas.",
+            howToPlayP2: "As palavras foram ordenadas por um algoritmo de inteligência artificial de acordo com a semelhança com a palavra secreta.",
+            howToPlayP3: "Após enviar uma palavra, você verá sua posição. A palavra secreta é o número 1.",
+            howToPlayP4: "O algoritmo analisou milhares de textos. Ele usa o contexto em que as palavras são usadas para calcular a semelhança entre elas.",
+            leaderboard: "Placar"
         }
     };
 

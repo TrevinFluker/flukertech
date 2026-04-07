@@ -527,21 +527,27 @@ document.addEventListener("DOMContentLoaded", () => {
   // ----------------------------
   function applySpanishUiVisibility(lang) {
     const isEs = lang === 'es';
+    const isPt = lang === 'pt';
+    const isNonEnglish = isEs || isPt;
 
     // Show/hide Spanish word selector
     const spanishSelector = document.getElementById('spanishWordSelector');
     if (spanishSelector) spanishSelector.style.display = isEs ? 'block' : 'none';
 
-    // Hide the custom word input and create button in Spanish mode, but keep random button visible
-    const passwordInputContainer = document.querySelector('#gameCreationUI .password-input-container');
-    if (passwordInputContainer) passwordInputContainer.style.display = isEs ? 'none' : '';
-    
-    const createCustomGameBtn = document.getElementById('createCustomGame');
-    if (createCustomGameBtn) createCustomGameBtn.style.display = isEs ? 'none' : '';
+    // Show/hide Portuguese word selector
+    const portugueseSelector = document.getElementById('portugueseWordSelector');
+    if (portugueseSelector) portugueseSelector.style.display = isPt ? 'block' : 'none';
 
-    // Hide the automated word list section in Spanish mode
+    // Hide the custom word input and create button in non-English modes, but keep random button visible
+    const passwordInputContainer = document.querySelector('#gameCreationUI .password-input-container');
+    if (passwordInputContainer) passwordInputContainer.style.display = isNonEnglish ? 'none' : '';
+
+    const createCustomGameBtn = document.getElementById('createCustomGame');
+    if (createCustomGameBtn) createCustomGameBtn.style.display = isNonEnglish ? 'none' : '';
+
+    // Hide the automated word list section in non-English modes
     const automatedListUI = document.getElementById('automatedListUI');
-    if (automatedListUI) automatedListUI.style.display = isEs ? 'none' : 'block';
+    if (automatedListUI) automatedListUI.style.display = isNonEnglish ? 'none' : 'block';
   }
 
   // Make it available inside DOMContentLoaded (called before it's defined there)
