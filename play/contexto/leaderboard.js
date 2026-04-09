@@ -9,9 +9,30 @@ function getLeaderboard() {
       return {};
     }
   }
+
+  function normalizeLeaderboardTimestamps(leaderboard) {
+    let changed = false;
+    const normalized = { ...leaderboard };
+
+    Object.keys(normalized).forEach((userId) => {
+      const entry = normalized[userId] || {};
+      const timestamp = Number(entry.scoreReachedAt);
+      if (!Number.isFinite(timestamp) || timestamp <= 0) {
+        normalized[userId] = { ...entry, scoreReachedAt: Date.now() };
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      localStorage.setItem("gameLeaderboard", JSON.stringify(normalized));
+    }
+
+    return normalized;
+  }
   
   function updateLeaderboard(userScores) {
     const leaderboard = getLeaderboard();
+    const now = Date.now();
   
     Object.values(userScores).forEach(userScore => {
       const user = userScore.user;
@@ -24,11 +45,17 @@ function getLeaderboard() {
           totalPoints: 0,
           username,
           photoUrl: user.photoUrl,
-          gamesPlayed: 0
+          gamesPlayed: 0,
+          scoreReachedAt: now
         };
       }
-  
-      leaderboard[userId].totalPoints += points;
+
+      const pointsToAdd = Number(points) || 0;
+      if (pointsToAdd > 0) {
+        leaderboard[userId].scoreReachedAt = now;
+      }
+
+      leaderboard[userId].totalPoints += pointsToAdd;
       leaderboard[userId].gamesPlayed++;
       leaderboard[userId].username = username;
       leaderboard[userId].photoUrl = user.photoUrl;
@@ -39,11 +66,17 @@ function getLeaderboard() {
   }
   
   function getTopLeaderboardUsers(limit = 10) {
-    const leaderboard = getLeaderboard();
+    const leaderboard = normalizeLeaderboardTimestamps(getLeaderboard());
     return Object.entries(leaderboard)
       .map(([userId, data]) => ({ userId, ...data }))
       .filter(user => user.totalPoints > 0)
-      .sort((a, b) => b.totalPoints - a.totalPoints)
+      .sort((a, b) => {
+        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+        const aTs = Number(a.scoreReachedAt) || 0;
+        const bTs = Number(b.scoreReachedAt) || 0;
+        if (aTs !== bTs) return aTs - bTs;
+        return String(a.userId).localeCompare(String(b.userId));
+      })
       .slice(0, limit);
   }
   
@@ -170,6 +203,20 @@ if (toggleLeaderboardHeight && floatingLeaderboardBody) {
     if (!leaderboardList) return;
   
     const allUsers = getTopLeaderboardUsers(1000);
+    try {
+      console.table(
+        allUsers.map((user, idx) => ({
+          rank: idx + 1,
+          userId: user.userId,
+          username: user.username,
+          totalPoints: user.totalPoints,
+          scoreReachedAt: user.scoreReachedAt,
+          scoreReachedAtIso: user.scoreReachedAt ? new Date(user.scoreReachedAt).toISOString() : ""
+        }))
+      );
+    } catch (e) {
+      console.warn("Leaderboard debug print failed:", e);
+    }
     const totalPages = Math.ceil(allUsers.length / leaderboardItemsPerPage);
   
     if (currentLeaderboardPage > totalPages && totalPages > 0) {
