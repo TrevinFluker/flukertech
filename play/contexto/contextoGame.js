@@ -17,6 +17,22 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     let suggestedWord = "";
     let winnerDeclared = false; // prevent multiple winners per round
     const numberOfGames = 1100;
+    /** Cap ES/PT recently-used arrays (entries, not unique lemmas) to avoid unbounded growth / quota issues */
+    const RECENTLY_USED_MAX_ENTRIES = 2000;
+
+    // Verbose word-selection / round-start logs: set localStorage.contextoDebugLogs = '1' (then refresh)
+    function contextoDebugLog(...args) {
+        try {
+            if (typeof localStorage !== "undefined" && localStorage.getItem("contextoDebugLogs") === "1") {
+                console.log.apply(console, args);
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    function capRecentlyUsedArray(arr) {
+        if (!Array.isArray(arr) || arr.length <= RECENTLY_USED_MAX_ENTRIES) return arr;
+        return arr.slice(-RECENTLY_USED_MAX_ENTRIES);
+    }
 
     // Per-language recently used word lists (separate tracking so ES and PT don't pollute each other)
     let recentlyUsedWordsEs = [];
@@ -27,7 +43,16 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         const savedEs = localStorage.getItem('recentlyUsedWords_es');
         if (savedEs) {
             recentlyUsedWordsEs = JSON.parse(savedEs);
-            console.log(`Loaded ${recentlyUsedWordsEs.length} recently used Spanish words from localStorage`);
+            if (!Array.isArray(recentlyUsedWordsEs)) recentlyUsedWordsEs = [];
+            if (recentlyUsedWordsEs.length > RECENTLY_USED_MAX_ENTRIES) {
+                recentlyUsedWordsEs = capRecentlyUsedArray(recentlyUsedWordsEs);
+                try {
+                    localStorage.setItem('recentlyUsedWords_es', JSON.stringify(recentlyUsedWordsEs));
+                } catch (e2) {
+                    console.warn('Failed to persist trimmed Spanish recently-used list:', e2);
+                }
+            }
+            contextoDebugLog(`Loaded ${recentlyUsedWordsEs.length} recently used Spanish words from localStorage`);
         }
     } catch (e) {
         console.warn('Failed to load recently used Spanish words from localStorage:', e);
@@ -36,7 +61,16 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         const savedPt = localStorage.getItem('recentlyUsedWords_pt');
         if (savedPt) {
             recentlyUsedWordsPt = JSON.parse(savedPt);
-            console.log(`Loaded ${recentlyUsedWordsPt.length} recently used Portuguese words from localStorage`);
+            if (!Array.isArray(recentlyUsedWordsPt)) recentlyUsedWordsPt = [];
+            if (recentlyUsedWordsPt.length > RECENTLY_USED_MAX_ENTRIES) {
+                recentlyUsedWordsPt = capRecentlyUsedArray(recentlyUsedWordsPt);
+                try {
+                    localStorage.setItem('recentlyUsedWords_pt', JSON.stringify(recentlyUsedWordsPt));
+                } catch (e2) {
+                    console.warn('Failed to persist trimmed Portuguese recently-used list:', e2);
+                }
+            }
+            contextoDebugLog(`Loaded ${recentlyUsedWordsPt.length} recently used Portuguese words from localStorage`);
         }
     } catch (e) {
         console.warn('Failed to load recently used Portuguese words from localStorage:', e);
@@ -131,17 +165,152 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
         }
     }
 
-    function populateSpanishWordDropdown(words) {
-        const dropdown = document.getElementById("spanishWordDropdown");
-        if (!dropdown) return;
-        
-        dropdown.innerHTML = "";
-        words.forEach(word => {
-            const option = document.createElement("option");
-            option.value = word;
-            option.textContent = word;
-            dropdown.appendChild(option);
+    function createEyeOffIcon() {
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("width", "18");
+        svg.setAttribute("height", "18");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "2");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("aria-hidden", "true");
+        const paths = [
+            "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
+            "M14.084 14.158a3 3 0 0 1-4.087-4.087",
+            "M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",
+            "m2 2 20 20"
+        ];
+        paths.forEach((d) => {
+            const p = document.createElementNS(ns, "path");
+            p.setAttribute("d", d);
+            svg.appendChild(p);
         });
+        return svg;
+    }
+
+    function getRecentSetForLang(lang) {
+        const arr = getRecentlyUsedForLang(lang);
+        return new Set(arr.map((w) => w.toLowerCase().trim()));
+    }
+
+    function updateWordPickerStats(lang) {
+        const statsEl =
+            lang === "es"
+                ? document.getElementById("spanishWordStats")
+                : lang === "pt"
+                    ? document.getElementById("portugueseWordStats")
+                    : null;
+        if (!statsEl) return;
+        const wordList =
+            lang === "es" ? spanishWordList : lang === "pt" ? portugueseWordList : [];
+        const total = wordList.length;
+        const recentSet = getRecentSetForLang(lang);
+        let uniqueExcluded = 0;
+        for (let i = 0; i < wordList.length; i++) {
+            if (recentSet.has(wordList[i].toLowerCase().trim())) uniqueExcluded++;
+        }
+        statsEl.textContent = `${uniqueExcluded} / ${total}`;
+    }
+
+    function setWordPickerSelection(listbox, row) {
+        if (!listbox || !row) return;
+        listbox.querySelectorAll(".word-picker-row[data-word]").forEach((r) => {
+            r.classList.remove("is-selected");
+            r.setAttribute("aria-selected", "false");
+        });
+        row.classList.add("is-selected");
+        row.setAttribute("aria-selected", "true");
+    }
+
+    function selectFirstWordPickerRow(listbox) {
+        const first = listbox?.querySelector(".word-picker-row[data-word]");
+        if (first) setWordPickerSelection(listbox, first);
+    }
+
+    function getSelectedWordPickerWord(listbox) {
+        const row = listbox?.querySelector(".word-picker-row.is-selected[data-word]");
+        return row ? row.getAttribute("data-word") : null;
+    }
+
+    function onWordPickerKeydown(e, listbox) {
+        const rows = [...listbox.querySelectorAll(".word-picker-row[data-word]")];
+        if (!rows.length) return;
+        let idx = rows.findIndex((r) => r.classList.contains("is-selected"));
+        if (idx < 0) idx = 0;
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            idx = Math.min(rows.length - 1, idx + 1);
+            setWordPickerSelection(listbox, rows[idx]);
+            rows[idx].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            idx = Math.max(0, idx - 1);
+            setWordPickerSelection(listbox, rows[idx]);
+            rows[idx].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "Home") {
+            e.preventDefault();
+            setWordPickerSelection(listbox, rows[0]);
+            rows[0].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "End") {
+            e.preventDefault();
+            const last = rows[rows.length - 1];
+            setWordPickerSelection(listbox, last);
+            last.scrollIntoView({ block: "nearest" });
+        }
+    }
+
+    function ensureWordPickerListboxInteractions(listbox) {
+        if (!listbox || listbox.dataset.wordPickerBound) return;
+        listbox.dataset.wordPickerBound = "1";
+        listbox.addEventListener("click", (e) => {
+            const row = e.target.closest(".word-picker-row[data-word]");
+            if (!row) return;
+            setWordPickerSelection(listbox, row);
+        });
+        listbox.addEventListener("keydown", (e) => onWordPickerKeydown(e, listbox));
+    }
+
+    function populateSpanishWordDropdown(words) {
+        const listbox = document.getElementById("spanishWordDropdown");
+        if (!listbox) return;
+
+        ensureWordPickerListboxInteractions(listbox);
+        listbox.innerHTML = "";
+        const lang = "es";
+        const recentSet = getRecentSetForLang(lang);
+
+        if (!Array.isArray(words) || words.length === 0) {
+            updateWordPickerStats(lang);
+            return;
+        }
+
+        words.forEach((word) => {
+            const row = document.createElement("div");
+            row.className = "word-picker-row";
+            row.setAttribute("role", "option");
+            row.setAttribute("data-word", word);
+            row.setAttribute("aria-selected", "false");
+
+            const labelEl = document.createElement("span");
+            labelEl.className = "word-picker-row-label";
+            labelEl.textContent = word;
+            row.appendChild(labelEl);
+
+            const iconWrap = document.createElement("span");
+            iconWrap.className = "word-picker-row-icon";
+            if (recentSet.has(word.toLowerCase().trim())) {
+                iconWrap.appendChild(createEyeOffIcon());
+            }
+            row.appendChild(iconWrap);
+
+            listbox.appendChild(row);
+        });
+
+        selectFirstWordPickerRow(listbox);
+        updateWordPickerStats(lang);
     }
 
     // ============================================================
@@ -168,16 +337,61 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     }
 
     function populatePortugueseWordDropdown(words) {
-        const dropdown = document.getElementById("portugueseWordDropdown");
-        if (!dropdown) return;
+        const listbox = document.getElementById("portugueseWordDropdown");
+        if (!listbox) return;
 
-        dropdown.innerHTML = "";
-        words.forEach(word => {
-            const option = document.createElement("option");
-            option.value = word;
-            option.textContent = word;
-            dropdown.appendChild(option);
+        ensureWordPickerListboxInteractions(listbox);
+        listbox.innerHTML = "";
+        const lang = "pt";
+        const recentSet = getRecentSetForLang(lang);
+
+        if (!Array.isArray(words) || words.length === 0) {
+            updateWordPickerStats(lang);
+            return;
+        }
+
+        words.forEach((word) => {
+            const row = document.createElement("div");
+            row.className = "word-picker-row";
+            row.setAttribute("role", "option");
+            row.setAttribute("data-word", word);
+            row.setAttribute("aria-selected", "false");
+
+            const labelEl = document.createElement("span");
+            labelEl.className = "word-picker-row-label";
+            labelEl.textContent = word;
+            row.appendChild(labelEl);
+
+            const iconWrap = document.createElement("span");
+            iconWrap.className = "word-picker-row-icon";
+            if (recentSet.has(word.toLowerCase().trim())) {
+                iconWrap.appendChild(createEyeOffIcon());
+            }
+            row.appendChild(iconWrap);
+
+            listbox.appendChild(row);
         });
+
+        selectFirstWordPickerRow(listbox);
+        updateWordPickerStats(lang);
+    }
+
+    function refreshWordPickerUIFromSearch(lang) {
+        if (lang === "es") {
+            const input = document.getElementById("spanishWordSearch");
+            const term = (input && input.value ? input.value : "").toLowerCase().trim();
+            const filtered = term
+                ? spanishWordList.filter((w) => w.toLowerCase().startsWith(term))
+                : spanishWordList;
+            populateSpanishWordDropdown(filtered);
+        } else if (lang === "pt") {
+            const input = document.getElementById("portugueseWordSearch");
+            const term = (input && input.value ? input.value : "").toLowerCase().trim();
+            const filtered = term
+                ? portugueseWordList.filter((w) => w.toLowerCase().startsWith(term))
+                : portugueseWordList;
+            populatePortugueseWordDropdown(filtered);
+        }
     }
 
     // Helper function to add word to recently used list (per-language)
@@ -188,20 +402,34 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
 
         if (lang === 'es') {
             recentlyUsedWordsEs.push(normalizedWord);
+            recentlyUsedWordsEs = capRecentlyUsedArray(recentlyUsedWordsEs);
             try {
                 localStorage.setItem('recentlyUsedWords_es', JSON.stringify(recentlyUsedWordsEs));
             } catch (e) {
                 console.warn('Failed to save recently used Spanish words to localStorage:', e);
-                if (recentlyUsedWordsEs.length > 2000) recentlyUsedWordsEs = recentlyUsedWordsEs.slice(-2000);
+                recentlyUsedWordsEs = capRecentlyUsedArray(recentlyUsedWordsEs);
+                try {
+                    localStorage.setItem('recentlyUsedWords_es', JSON.stringify(recentlyUsedWordsEs));
+                } catch (e2) {
+                    console.warn('Failed to save Spanish recently-used list after trim:', e2);
+                }
             }
+            refreshWordPickerUIFromSearch('es');
         } else if (lang === 'pt') {
             recentlyUsedWordsPt.push(normalizedWord);
+            recentlyUsedWordsPt = capRecentlyUsedArray(recentlyUsedWordsPt);
             try {
                 localStorage.setItem('recentlyUsedWords_pt', JSON.stringify(recentlyUsedWordsPt));
             } catch (e) {
                 console.warn('Failed to save recently used Portuguese words to localStorage:', e);
-                if (recentlyUsedWordsPt.length > 2000) recentlyUsedWordsPt = recentlyUsedWordsPt.slice(-2000);
+                recentlyUsedWordsPt = capRecentlyUsedArray(recentlyUsedWordsPt);
+                try {
+                    localStorage.setItem('recentlyUsedWords_pt', JSON.stringify(recentlyUsedWordsPt));
+                } catch (e2) {
+                    console.warn('Failed to save Portuguese recently-used list after trim:', e2);
+                }
             }
+            refreshWordPickerUIFromSearch('pt');
         }
         // English uses static FALLBACK_WORDS — no persistence needed
     }
@@ -221,23 +449,27 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
             !recentSet.has(word.toLowerCase().trim())
         );
 
-        // Enhanced logging for diagnostics
-        console.log(`Word selection: ${availableWords.length}/${wordList.length} available (${recentlyUsed.length} used)`);
+        const excludedFromCorpus = wordList.length - availableWords.length;
+        contextoDebugLog(
+            `Word selection: ${availableWords.length}/${wordList.length} available (${excludedFromCorpus} unique excluded from corpus, ${recentSet.size} unique in history)`
+        );
 
         // If all words have been used, clear history and start fresh
         if (availableWords.length === 0) {
             const langName = lang === 'pt' ? 'Portuguese' : lang === 'es' ? 'Spanish' : 'English';
-            console.log(`🔄 All ${langName} words have been used! Clearing history to start fresh.`);
+            contextoDebugLog(`All ${langName} words have been used; clearing history to start fresh.`);
             if (lang === 'es') {
                 recentlyUsedWordsEs = [];
                 try { localStorage.setItem('recentlyUsedWords_es', JSON.stringify([])); } catch (e) {
                     console.warn('Failed to clear recently used Spanish words in localStorage:', e);
                 }
+                refreshWordPickerUIFromSearch('es');
             } else if (lang === 'pt') {
                 recentlyUsedWordsPt = [];
                 try { localStorage.setItem('recentlyUsedWords_pt', JSON.stringify([])); } catch (e) {
                     console.warn('Failed to clear recently used Portuguese words in localStorage:', e);
                 }
+                refreshWordPickerUIFromSearch('pt');
             }
         }
 
@@ -388,7 +620,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
                     await loadSpanishWordList();
                 }
                 const randomWord = pickRandomWordFromList(spanishWordList);
-                console.log(`Starting Spanish game with word: ${randomWord}`);
+                contextoDebugLog(`Starting Spanish game with word: ${randomWord}`);
                 addToRecentlyUsed(randomWord);
                 response = await fetch(`https://ccbackend.com/preloaded/es/${encodeURIComponent(randomWord)}`);
                 if (!response.ok) throw new Error(`Failed to fetch Spanish game data: ${response.status}`);
@@ -398,7 +630,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
                     await loadPortugueseWordList();
                 }
                 const randomWord = pickRandomWordFromList(portugueseWordList);
-                console.log(`Starting Portuguese game with word: ${randomWord}`);
+                contextoDebugLog(`Starting Portuguese game with word: ${randomWord}`);
                 addToRecentlyUsed(randomWord);
                 response = await fetch(`https://ccbackend.com/preloaded/pt/${encodeURIComponent(randomWord)}`);
                 if (!response.ok) throw new Error(`Failed to fetch Portuguese game data: ${response.status}`);
@@ -406,7 +638,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
                 // No specific game requested — use a random word from the fallback list
                 const randomWord = pickRandomWordFromList(FALLBACK_WORDS);
                 const fallbackUrl = `https://www.runchatcapture.com/scripts/contexto_results/contexto-${randomWord}.json`;
-                console.log(`Starting random game from fallback list: ${fallbackUrl}`);
+                contextoDebugLog(`Starting random game from fallback list: ${fallbackUrl}`);
                 addToRecentlyUsed(randomWord);
                 response = await fetch(fallbackUrl);
                 if (!response.ok) {
@@ -1053,12 +1285,8 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     // Spanish word search filter
     const spanishWordSearch = document.getElementById("spanishWordSearch");
     if (spanishWordSearch) {
-        spanishWordSearch.addEventListener("input", (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredWords = spanishWordList.filter(word => 
-                word.toLowerCase().startsWith(searchTerm)
-            );
-            populateSpanishWordDropdown(filteredWords);
+        spanishWordSearch.addEventListener("input", () => {
+            refreshWordPickerUIFromSearch("es");
         });
     }
 
@@ -1068,7 +1296,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
 
     if (playSelectedBtn && spanishDropdown) {
         playSelectedBtn.addEventListener("click", async () => {
-            const selectedWord = spanishDropdown.value;
+            const selectedWord = getSelectedWordPickerWord(spanishDropdown);
             
             if (!selectedWord) {
                 const panelError = document.getElementById("customGameError");
@@ -1122,12 +1350,8 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     // Portuguese word search filter
     const portugueseWordSearch = document.getElementById("portugueseWordSearch");
     if (portugueseWordSearch) {
-        portugueseWordSearch.addEventListener("input", (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredWords = portugueseWordList.filter(word =>
-                word.toLowerCase().startsWith(searchTerm)
-            );
-            populatePortugueseWordDropdown(filteredWords);
+        portugueseWordSearch.addEventListener("input", () => {
+            refreshWordPickerUIFromSearch("pt");
         });
     }
 
@@ -1137,7 +1361,7 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
 
     if (playSelectedPortugueseBtn && portugueseDropdown) {
         playSelectedPortugueseBtn.addEventListener("click", async () => {
-            const selectedWord = portugueseDropdown.value;
+            const selectedWord = getSelectedWordPickerWord(portugueseDropdown);
 
             if (!selectedWord) {
                 const panelError = document.getElementById("customGameError");
@@ -1208,6 +1432,8 @@ let allowHintsThisRound = true; // globally visible so gift handler can check
     };
 
     initDictionary();
+    ensureWordPickerListboxInteractions(document.getElementById("spanishWordDropdown"));
+    ensureWordPickerListboxInteractions(document.getElementById("portugueseWordDropdown"));
     loadSpanishWordList();
     loadPortugueseWordList();
 

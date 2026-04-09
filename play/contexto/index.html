@@ -154,8 +154,8 @@
           
           <!-- Spanish Word Selector (visible only in Spanish mode) -->
           <div id="spanishWordSelector" style="display: none; margin-bottom: 10px;">
-            <label for="spanishWordDropdown" style="font-size: 14px; color: #ffffff; display: block; margin-bottom: 5px;">
-              <span data-i18n="selectSpanishWord">Select a Spanish word:</span>
+            <label style="font-size: 14px; color: #ffffff; display: block; margin-bottom: 5px;">
+              <span id="spanishWordPickerLabel" data-i18n="selectSpanishWord">Select a Spanish word:</span>
             </label>
             <input 
               type="text" 
@@ -165,9 +165,14 @@
               placeholder="Type to search..."
               style="margin-bottom: 5px;"
             >
-            <select id="spanishWordDropdown" class="setting-select" size="8" style="width: 100%; font-size: 14px;">
-              <option value="" disabled selected>Loading Spanish words...</option>
-            </select>
+            <div
+              id="spanishWordDropdown"
+              class="word-picker-listbox setting-select"
+              role="listbox"
+              tabindex="0"
+              aria-labelledby="spanishWordPickerLabel"
+            ></div>
+            <div id="spanishWordStats" class="word-picker-stats" aria-live="polite">0 / 0</div>
             <button id="playSelectedSpanishWord" data-i18n="playSelectedWord" style="margin-top: 5px; width: 100%;">
               Play Selected Word
             </button>
@@ -175,8 +180,8 @@
 
           <!-- Portuguese Word Selector (visible only in Portuguese mode) -->
           <div id="portugueseWordSelector" style="display: none; margin-bottom: 10px;">
-            <label for="portugueseWordDropdown" style="font-size: 14px; color: #ffffff; display: block; margin-bottom: 5px;">
-              <span data-i18n="selectSpanishWord">Select a Portuguese word:</span>
+            <label style="font-size: 14px; color: #ffffff; display: block; margin-bottom: 5px;">
+              <span id="portugueseWordPickerLabel" data-i18n="selectSpanishWord">Select a Portuguese word:</span>
             </label>
             <input
               type="text"
@@ -186,9 +191,14 @@
               placeholder="Type to search..."
               style="margin-bottom: 5px;"
             >
-            <select id="portugueseWordDropdown" class="setting-select" size="8" style="width: 100%; font-size: 14px;">
-              <option value="" disabled selected>Loading Portuguese words...</option>
-            </select>
+            <div
+              id="portugueseWordDropdown"
+              class="word-picker-listbox setting-select"
+              role="listbox"
+              tabindex="0"
+              aria-labelledby="portugueseWordPickerLabel"
+            ></div>
+            <div id="portugueseWordStats" class="word-picker-stats" aria-live="polite">0 / 0</div>
             <button id="playSelectedPortugueseWord" data-i18n="playSelectedWord" style="margin-top: 5px; width: 100%;">
               Play Selected Word
             </button>
