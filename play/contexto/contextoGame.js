@@ -1,6 +1,9 @@
 // contextoGame.js
 // Contexto gameplay logic safely namespaced for use by GameManager
 
+//THINGS TO REMEMBER
+//Optimize Spanish and Portuguese history sections to ease load on DOM if you get to 3000 words on either.
+
 let allowHintsThisRound = true; // globally visible so gift handler can check
 
 (function () {

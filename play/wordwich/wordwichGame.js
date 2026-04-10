@@ -185,6 +185,89 @@
     }
 
     // ============================================================
+    // 🎯 AUTOMATED WORD LIST (queue validated against wordwich.json wordsList)
+    // ============================================================
+    async function getNextAutomatedWord() {
+        try {
+            let wordList = typeof getAutomatedWordList === "function" ? getAutomatedWordList() : [];
+            if (!Array.isArray(wordList) || wordList.length === 0) {
+                return null;
+            }
+
+            if (wordsList.length === 0) {
+                await loadWordsList();
+            }
+            if (wordsList.length === 0) {
+                console.warn("getNextAutomatedWord: word dictionary not loaded");
+                return null;
+            }
+
+            const raw = String(wordList[0] || "").toLowerCase().trim();
+            if (!raw) {
+                wordList.shift();
+                if (typeof saveAutomatedWordList === "function") saveAutomatedWordList(wordList);
+                return getNextAutomatedWord();
+            }
+
+            const upperWord = raw.toUpperCase();
+            if (!wordsList.includes(upperWord)) {
+                console.log(`Word '${upperWord}' not in Wordwich dictionary, skipping...`);
+                wordList.shift();
+                if (typeof saveAutomatedWordList === "function") saveAutomatedWordList(wordList);
+                return getNextAutomatedWord();
+            }
+
+            wordList.shift();
+            if (typeof saveAutomatedWordList === "function") saveAutomatedWordList(wordList);
+            return { canonicalWord: upperWord };
+        } catch (error) {
+            console.error("Error in getNextAutomatedWord:", error);
+            return null;
+        }
+    }
+
+    async function initNextRound() {
+        guesses = [];
+        mostRecentGuess = null;
+        winnerDeclared = false;
+        hintDisplayed = false;
+        closestBefore = { word: "aardvark", photo: null };
+        closestAfter = { word: "zulu", photo: null };
+        if (guessesContainerBefore) guessesContainerBefore.innerHTML = "";
+        if (guessesContainerAfter) guessesContainerAfter.innerHTML = "";
+        loadingElement.style.display = "block";
+        errorMessageElement.style.display = "none";
+        stopPlaceholderToggle();
+        updateInputPlaceholder();
+
+        try {
+            const nextWordData = await getNextAutomatedWord();
+            if (nextWordData) {
+                targetWord = nextWordData.canonicalWord;
+                if (window.SettingsPanel) window.SettingsPanel.setCurrentAnswer(targetWord);
+                loadingElement.style.display = "none";
+                updateGuessCount(0);
+                startPlaceholderToggle();
+                if (typeof window.updateAutomatedListStatus === "function") {
+                    window.updateAutomatedListStatus();
+                }
+            } else {
+                await wordwichInitGame(null);
+                if (typeof window.updateAutomatedListStatus === "function") {
+                    window.updateAutomatedListStatus();
+                }
+            }
+        } catch (error) {
+            console.error("Error in initNextRound:", error);
+            loadingElement.style.display = "none";
+            await wordwichInitGame(null);
+            if (typeof window.updateAutomatedListStatus === "function") {
+                window.updateAutomatedListStatus();
+            }
+        }
+    }
+
+    // ============================================================
     // 🔤 GAME LOGIC
     // ============================================================
     function compareWord(guess) {
@@ -904,6 +987,8 @@
     // ============================================================
     window.Wordwich = {
         initGame: wordwichInitGame,
+        initNextRound,
+        getNextAutomatedWord,
         initCustomGame,
         submitWord,
         compareWord,

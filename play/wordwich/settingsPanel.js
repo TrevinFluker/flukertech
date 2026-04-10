@@ -365,6 +365,109 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     }
+
+    // ---------- Automated Word List ----------
+    const automatedWordListInput = document.getElementById("automatedWordListInput");
+    const startAutomatedListBtn = document.getElementById("startAutomatedList");
+    const clearAutomatedListBtn = document.getElementById("clearAutomatedList");
+    const automatedListStatus = document.getElementById("automatedListStatus");
+    const automatedListError = document.getElementById("automatedListError");
+
+    function updateAutomatedListStatus() {
+      if (!automatedListStatus || typeof getAutomatedWordList !== "function") return;
+
+      const wordList = getAutomatedWordList();
+      if (Array.isArray(wordList) && wordList.length > 0) {
+        if (automatedWordListInput) {
+          automatedWordListInput.value = wordList.join(", ");
+        }
+        automatedListStatus.textContent = `${wordList.length} word${wordList.length !== 1 ? "s" : ""} remaining in list`;
+        automatedListStatus.style.display = "block";
+        if (clearAutomatedListBtn) clearAutomatedListBtn.style.display = "inline-block";
+        if (startAutomatedListBtn) startAutomatedListBtn.textContent = "Update List";
+      } else {
+        if (automatedWordListInput) {
+          automatedWordListInput.value = "";
+        }
+        automatedListStatus.style.display = "none";
+        if (clearAutomatedListBtn) clearAutomatedListBtn.style.display = "none";
+        if (startAutomatedListBtn) startAutomatedListBtn.textContent = "Start Automated List";
+      }
+    }
+
+    window.updateAutomatedListStatus = updateAutomatedListStatus;
+    updateAutomatedListStatus();
+
+    if (startAutomatedListBtn && automatedWordListInput) {
+      startAutomatedListBtn.addEventListener("click", () => {
+        const input = automatedWordListInput.value.trim();
+
+        if (!input) {
+          if (typeof clearAutomatedWordList === "function") {
+            clearAutomatedWordList();
+          }
+          updateAutomatedListStatus();
+          if (automatedListError) automatedListError.style.display = "none";
+          return;
+        }
+
+        const words = input
+          .split(",")
+          .map((w) => w.trim().toLowerCase())
+          .filter((w) => w.length > 0);
+
+        if (words.length === 0) {
+          if (automatedListError) {
+            automatedListError.textContent = "Please enter valid words.";
+            automatedListError.style.display = "block";
+          }
+          return;
+        }
+
+        if (words.length > 100) {
+          if (automatedListError) {
+            automatedListError.textContent = `Maximum 100 words allowed. You entered ${words.length} words. Please reduce.`;
+            automatedListError.style.display = "block";
+          }
+          return;
+        }
+
+        if (typeof saveAutomatedWordList === "function") {
+          saveAutomatedWordList(words);
+        }
+
+        if (automatedListError) automatedListError.style.display = "none";
+        updateAutomatedListStatus();
+
+        if (window.SettingsPanel?.closeSettingsPanel) {
+          window.SettingsPanel.closeSettingsPanel();
+        }
+        if (window.Wordwich?.initNextRound) {
+          window.Wordwich.initNextRound();
+        }
+      });
+    }
+
+    if (clearAutomatedListBtn) {
+      clearAutomatedListBtn.addEventListener("click", () => {
+        const confirmed = window.confirm("Clear the automated word list? This cannot be undone.");
+        if (!confirmed) return;
+
+        if (typeof clearAutomatedWordList === "function") {
+          clearAutomatedWordList();
+        }
+        if (automatedWordListInput) {
+          automatedWordListInput.value = "";
+        }
+        updateAutomatedListStatus();
+      });
+    }
+
+    if (settingsToggle) {
+      settingsToggle.addEventListener("click", () => {
+        setTimeout(updateAutomatedListStatus, 100);
+      });
+    }
     
     // ---------- Update container heights based on visible rows ----------
     function updateContainerHeights(rows) {

@@ -76,7 +76,8 @@ function endRound(result, winners = [], answer = "") {
     setTimeout(() => {
         hideWinningModal();
         initGame();
-        if (window.Wordwich?.initGame) window.Wordwich.initGame();
+        if (window.Wordwich?.initNextRound) window.Wordwich.initNextRound();
+        else if (window.Wordwich?.initGame) window.Wordwich.initGame();
     }, (getWinningModalDuration() || 5) * 1000);
 }
 
@@ -339,7 +340,8 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Skipping tutorial, loading normal game...");
         // Load persisted settings and start the first round
         initGame();
-        if (window.Wordwich?.initGame) window.Wordwich.initGame();
+        if (window.Wordwich?.initNextRound) window.Wordwich.initNextRound();
+        else if (window.Wordwich?.initGame) window.Wordwich.initGame();
     }
 });
 

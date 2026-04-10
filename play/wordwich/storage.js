@@ -59,7 +59,9 @@ const STORAGE_KEYS = {
     // Leaderboard
     LEADERBOARD: "wwGameLeaderboard",
     // Tutorial
-    TUTORIAL_SEEN: "wwSeenTutorial"
+    TUTORIAL_SEEN: "wwSeenTutorial",
+    // Automated word list (FIFO queue for host-configured rounds)
+    AUTOMATED_WORD_LIST: "wwAutomatedWordList"
 };
 
 // --- Generic helpers ---
@@ -213,3 +215,8 @@ function getHintGiftName() { return getItem(STORAGE_KEYS.HINT_GIFT_NAME, ""); }
 // --- Tutorial ---
 function saveTutorialSeen(val) { saveItem(STORAGE_KEYS.TUTORIAL_SEEN, val); }
 function getTutorialSeen() { return getItem(STORAGE_KEYS.TUTORIAL_SEEN, false); }
+
+// --- Automated word list ---
+function saveAutomatedWordList(wordsArray) { saveItem(STORAGE_KEYS.AUTOMATED_WORD_LIST, wordsArray); }
+function getAutomatedWordList() { return getItem(STORAGE_KEYS.AUTOMATED_WORD_LIST, []); }
+function clearAutomatedWordList() { removeItem(STORAGE_KEYS.AUTOMATED_WORD_LIST); }
