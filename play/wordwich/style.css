@@ -889,7 +889,7 @@ body.dark-mode .leaderboard-empty {
 
 .settings-section-header:not(.collapsed) + .settings-section-content {
   padding: 15px 20px;
-  max-height: 800px;
+  max-height: none; /* allow full Game Settings (automated list, etc.); fixed cap was clipping */
 }
 
 .settings-toggle {
