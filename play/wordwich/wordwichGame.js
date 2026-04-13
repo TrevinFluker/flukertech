@@ -16,6 +16,7 @@
     let hintDisplayed = false; // Track if hint shown this round
     let placeholderToggleInterval = null; // Track placeholder toggle interval
     let showingHintPlaceholder = false; // Track which placeholder is showing
+    let hintsCache = null; // Cache for hints JSON (loaded once at startup)
     
     // Boundary words with attribution
     let closestBefore = { word: "aardvark", photo: null };
@@ -97,6 +98,25 @@
                 stack: error.stack
             });
             wordsList = [];
+            return false;
+        }
+    }
+
+    async function loadHintsCache() {
+        try {
+            console.log("Loading hints cache...");
+            const response = await fetch('/play/wordwich/hints_output.json');
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch hints: ${response.status} ${response.statusText}`);
+            }
+            
+            hintsCache = await response.json();
+            console.log(`Loaded ${Object.keys(hintsCache).length} hints into cache`);
+            return true;
+        } catch (error) {
+            console.error("Failed to load hints cache:", error);
+            hintsCache = {}; // Fallback to empty object
             return false;
         }
     }
@@ -913,12 +933,8 @@
             // Get current target word
             if (!targetWord) return;
             
-            // Fetch hint from JSON
-            const response = await fetch('/play/wordwich/hints_output.json');
-            if (!response.ok) return;
-            
-            const hints = await response.json();
-            const hint = hints[targetWord.toLowerCase()];
+            // Lookup hint from cache (instant)
+            const hint = hintsCache?.[targetWord.toLowerCase()];
             
             if (hint) {
                 showHint(hint, user);
@@ -965,12 +981,8 @@
             if (hintDisplayed) return;
             if (!targetWord) return;
             
-            // Fetch hint from JSON
-            const response = await fetch('/play/wordwich/hints_output.json');
-            if (!response.ok) return;
-            
-            const hints = await response.json();
-            const hint = hints[targetWord.toLowerCase()];
+            // Lookup hint from cache (instant)
+            const hint = hintsCache?.[targetWord.toLowerCase()];
             
             if (hint) {
                 showHint(hint, { nickname: 'Tutorial', photoUrl: 'https://via.placeholder.com/50' });
@@ -1009,20 +1021,20 @@
         triggerHint
     };
 
-    // Initialize by loading words list
+    // Initialize by loading words list and hints in parallel
     console.log("=== WORDWICH INITIALIZATION START ===");
-    console.log("Wordwich script loaded, starting word list fetch...");
-    console.log("URL:", WORDS_JSON_URL);
+    console.log("Wordwich script loaded, starting data fetch...");
+    console.log("Words URL:", WORDS_JSON_URL);
     console.log("Time:", new Date().toISOString());
     
-    loadWordsList().then((success) => {
-        console.log("=== WORD LIST FETCH COMPLETED ===");
-        console.log("Success:", success);
-        console.log("Words loaded:", wordsList.length);
+    Promise.all([loadWordsList(), loadHintsCache()]).then(([wordsSuccess, hintsSuccess]) => {
+        console.log("=== DATA FETCH COMPLETED ===");
+        console.log("Words success:", wordsSuccess, "| Words loaded:", wordsList.length);
+        console.log("Hints success:", hintsSuccess, "| Hints loaded:", hintsCache ? Object.keys(hintsCache).length : 0);
         console.log("Time:", new Date().toISOString());
         
         // Show a visual indicator if loading failed
-        if (!success || wordsList.length === 0) {
+        if (!wordsSuccess || wordsList.length === 0) {
             if (errorMessageElement) {
                 errorMessageElement.textContent = "Failed to load word dictionary. Please refresh the page.";
                 errorMessageElement.style.display = "block";
